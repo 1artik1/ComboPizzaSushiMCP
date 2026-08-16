@@ -10,6 +10,8 @@ tests/expected.json. Расхождение → FAIL + дифф, эталон п
    пороги позиций, граничные входные параметры.
 3. Контрольные блюда: 1-2 известных блюда на сеть из кэша.
 4. Связка с health_check: все сети отвечают и имеют позиции.
+5. compare с persons: все 7 сетей, лучшее комбо = первая вариация best_combo,
+   в лучшем комбо ровно persons напитков.
 
 Запуск: .venv\\Scripts\\python.exe scripts/autotest.py
 """
@@ -30,6 +32,7 @@ from combo_mcp.config import get_chain_meta
 from combo_mcp.engines.drinks import is_drink
 from combo_mcp.names import localize
 from combo_mcp.tools.best_combo import best_combo
+from combo_mcp.tools.compare import compare as _compare
 from combo_mcp.tools.health_check import health_check
 
 EXPECTED_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -129,6 +132,26 @@ def check_combos():
                 _check_invariants(cid, key, budget, persons, raw, exp)
 
 
+def _expected_drinks(cid, budget, persons):
+    """Сколько напитков реально можно включить: min(persons, влезает в бюджет)."""
+    cache_items = load_cache(cid).get("items", []) or []
+    valid_drinks = sorted(
+        [it for it in cache_items if is_drink(it) and (it.get("weight_g") or 0) > 0
+         and (it.get("price_rub") or 0) > 0],
+        key=lambda x: (x["price_rub"] / x["weight_g"], x["price_rub"]),
+    )
+    expect = 0
+    spent = 0
+    for it in valid_drinks:
+        if expect >= persons:
+            break
+        if spent + it["price_rub"] > budget:
+            break
+        expect += 1
+        spent += it["price_rub"]
+    return expect
+
+
 def _check_invariants(cid, key, budget, persons, raw, exp):
     """Инварианты данных для одного ответа best_combo."""
     combos = raw.get("combos", [])
@@ -142,20 +165,7 @@ def _check_invariants(cid, key, budget, persons, raw, exp):
         by_name.setdefault(localize(cid, _norm_name(it["name"])), it)
 
     # ровно persons напитков (сколько реально доступно с весом)
-    valid_drinks = sorted(
-        [it for it in cache_items if is_drink(it) and (it.get("weight_g") or 0) > 0
-         and (it.get("price_rub") or 0) > 0],
-        key=lambda x: (x["price_rub"] / x["weight_g"], x["price_rub"]),
-    )
-    expect_drinks = 0
-    spent = 0
-    for it in valid_drinks:
-        if expect_drinks >= persons:
-            break
-        if spent + it["price_rub"] > budget:
-            break
-        expect_drinks += 1
-        spent += it["price_rub"]
+    expect_drinks = _expected_drinks(cid, budget, persons)
 
     for v in combos:
         price = v["price_rub"]
@@ -246,11 +256,66 @@ def check_health():
             _ok("health", f"{c['id']}: {e['verdict']}, {e['items_count']} позиций")
 
 
+# ---------------------------------------------------------------- блок 5
+def check_compare():
+    print("Блок 5: compare с persons")
+    budget = 3000
+
+    if "error" not in json.loads(_compare(budget, persons=0)):
+        _fail("compare", "persons=0 должен давать ошибку")
+    else:
+        _ok("compare", "persons=0 (ошибка)")
+
+    raw = json.loads(_compare(budget, persons=2))
+    if len(raw) != 7:
+        _fail("compare", f"сетей {len(raw)}, ожидается 7")
+        return
+
+    for c in get_chain_meta():
+        cid = c["id"]
+        entry = next((e for e in raw if e["chain_id"] == cid), None)
+        if entry is None:
+            _fail("compare", f"{cid}: нет в ответе")
+            continue
+        if not entry.get("available"):
+            _fail("compare", f"{cid}: недоступен ({entry.get('error')})")
+            continue
+
+        # лучшее комбо compare == первая вариация best_combo (тот же движок)
+        bc = json.loads(best_combo(cid, budget, persons=2, variations=3))
+        if "error" in bc or not bc.get("combos"):
+            _fail("compare", f"{cid}: best_combo не дал комбо")
+            continue
+        top = bc["combos"][0]
+        if entry["total_weight_g"] != top["weight_g"] or entry["total_price_rub"] != top["price_rub"]:
+            _fail("compare", f"{cid}: {entry['total_weight_g']}г/{entry['total_price_rub']}₽ "
+                             f"!= best_combo {top['weight_g']}г/{top['price_rub']}₽")
+            continue
+
+        # ровно persons напитков в лучшем комбо compare
+        cache_items = load_cache(cid).get("items", []) or []
+        by_name = {}
+        for it in cache_items:
+            by_name.setdefault(localize(cid, _norm_name(it["name"])), it)
+        n_drinks = 0
+        for i in entry.get("items", []):
+            it = by_name.get(_norm_name(i["name"]))
+            if it and is_drink(it):
+                n_drinks += i.get("count", 1)
+        expect = _expected_drinks(cid, budget, 2)
+        if n_drinks != expect:
+            _fail("compare", f"{cid}: напитков в комбо {n_drinks}, ожидается {expect} "
+                             f"(persons=2): {[i['name'] for i in entry.get('items', [])]}")
+            continue
+        _ok("compare", f"{cid}: {entry['total_weight_g']}г/{entry['total_price_rub']}₽, {n_drinks} напитков")
+
+
 def main():
     check_combos()
     check_boundary()
     check_dishes()
     check_health()
+    check_compare()
     print()
     if _FAILED:
         print(f"ИТОГ: FAIL ({len(_FAILED)} проверок провалено)")

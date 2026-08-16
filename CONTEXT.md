@@ -46,11 +46,15 @@ check_price, health_check, compare, get_chain_info, get_chains, clear_cache, ref
   веса pizza_kuba из названий размеров, справочник estimated_weights.json (~97 позиций:
   закуски «N шт», соусы, напитки 0,5/1 л — с полем source), адаптивный рейт-гейт ninja_food
   (полный парсинг ~72 с, все 290 позиций с весом), GUI удалён, CONTEXT.md-чекпоинт,
-  ROADMAP с субагент-делегированием и проверкой контрибьютора.
+  ROADMAP с субагент-делегированием и проверкой контрибьютора, локализация названий
+  (translations.json + names.py, вес единицы в выборке: «Пицца Пепперони Фреш (370 г) x2»),
+  compare с persons + блок 5 автотеста (compare == первая вариация best_combo,
+  напитки = min(persons, доступных)).
 - Инструменты: weight_source (site|size_name|reference|none) в best_combo/verify_chain/
-  check_price/status; gen_expected.py сохраняет раздел dishes.
-- Открыто: compare с persons; drinks.py под новые сети; TTL в config; проверка комбо-состава
-  с reference-весами (оценки, не фактические данные сайта).
+  check_price/status; gen_expected.py сохраняет раздел dishes; compare(budget, persons=1).
+- Открыто: drinks.py под новые сети; TTL в config; проверка комбо-состава
+  с reference-весами (оценки, не фактические данные сайта); pizza_kuba: фактические
+  веса закусок «N шт», если появятся на карточках.
 
 ## Порядок старта сессии
 
