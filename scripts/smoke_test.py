@@ -13,8 +13,8 @@ import subprocess
 import mcp.client.stdio as stdio_client
 from mcp.client.session import ClientSession
 
-SERVER_SCRIPT = os.path.join(_project_dir, "combo_mcp", "server.py")
-PYTHON = os.path.join(_parent_dir, "..", "Scripts", "python.exe")
+SERVER_SCRIPT = os.path.join(_parent_dir, "combo_mcp", "server.py")
+PYTHON = os.path.join(_parent_dir, ".venv", "Scripts", "python.exe")
 
 
 async def run_smoke_test():
@@ -45,18 +45,19 @@ async def run_smoke_test():
             async with ClientSession(read_stream, write_stream) as session:
                 await session.initialize()
 
-                # 1. list_tools — все 9 инструментов
+                # 1. list_tools — все 10 инструментов
                 print("\n[1] list_tools()")
                 tools = await session.list_tools()
                 tool_names = [t.name for t in tools.tools]
                 print(f"  Tools ({len(tool_names)}): {', '.join(tool_names)}")
                 expected = ["list_chains", "parse_menu", "best_combo", "compare",
-                            "status", "verify_chain", "check_price", "diff_menu", "check_config"]
+                            "status", "verify_chain", "check_price", "diff_menu",
+                            "check_config", "health_check"]
                 missing = [n for n in expected if n not in tool_names]
                 if missing:
                     print(f"  FAIL: missing tools: {missing}")
                 else:
-                    print("  PASS: all 9 tools registered")
+                    print("  PASS: all 10 tools registered")
 
                 # 2. call_tool("list_chains", {})
                 print("\n[2] call_tool('list_chains', {})")
@@ -77,23 +78,24 @@ async def run_smoke_test():
                 except json.JSONDecodeError:
                     print(f"  FAIL: not JSON: {text[:200]}")
 
-                # 3. call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000})
-                print("\n[3] call_tool('best_combo', {{'chain_id': 'la_pizza', 'budget': 3000}})")
-                resp = await session.call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000})
+                # 3. call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000, "persons": 1})
+                print("\n[3] call_tool('best_combo', {'chain_id': 'la_pizza', 'budget': 3000, 'persons': 1})")
+                resp = await session.call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000, "persons": 1})
                 text = ""
                 for c in resp.content:
                     if hasattr(c, 'text'):
                         text += c.text
                 try:
                     data = json.loads(text)
-                    combo = data.get("combo_max_weight", {})
+                    combos = data.get("combos", [])
+                    combo = combos[0] if combos else {}
                     w = combo.get("weight_g", 0)
                     p = combo.get("price_rub", 0)
-                    print(f"  Result: {w}g / {p}rub")
-                    if w == 5100 and p == 2800:
-                        print("  PASS: matches expected 5100g/2800rub")
+                    print(f"  Result: {w}g / {p}rub, variations: {len(combos)}")
+                    if w == 4400 and p == 2950:
+                        print("  PASS: matches expected 4400g/2950rub")
                     else:
-                        print(f"  INFO: expected 5100g/2800rub, got {w}g/{p}rub")
+                        print(f"  INFO: expected 4400g/2950rub, got {w}g/{p}rub")
                 except json.JSONDecodeError:
                     print(f"  FAIL: not JSON: {text[:200]}")
 
@@ -126,6 +128,27 @@ async def run_smoke_test():
                     data = json.loads(text)
                     print(f"  Result: {data}")
                     print("  PASS: check_config returned OK")
+                except json.JSONDecodeError:
+                    print(f"  FAIL: not JSON: {text[:200]}")
+
+                # 4c. call_tool("health_check", {"refresh": False})
+                print("\n[4c] call_tool('health_check', {'refresh': False})")
+                resp = await session.call_tool("health_check", {"refresh": False})
+                text = ""
+                for c in resp.content:
+                    if hasattr(c, 'text'):
+                        text += c.text
+                try:
+                    data = json.loads(text)
+                    if isinstance(data, list) and data:
+                        healthy = sum(1 for e in data if e["verdict"] == "healthy")
+                        print(f"  Result: {len(data)} chains, {healthy} healthy")
+                        if healthy == len(data):
+                            print("  PASS: all chains healthy")
+                        else:
+                            print("  WARN: not all chains healthy")
+                    else:
+                        print(f"  WARN: unexpected response type: {type(data)}")
                 except json.JSONDecodeError:
                     print(f"  FAIL: not JSON: {text[:200]}")
 

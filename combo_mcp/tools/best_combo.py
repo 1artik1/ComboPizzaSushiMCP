@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""best_combo.py — best_combo(chain_id, budget, refresh): 3 комбо."""
+"""best_combo.py — best_combo(chain_id, budget, persons, variations, refresh): N комбо.
+
+Порядок вариаций: Оптимум → Без повторов → Макс. вес → доп. стратегии.
+Во всех вариациях — ровно persons напитков (по 1 на персону).
+"""
 
 import json
 from combo_mcp.engines.dp import calculate_combos
@@ -9,14 +13,28 @@ from combo_mcp.cache import load_cache, save_cache
 from combo_mcp.chains.base import ChainUnavailable
 
 
-def best_combo(chain_id, budget, refresh=False):
-    """Лучшие 3 варианта комбо для сети при заданном бюджете."""
+def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
+    """Лучшие варианты комбо для сети при заданном бюджете."""
     try:
         budget = int(budget)
     except (TypeError, ValueError):
         return json.dumps({"error": "budget должен быть целым числом > 0"}, ensure_ascii=False)
     if budget <= 0:
         return json.dumps({"error": "budget должен быть > 0"}, ensure_ascii=False)
+
+    try:
+        persons = int(persons)
+    except (TypeError, ValueError):
+        return json.dumps({"error": "persons должен быть целым числом >= 1"}, ensure_ascii=False)
+    if persons < 1:
+        return json.dumps({"error": "persons должен быть >= 1"}, ensure_ascii=False)
+
+    try:
+        variations = int(variations)
+    except (TypeError, ValueError):
+        return json.dumps({"error": "variations должен быть целым числом >= 1"}, ensure_ascii=False)
+    if variations < 1:
+        return json.dumps({"error": "variations должен быть >= 1"}, ensure_ascii=False)
 
     ids = [c["id"] for c in get_chain_meta()]
     if chain_id not in ids:
@@ -41,6 +59,7 @@ def best_combo(chain_id, budget, refresh=False):
         return json.dumps({
             "chain_id": chain_id,
             "budget": budget,
+            "persons": persons,
             "total_items_parsed": len(items),
             "items_with_weight": 0,
             "items_without_weight_excluded": no_weight_count,
@@ -53,40 +72,45 @@ def best_combo(chain_id, budget, refresh=False):
 
     # Calculate combos
     try:
-        line1, line2, line3 = calculate_combos(valid_items, budget)
+        lines = calculate_combos(valid_items, budget, persons=persons, variations=variations)
     except Exception as e:
         return json.dumps({"error": f"Ошибка расчёта: {e}"}, ensure_ascii=False)
 
-    def _build_combo_line(line):
-        parts = line.split(" | ")
-        if len(parts) < 4:
-            return {"line": line, "weight_g": 0, "price_rub": 0, "price_per_100g": 0.0, "items": ""}
-        try:
-            weight_str = parts[0].split()[0]
-            price_str = parts[1].split()[0]
-            per100 = parts[2].split()[0]
-            items_str = parts[3]
-            return {
-                "line": line,
-                "weight_g": int(weight_str),
-                "price_rub": int(price_str),
-                "price_per_100g": float(per100),
-                "items": items_str,
-            }
-        except (ValueError, IndexError):
-            return {"line": line, "weight_g": 0, "price_rub": 0, "price_per_100g": 0.0, "items": ""}
+    variants = [_build_combo_line(line) for line in lines]
 
     result = {
         "chain_id": chain_id,
         "budget": budget,
+        "persons": persons,
+        "variations_requested": variations,
+        "variations_returned": len(variants),
         "total_items_parsed": len(items),
         "items_with_weight": len(valid_items),
         "items_without_weight_excluded": no_weight_count,
-        "combo_max_weight": _build_combo_line(line1),
-        "combo_optimum": _build_combo_line(line2),
-        "combo_no_duplicates": _build_combo_line(line3),
+        "combos": variants,
     }
     return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+def _build_combo_line(line):
+    """Разобрать строку комбо в структуру."""
+    parts = line.split(" | ")
+    if len(parts) < 4:
+        return {"line": line, "weight_g": 0, "price_rub": 0, "price_per_100g": 0.0, "items": ""}
+    try:
+        weight_str = parts[0].split()[0]
+        price_str = parts[1].split()[0]
+        per100 = parts[2].split()[0]
+        items_str = parts[3]
+        return {
+            "line": line,
+            "weight_g": int(weight_str),
+            "price_rub": int(price_str),
+            "price_per_100g": float(per100),
+            "items": items_str,
+        }
+    except (ValueError, IndexError):
+        return {"line": line, "weight_g": 0, "price_rub": 0, "price_per_100g": 0.0, "items": ""}
 
 
 def _load_items(chain_id, refresh=False):

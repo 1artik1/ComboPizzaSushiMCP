@@ -1,0 +1,612 @@
+{
+  "version": 1,
+  "combos": {
+    "la_pizza": {
+      "1500_1": [
+        {
+          "weight_g": 2000,
+          "price_rub": 1350,
+          "price_per_100g": 67.5,
+          "items": "Гигант с Грибами 45 см x1"
+        },
+        {
+          "weight_g": 2450,
+          "price_rub": 1400,
+          "price_per_100g": 57.1,
+          "items": "Курица-Бекон x1, Курица Чили x1"
+        },
+        {
+          "weight_g": 2600,
+          "price_rub": 1500,
+          "price_per_100g": 57.7,
+          "items": "Жюльен x1, Курица Чили x2"
+        }
+      ],
+      "1500_2": [
+        {
+          "weight_g": 2000,
+          "price_rub": 1350,
+          "price_per_100g": 67.5,
+          "items": "Гигант с Грибами 45 см x1"
+        },
+        {
+          "weight_g": 2450,
+          "price_rub": 1400,
+          "price_per_100g": 57.1,
+          "items": "Курица-Бекон x1, Курица Чили x1"
+        },
+        {
+          "weight_g": 2600,
+          "price_rub": 1500,
+          "price_per_100g": 57.7,
+          "items": "Жюльен x1, Курица Чили x2"
+        }
+      ],
+      "3000_1": [
+        {
+          "weight_g": 4400,
+          "price_rub": 2950,
+          "price_per_100g": 67.0,
+          "items": "Гигант с Грибами 45 см x1, Грибной Мега Гигант 50 см x1"
+        },
+        {
+          "weight_g": 4850,
+          "price_rub": 3000,
+          "price_per_100g": 61.9,
+          "items": "Мясной Мега Гигант 50 см x1, Курица-Бекон x1, Курица Чили x1"
+        },
+        {
+          "weight_g": 5100,
+          "price_rub": 2800,
+          "price_per_100g": 54.9,
+          "items": "Комбо 3кг x1, Курица Чили x2"
+        }
+      ],
+      "3000_2": [
+        {
+          "weight_g": 4400,
+          "price_rub": 2950,
+          "price_per_100g": 67.0,
+          "items": "Гигант с Грибами 45 см x1, Грибной Мега Гигант 50 см x1"
+        },
+        {
+          "weight_g": 4850,
+          "price_rub": 3000,
+          "price_per_100g": 61.9,
+          "items": "Мясной Мега Гигант 50 см x1, Курица-Бекон x1, Курица Чили x1"
+        },
+        {
+          "weight_g": 5100,
+          "price_rub": 2800,
+          "price_per_100g": 54.9,
+          "items": "Комбо 3кг x1, Курица Чили x2"
+        }
+      ]
+    },
+    "pizza_kuba": {
+      "1500_1": [
+        {
+          "weight_g": 600,
+          "price_rub": 1500,
+          "price_per_100g": 250.0,
+          "items": "ЧИЗКЕЙК КЛУБНИЧНЫЙ x2, ЧИЗКЕЙК ШОКОЛАДНЫЙ x2, ЧИЗКЕЙК NEW YORK x2"
+        },
+        {
+          "weight_g": 400,
+          "price_rub": 1000,
+          "price_per_100g": 250.0,
+          "items": "ЧИЗКЕЙК КЛУБНИЧНЫЙ x1, ЧИЗКЕЙК ШОКОЛАДНЫЙ x1, ЧИЗКЕЙК NEW YORK x1, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x1"
+        }
+      ],
+      "1500_2": [
+        {
+          "weight_g": 600,
+          "price_rub": 1500,
+          "price_per_100g": 250.0,
+          "items": "ЧИЗКЕЙК КЛУБНИЧНЫЙ x2, ЧИЗКЕЙК ШОКОЛАДНЫЙ x2, ЧИЗКЕЙК NEW YORK x2"
+        },
+        {
+          "weight_g": 400,
+          "price_rub": 1000,
+          "price_per_100g": 250.0,
+          "items": "ЧИЗКЕЙК КЛУБНИЧНЫЙ x1, ЧИЗКЕЙК ШОКОЛАДНЫЙ x1, ЧИЗКЕЙК NEW YORK x1, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x1"
+        }
+      ],
+      "3000_1": [
+        {
+          "weight_g": 800,
+          "price_rub": 2000,
+          "price_per_100g": 250.0,
+          "items": "ЧИЗКЕЙК КЛУБНИЧНЫЙ x2, ЧИЗКЕЙК ШОКОЛАДНЫЙ x2, ЧИЗКЕЙК NEW YORK x2, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x2"
+        },
+        {
+          "weight_g": 400,
+          "price_rub": 1000,
+          "price_per_100g": 250.0,
+          "items": "ЧИЗКЕЙК КЛУБНИЧНЫЙ x1, ЧИЗКЕЙК ШОКОЛАДНЫЙ x1, ЧИЗКЕЙК NEW YORK x1, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x1"
+        }
+      ],
+      "3000_2": [
+        {
+          "weight_g": 800,
+          "price_rub": 2000,
+          "price_per_100g": 250.0,
+          "items": "ЧИЗКЕЙК КЛУБНИЧНЫЙ x2, ЧИЗКЕЙК ШОКОЛАДНЫЙ x2, ЧИЗКЕЙК NEW YORK x2, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x2"
+        },
+        {
+          "weight_g": 400,
+          "price_rub": 1000,
+          "price_per_100g": 250.0,
+          "items": "ЧИЗКЕЙК КЛУБНИЧНЫЙ x1, ЧИЗКЕЙК ШОКОЛАДНЫЙ x1, ЧИЗКЕЙК NEW YORK x1, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x1"
+        }
+      ]
+    },
+    "ninja_food": {
+      "1500_1": [
+        {
+          "weight_g": 1570,
+          "price_rub": 1497,
+          "price_per_100g": 95.4,
+          "items": "Морс Клюквенный x1, Вок Удон курица грибы x1, Курица Терияки 40см ТТ x1"
+        },
+        {
+          "weight_g": 2105,
+          "price_rub": 1495,
+          "price_per_100g": 71.0,
+          "items": "Морс Клюквенный x1, Ланч \\\"Сила внутри\\\" x1, Ланч \\\"Тайм-аут\\\" x1, Суп Куриный x1, Соус Фирменный x1"
+        },
+        {
+          "weight_g": 2110,
+          "price_rub": 1456,
+          "price_per_100g": 69.0,
+          "items": "Морс Клюквенный x1, Ланч \\\"Тайм-аут\\\" x2, Удон с овощами x1"
+        }
+      ],
+      "1500_2": [
+        {
+          "weight_g": 1560,
+          "price_rub": 1444,
+          "price_per_100g": 92.6,
+          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Вок Удон курица грибы x3, Луковые кольца 8шт x1"
+        },
+        {
+          "weight_g": 2220,
+          "price_rub": 1484,
+          "price_per_100g": 66.8,
+          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Ланч \\\"Тайм-аут\\\" x1, Онигири с крабом x1, Мисо суп с курицей x1, Суп Куриный x1"
+        },
+        {
+          "weight_g": 2260,
+          "price_rub": 1465,
+          "price_per_100g": 64.8,
+          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Ланч \\\"Тайм-аут\\\" x2, Онигири с крабом x1"
+        }
+      ],
+      "3000_1": [
+        {
+          "weight_g": 2875,
+          "price_rub": 2824,
+          "price_per_100g": 98.2,
+          "items": "Морс Клюквенный x1, Вок Удон курица грибы x3, Курица Терияки 40см x1, Курочка темпура хот x1"
+        },
+        {
+          "weight_g": 3990,
+          "price_rub": 2967,
+          "price_per_100g": 74.4,
+          "items": "Морс Клюквенный x1, Ланч \\\"Тайм-аут\\\" x1, Набор из 3 пицц 33см x1"
+        },
+        {
+          "weight_g": 4060,
+          "price_rub": 2994,
+          "price_per_100g": 73.7,
+          "items": "Морс Клюквенный x1, Ланч \\\"Тайм-аут\\\" x2, Чизбургер 40см x1, Суп Куриный x2"
+        }
+      ],
+      "3000_2": [
+        {
+          "weight_g": 3175,
+          "price_rub": 2933,
+          "price_per_100g": 92.4,
+          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Вок Удон курица грибы x3, Курица Терияки 40см x1, Курочка темпура хот x1"
+        },
+        {
+          "weight_g": 4160,
+          "price_rub": 2983,
+          "price_per_100g": 71.7,
+          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Ланч \\\"Сила внутри\\\" x1, Ланч \\\"Тайм-аут\\\" x1, Пеперони 40см x1, Мисо суп с курицей x1, Суп Куриный x1"
+        },
+        {
+          "weight_g": 4240,
+          "price_rub": 2991,
+          "price_per_100g": 70.5,
+          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Ланч \\\"Сила внутри\\\" x1, Ланч \\\"Тайм-аут\\\" x2, Мисо суп с курицей x2, Суп Куриный x2"
+        }
+      ]
+    },
+    "sushi_time": {
+      "1500_1": [
+        {
+          "weight_g": 1150,
+          "price_rub": 1470,
+          "price_per_100g": 127.8,
+          "items": "Морской x1"
+        }
+      ],
+      "1500_2": [
+        {
+          "weight_g": 1150,
+          "price_rub": 1470,
+          "price_per_100g": 127.8,
+          "items": "Морской x1"
+        }
+      ],
+      "3000_1": [
+        {
+          "weight_g": 2890,
+          "price_rub": 2980,
+          "price_per_100g": 103.1,
+          "items": "Морской x1, Удон с курицей и беконом x3, Сэндвич с беконом x2"
+        },
+        {
+          "weight_g": 3415,
+          "price_rub": 2978,
+          "price_per_100g": 87.2,
+          "items": "Морской x1, Тори Темпура x1, Рамен со свининой x1, Тяхан с курицей x1, Тяхан вегетарианский x1, Рамен с курицей x1, Рамен со свининой x1"
+        },
+        {
+          "weight_g": 3555,
+          "price_rub": 2969,
+          "price_per_100g": 83.5,
+          "items": "Морской x1, Огурец x1, Тяхан вегетарианский x2, Рамен с курицей x2, Рамен со свининой x2"
+        }
+      ],
+      "3000_2": [
+        {
+          "weight_g": 2410,
+          "price_rub": 2959,
+          "price_per_100g": 122.8,
+          "items": "Морской x1, Морская (сливочная основа) x1, Удон с курицей и беконом x1, Сэндвич с беконом x1"
+        },
+        {
+          "weight_g": 2655,
+          "price_rub": 2968,
+          "price_per_100g": 111.8,
+          "items": "Морской x1, Морская (сливочная основа) x1, Огурец x1, Рамен с курицей x1, Рамен со свининой x1"
+        },
+        {
+          "weight_g": 2690,
+          "price_rub": 2999,
+          "price_per_100g": 111.5,
+          "items": "Морской x1, Морская (сливочная основа) x1, Фреш x1, Тяхан вегетарианский x2"
+        }
+      ]
+    },
+    "sushi_darom": {
+      "1500_1": [
+        {
+          "weight_g": 1675,
+          "price_rub": 1309,
+          "price_per_100g": 78.1,
+          "items": "Сет Очень Темное Искусство 🌶 x1"
+        },
+        {
+          "weight_g": 1921,
+          "price_rub": 1493,
+          "price_per_100g": 77.7,
+          "items": "Имбирь x1, Васаби 🌶 x1, Соевый соус x1, Набор специй 🌶 x1, Спайси соус 🌶 x1, Палочки x1, И Владу 🌶 x1"
+        },
+        {
+          "weight_g": 1940,
+          "price_rub": 1497,
+          "price_per_100g": 77.2,
+          "items": "Имбирь x2, Соевый соус x1, Набор специй 🌶 x1, Спайси соус 🌶 x1, И Владу 🌶 x1"
+        }
+      ],
+      "1500_2": [
+        {
+          "weight_g": 1675,
+          "price_rub": 1309,
+          "price_per_100g": 78.1,
+          "items": "Сет Очень Темное Искусство 🌶 x1"
+        },
+        {
+          "weight_g": 1921,
+          "price_rub": 1493,
+          "price_per_100g": 77.7,
+          "items": "Имбирь x1, Васаби 🌶 x1, Соевый соус x1, Набор специй 🌶 x1, Спайси соус 🌶 x1, Палочки x1, И Владу 🌶 x1"
+        },
+        {
+          "weight_g": 1940,
+          "price_rub": 1497,
+          "price_per_100g": 77.2,
+          "items": "Имбирь x2, Соевый соус x1, Набор специй 🌶 x1, Спайси соус 🌶 x1, И Владу 🌶 x1"
+        }
+      ],
+      "3000_1": [
+        {
+          "weight_g": 3350,
+          "price_rub": 2618,
+          "price_per_100g": 78.1,
+          "items": "Сет Очень Темное Искусство 🌶 x2"
+        },
+        {
+          "weight_g": 3880,
+          "price_rub": 2998,
+          "price_per_100g": 77.3,
+          "items": "Имбирь x1, Соевый соус x1, Набор специй 🌶 x1, Спайси соус 🌶 x1, И Владу 🌶 x1, Сет Для Двоих x1, Сет Бонус x1"
+        },
+        {
+          "weight_g": 3881,
+          "price_rub": 2997,
+          "price_per_100g": 77.2,
+          "items": "Спайси соус 🌶 x2, Палочки x1, Жареный ролл Лава с курочкой x1, И Владу 🌶 x2"
+        }
+      ],
+      "3000_2": [
+        {
+          "weight_g": 3350,
+          "price_rub": 2618,
+          "price_per_100g": 78.1,
+          "items": "Сет Очень Темное Искусство 🌶 x2"
+        },
+        {
+          "weight_g": 3880,
+          "price_rub": 2998,
+          "price_per_100g": 77.3,
+          "items": "Имбирь x1, Соевый соус x1, Набор специй 🌶 x1, Спайси соус 🌶 x1, И Владу 🌶 x1, Сет Для Двоих x1, Сет Бонус x1"
+        },
+        {
+          "weight_g": 3881,
+          "price_rub": 2997,
+          "price_per_100g": 77.2,
+          "items": "Спайси соус 🌶 x2, Палочки x1, Жареный ролл Лава с курочкой x1, И Владу 🌶 x2"
+        }
+      ]
+    },
+    "anti_sushi": {
+      "1500_1": [
+        {
+          "weight_g": 1330,
+          "price_rub": 1377,
+          "price_per_100g": 103.5,
+          "items": "Сыр и мясо x2, Мафия x1"
+        },
+        {
+          "weight_g": 1810,
+          "price_rub": 1487,
+          "price_per_100g": 82.2,
+          "items": "Возьму сам 1 кг x1, Комбо: \"Детское\" x1, Суши с тунцом x1"
+        },
+        {
+          "weight_g": 1925,
+          "price_rub": 1486,
+          "price_per_100g": 77.2,
+          "items": "Комбо: \"Детское\" x2, Мафия x1, Капоэйра x1"
+        }
+      ],
+      "1500_2": [
+        {
+          "weight_g": 1330,
+          "price_rub": 1377,
+          "price_per_100g": 103.5,
+          "items": "Сыр и мясо x2, Мафия x1"
+        },
+        {
+          "weight_g": 1810,
+          "price_rub": 1487,
+          "price_per_100g": 82.2,
+          "items": "Возьму сам 1 кг x1, Комбо: \"Детское\" x1, Суши с тунцом x1"
+        },
+        {
+          "weight_g": 1925,
+          "price_rub": 1486,
+          "price_per_100g": 77.2,
+          "items": "Комбо: \"Детское\" x2, Мафия x1, Капоэйра x1"
+        }
+      ],
+      "3000_1": [
+        {
+          "weight_g": 2870,
+          "price_rub": 2995,
+          "price_per_100g": 104.4,
+          "items": "Сыр и мясо x3, Цезарь x1, Возьму сам 1 кг x1"
+        },
+        {
+          "weight_g": 3635,
+          "price_rub": 2946,
+          "price_per_100g": 81.0,
+          "items": "Возьму сам 2 кг x1, Комбо: \"Детское\" x1, Мафия x1, Нежная x1"
+        },
+        {
+          "weight_g": 3750,
+          "price_rub": 2994,
+          "price_per_100g": 79.8,
+          "items": "Возьму сам 1 кг x1, Комбо: \"Детское\" x2, Мафия x2, Нежная x1"
+        }
+      ],
+      "3000_2": [
+        {
+          "weight_g": 2870,
+          "price_rub": 2995,
+          "price_per_100g": 104.4,
+          "items": "Сыр и мясо x3, Цезарь x1, Возьму сам 1 кг x1"
+        },
+        {
+          "weight_g": 3635,
+          "price_rub": 2946,
+          "price_per_100g": 81.0,
+          "items": "Возьму сам 2 кг x1, Комбо: \"Детское\" x1, Мафия x1, Нежная x1"
+        },
+        {
+          "weight_g": 3750,
+          "price_rub": 2994,
+          "price_per_100g": 79.8,
+          "items": "Возьму сам 1 кг x1, Комбо: \"Детское\" x2, Мафия x2, Нежная x1"
+        }
+      ]
+    },
+    "dodo": {
+      "1500_1": [
+        {
+          "weight_g": 1640,
+          "price_rub": 1497,
+          "price_per_100g": 91.3,
+          "items": "Americano x1, Pepperoni Fresh x2, Create your own pizza x2"
+        },
+        {
+          "weight_g": 1550,
+          "price_rub": 1496,
+          "price_per_100g": 96.5,
+          "items": "Americano x1, Ham and pickles x1, Pepperoni Fresh x1, Create your own pizza x1, Cold chicken roll x1, Salted Caramel Maffin x1"
+        },
+        {
+          "weight_g": 1200,
+          "price_rub": 1487,
+          "price_per_100g": 123.9,
+          "items": "Americano x1, Roman-style pesto x1, Julienne x1, Curd fritters without topping x1"
+        }
+      ],
+      "1500_2": [
+        {
+          "weight_g": 1700,
+          "price_rub": 1499,
+          "price_per_100g": 88.2,
+          "items": "Americano x1, Flat white x1, Pepperoni Fresh x1, Create your own pizza x2, Salted Caramel Maffin x2"
+        },
+        {
+          "weight_g": 1605,
+          "price_rub": 1471,
+          "price_per_100g": 91.7,
+          "items": "Americano x1, Flat white x1, Ham and pickles x1, Pepperoni Fresh x1, Create your own pizza x1, Salted Caramel Maffin x1, Raspberry sauce x1"
+        },
+        {
+          "weight_g": 1260,
+          "price_rub": 1456,
+          "price_per_100g": 115.6,
+          "items": "Americano x1, Flat white x1, Roman-style pesto x1, Julienne x1"
+        }
+      ],
+      "3000_1": [
+        {
+          "weight_g": 3020,
+          "price_rub": 2989,
+          "price_per_100g": 99.0,
+          "items": "Americano x1, Ham and pickles x2, Pepperoni Fresh x2, Garlic Chicken x1, Create your own pizza x2, Salted Caramel Maffin x2, Chicken Nuggets x1"
+        },
+        {
+          "weight_g": 2850,
+          "price_rub": 2995,
+          "price_per_100g": 105.1,
+          "items": "Americano x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Burger pizza x1, Create your own pizza x1, Horseradish Lunchbox x1, Salted Caramel Maffin x1, Curd fritters without topping x1"
+        },
+        {
+          "weight_g": 2090,
+          "price_rub": 2974,
+          "price_per_100g": 142.3,
+          "items": "Americano x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Dodo x1, Cold chicken roll x1"
+        }
+      ],
+      "3000_2": [
+        {
+          "weight_g": 3100,
+          "price_rub": 2979,
+          "price_per_100g": 96.1,
+          "items": "Americano x1, Flat white x1, Ham and pickles x2, Pepperoni Fresh x2, Garlic Chicken x1, Create your own pizza x2, Salted Caramel Maffin x2"
+        },
+        {
+          "weight_g": 2930,
+          "price_rub": 2994,
+          "price_per_100g": 102.2,
+          "items": "Americano x1, Flat white x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Burger pizza x1, Create your own pizza x1, Cold chicken roll x1, Salted Caramel Maffin x1, Curd fritters without topping x1"
+        },
+        {
+          "weight_g": 2170,
+          "price_rub": 2998,
+          "price_per_100g": 138.2,
+          "items": "Americano x1, Flat white x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Dodo x1, Raspberry sauce x1, Thousand Island x1"
+        }
+      ]
+    }
+  },
+  "dishes": {
+    "la_pizza": [
+      {
+        "name": "Мясной Гигант 45 см",
+        "price_rub": 1350,
+        "weight_g": 2000
+      },
+      {
+        "name": "Пепперони",
+        "price_rub": 1050,
+        "weight_g": 1200
+      }
+    ],
+    "pizza_kuba": [
+      {
+        "name": "ЧИЗКЕЙК ШОКОЛАДНЫЙ",
+        "price_rub": 250,
+        "weight_g": 100
+      }
+    ],
+    "ninja_food": [
+      {
+        "name": "Ланч \"Сила внутри\"",
+        "price_rub": 499,
+        "weight_g": 640
+      },
+      {
+        "name": "Ланч \"Тайм-аут\"",
+        "price_rub": 559,
+        "weight_g": 770
+      }
+    ],
+    "sushi_time": [
+      {
+        "name": "Дружба",
+        "price_rub": 650,
+        "weight_g": 900
+      },
+      {
+        "name": "Сочи",
+        "price_rub": 1400,
+        "weight_g": 1600
+      }
+    ],
+    "sushi_darom": [
+      {
+        "name": "Сет Горячий",
+        "price_rub": 1309,
+        "weight_g": 1360
+      },
+      {
+        "name": "Сет Мини",
+        "price_rub": 529,
+        "weight_g": 505
+      }
+    ],
+    "anti_sushi": [
+      {
+        "name": "Для своих",
+        "price_rub": 1499,
+        "weight_g": 1470
+      },
+      {
+        "name": "Пит-Стоп",
+        "price_rub": 1369,
+        "weight_g": 1160
+      }
+    ],
+    "dodo": [
+      {
+        "name": "Chicken Bomboni",
+        "price_rub": 595,
+        "weight_g": 400
+      },
+      {
+        "name": "Pizza alla Bolognese",
+        "price_rub": 459,
+        "weight_g": 360
+      }
+    ]
+  }
+}

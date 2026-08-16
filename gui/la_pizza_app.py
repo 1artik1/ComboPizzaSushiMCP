@@ -273,18 +273,17 @@ class LaPizzaApp:
             if not products:
                 self.root.after(0, lambda: self._show_error("Could not connect to site"))
                 return
-            line1, line2, line3 = calculate_combos(products, budget)
+            lines = calculate_combos(products, budget)
             status_msg = f"Parsed {len(products)} items in {elapsed:.1f}s"
-            self.root.after(0, lambda: self._show_results(line1, line2, line3, status_msg))
+            self.root.after(0, lambda: self._show_results(lines, status_msg))
         except Exception as e:
             self.root.after(0, lambda: self._show_error(f"Error: {e}"))
 
-    def _show_results(self, line1, line2, line3, status):
+    def _show_results(self, lines, status):
         self.text_output.config(state=tk.NORMAL)
         self.text_output.delete(1.0, tk.END)
-        self.text_output.insert(tk.END, f"1) {line1}\n")
-        self.text_output.insert(tk.END, f"2) {line2}\n")
-        self.text_output.insert(tk.END, f"3) {line3}\n")
+        for i, line in enumerate(lines, 1):
+            self.text_output.insert(tk.END, f"{i}) {line}\n")
         self.text_output.config(state=tk.DISABLED)
         self.status_var.set(status)
         self.btn_parse.config(text="Parse", state=tk.NORMAL)
@@ -314,10 +313,9 @@ def selftest(budget):
     for p in products:
         taste = count_ingredients(p["description"])
         print(f"  {p['name']} | {p['weight_g']}g | {p['price_rub']}rub | taste={taste} | {p['category']}")
-    line1, line2, line3 = calculate_combos(products, budget)
-    print(f"\n1) {line1}")
-    print(f"2) {line2}")
-    print(f"3) {line3}")
+    lines = calculate_combos(products, budget)
+    for i, line in enumerate(lines, 1):
+        print(f"{i}) {line}")
     print("\nOK")
 
     out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "selftest_output.txt")
@@ -329,9 +327,8 @@ def selftest(budget):
         for p in products:
             taste = count_ingredients(p["description"])
             f.write(f"  {p['name']} | {p['weight_g']}g | {p['price_rub']}rub | taste={taste} | {p['category']}\n")
-        f.write(f"\n1) {line1}\n")
-        f.write(f"2) {line2}\n")
-        f.write(f"3) {line3}\n")
+        for i, line in enumerate(lines, 1):
+            f.write(f"{i}) {line}\n")
         f.write("\nOK\n")
     print(f"\nUTF-8 output saved to {out_path}")
 

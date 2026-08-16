@@ -7,6 +7,7 @@ _pareto_filter, format_combo, solve_optimum, _solve_optimum_pareto, calculate_co
 
 from collections import Counter
 from combo_mcp.engines.taste import count_ingredients
+from combo_mcp.engines.drinks import is_drink
 
 
 def solve_max_weight_single(items, budget):
@@ -229,14 +230,127 @@ def _solve_optimum_pareto(items, budget, filtered):
     return final, total_weight, total_cost
 
 
-def calculate_combos(products, budget):
-    """Calculate 3 combo variants."""
+def _valid(item):
+    """Позиция пригодна для расчёта: цена и вес > 0."""
+    return (item.get("weight_g") or 0) > 0 and (item.get("price_rub") or 0) > 0
+
+
+def select_drinks(items, persons, budget):
+    """Выбрать ровно persons напитков: самые выгодные по г/₽, сумма ≤ budget.
+
+    Возвращает список (idx, count) пар по исходному списку items.
+    Если напитков меньше persons — берутся все подходящие.
+    """
+    drinks = [(i, it) for i, it in enumerate(items) if _valid(it) and is_drink(it)]
+    drinks.sort(key=lambda x: (x[1]["price_rub"] / x[1]["weight_g"], x[1]["price_rub"]))
+    picked = []
+    spent = 0
+    for i, it in drinks:
+        if len(picked) >= persons:
+            break
+        if spent + it["price_rub"] > budget:
+            continue
+        picked.append((i, 1))
+        spent += it["price_rub"]
+    return picked, spent
+
+
+def _combo_variants(items, budget, persons=1):
+    """Сгенерировать до 6 стратегий комбо: список строк в порядке
+    Оптимум → Без повторов → Макс. вес → ... (см. _STRATEGIES).
+    """
+    drinks = [(i, it) for i, it in enumerate(items) if _valid(it) and is_drink(it)]
+    food = [(i, it) for i, it in enumerate(items) if _valid(it) and not is_drink(it)]
+    food_items = [it for _, it in food]
+
+    drink_pairs, drink_spent = select_drinks(items, persons, budget)
+    food_budget = budget - drink_spent
+
+    variants = []
+
+    def _build(strategy):
+        pairs = list(drink_pairs)
+        if strategy == "optimum":
+            indices, w, cost = solve_optimum(food_items, food_budget)
+            pairs += [(food[i][0], cnt) for i, cnt in indices]
+        elif strategy == "no_duplicates":
+            indices, w = solve_max_weight_single(food_items, food_budget)
+            pairs += [(food[i][0], 1) for i in indices]
+        elif strategy == "max_weight":
+            indices, w, cost = solve_max_weight_double(food_items, food_budget)
+            pairs += [(food[i][0], cnt) for i, cnt in indices]
+        elif strategy == "fewest_items":
+            # Максимум веса при минимуме позиций: жадный по весу, по 1 шт,
+            # поверх persons напитков.
+            cand = sorted(food, key=lambda x: (-x[1]["weight_g"], x[1]["price_rub"]))
+            spent = sum(items[i]["price_rub"] * c for i, c in drink_pairs)
+            for i, it in cand:
+                if spent + it["price_rub"] <= budget:
+                    pairs.append((i, 1))
+                    spent += it["price_rub"]
+        else:
+            return None
+
+        if not pairs:
+            return None
+        return format_combo(items, pairs, budget)
+
+    strategies = ["optimum", "no_duplicates", "max_weight", "fewest_items"]
+    for s in strategies:
+        if len(variants) >= 3:
+            break
+        line = _build(s)
+        if line and line not in variants:
+            variants.append(line)
+    return variants
+
+
+def _extra_variant(items, budget, strategy, persons=1):
+    """Дополнительные стратегии для variations > 3 (без гарантий persons)."""
+    if strategy == "no_drinks_max":
+        food = [(i, it) for i, it in enumerate(items) if _valid(it) and not is_drink(it)]
+        indices, w, cost = solve_max_weight_double([it for _, it in food], budget)
+        pairs = [(food[i][0], cnt) for i, cnt in indices]
+        return format_combo(items, pairs, budget)
+    if strategy == "drinks_only":
+        cand = [(i, it) for i, it in enumerate(items) if _valid(it) and is_drink(it)]
+        cand.sort(key=lambda x: (x[1]["price_rub"], -x[1]["weight_g"]))
+        pairs = []
+        spent = 0
+        for i, it in cand:
+            if spent + it["price_rub"] <= budget:
+                pairs.append((i, 1))
+                spent += it["price_rub"]
+        if not pairs:
+            return None
+        return format_combo(items, pairs, budget)
+    return None
+
+
+def calculate_combos(products, budget, persons=1, variations=3):
+    """Calculate up to `variations` combo variants (persons drinks included).
+
+    Порядок: Оптимум → Без повторов → Макс. вес → дополнительные стратегии.
+    """
     for p in products:
         p["_taste"] = count_ingredients(p["description"])
-    indices1, weight1, cost1 = solve_max_weight_double(products, budget)
-    line1 = format_combo(products, indices1, budget)
-    indices2, weight2, cost2 = solve_optimum(products, budget)
-    line2 = format_combo(products, indices2, budget)
-    indices3, weight3 = solve_max_weight_single(products, budget)
-    line3 = format_combo(products, [(idx, 1) for idx in indices3], budget)
-    return line1, line2, line3
+    variants = _combo_variants(products, budget, persons)
+    if not variants:
+        return []
+    if variations <= 3:
+        return variants[:variations]
+    # Больше 3: дополнительные стратегии без persons-гарантий + варианты персон
+    extra = []
+    for strategy in ("no_drinks_max", "drinks_only"):
+        line = _extra_variant(products, budget, strategy, persons)
+        if line and line not in variants and line not in extra:
+            extra.append(line)
+    for persons_v in (0, persons + 1, max(persons * 2, 2)):
+        if len(extra) >= variations - 3:
+            break
+        for v in _combo_variants(products, budget, persons_v):
+            if v not in variants and v not in extra:
+                extra.append(v)
+        if len(extra) >= variations - 3:
+            break
+    return (variants + extra)[:variations]

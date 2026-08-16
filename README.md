@@ -12,11 +12,12 @@
 │   ├── cache.py        # дисковый кэш + stale-if-error
 │   ├── http_client.py  # requests-обёртка (UA, ретраи, куки)
 │   ├── playwright_client.py  # ленивый браузер
-│   ├── engines\        # dp.py (комбо), taste.py (вкусность)
+│   ├── engines\        # dp.py (комбо), taste.py (вкусность), drinks.py (напитки)
 │   ├── chains\         # 1 файл = 1 сеть (@chain("id"))
 │   └── tools\          # 1 файл = 1 инструмент MCP
 ├── gui\la_pizza_app.py # GUI-приложение Ла Пицца
-├── scripts\selftest.py # регресс-проверка всех сетей
+├── scripts\            # selftest.py, autotest.py, smoke_test.py, gen_expected.py
+├── tests\expected.json # эталоны для autotest
 ├── config\chains_config.json
 ├── cache\              # создаётся автоматически
 └── archive\            # старые файлы + референсы разведки (recon\)
@@ -27,8 +28,14 @@
 # MCP-сервер (регистрируется opencode через opencode.json)
 .\.venv\Scripts\python.exe combo_mcp\server.py
 
-# Selftest: все сети + эталоны Ла Пиццы (3000₽ → 5100/2800, 4400/2950, 4850/3000)
+# Selftest: все сети + эталоны Ла Пиццы (3000₽ → 4400/2950, 4850/3000, 5100/2800)
 .\.venv\Scripts\python.exe scripts\selftest.py
+
+# Автотесты: эталоны комбо + инварианты + контрольные блюда + health_check
+.\.venv\Scripts\python.exe scripts\autotest.py
+
+# Smoke-тест реального MCP-протокола (10 инструментов)
+.\.venv\Scripts\python.exe scripts\smoke_test.py
 
 # GUI-приложение Ла Пицца
 .\.venv\Scripts\python.exe gui\la_pizza_app.py
@@ -37,16 +44,25 @@
 .\.venv\Scripts\python.exe scripts\clear_cache.py
 ```
 
-## Инструменты MCP (9)
+## Инструменты MCP (10)
 - `list_chains()` — сети и их доступность
 - `parse_menu(chain_id, category=, min_weight=, sort_by=, limit=, refresh=)` — меню
-- `best_combo(chain_id, budget, refresh=)` — 3 варианта комбо (макс.вес / оптимум / без повторов)
+- `best_combo(chain_id, budget, persons=1, variations=3, refresh=)` — варианты комбо:
+  во всех вариациях ровно `persons` напитков (1 на персону), порядок:
+  Оптимум → Без повторов → Макс. вес → доп. стратегии (при variations > 3)
 - `compare(budget)` — все сети по выгодности (₽/100г)
 - `status()` — конфиг, возраст кэша, ошибки
 - `verify_chain(chain_id)` — качество данных (веса, дубликаты, аномалии)
 - `check_price(chain_id, item_name, expected_price=)` — сверка цены позиции
 - `diff_menu(chain_id)` — изменения меню с прошлой загрузки
 - `check_config()` — валидация конфига и доступность ссылок
+- `health_check(refresh=False)` — HTTP + парсинг + кол-во позиций по всем сетям
+  (refresh=true — реальный прогон, иначе быстрый ответ по кэшу)
+
+## Автотесты
+`tests\expected.json` — фиксированные эталоны (комбо по сетям/бюджетам, контрольные блюда).
+Без record-режима: `scripts\autotest.py` сверяет фактический результат с эталоном,
+расхождение → FAIL + дифф. Эталон обновляется только осознанным коммитом.
 
 ## Конфиг сетей
 `config\chains_config.json` — per-chain: `url`, `enabled`, `ttl_minutes`, `headers`, `cookies`.

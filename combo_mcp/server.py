@@ -22,6 +22,7 @@ from combo_mcp.tools.verify_chain import verify_chain as _verify_chain
 from combo_mcp.tools.check_price import check_price as _check_price
 from combo_mcp.tools.diff_menu import diff_menu as _diff_menu
 from combo_mcp.tools.check_config import check_config as _check_config
+from combo_mcp.tools.health_check import health_check as _health_check
 
 # Create server
 mcp = MCPServer(
@@ -84,6 +85,12 @@ mcp.add_tool(
     _check_config,
     name="check_config",
     description="check_config: валидация chains_config.json.",
+)
+
+mcp.add_tool(
+    _health_check,
+    name="health_check",
+    description="health_check: стабильность получения данных с сайтов — HTTP, парсинг, кол-во позиций.",
 )
 
 

@@ -5,9 +5,11 @@
     "items": 43,
     "valid": 42,
     "excluded": 1,
-    "line1": "5100 g | 2800 rub | 54.9 rub/100g | Комбо 3кг x1, Курица Чили x2",
-    "line2": "4400 g | 2950 rub | 67.0 rub/100g | Гигант с Грибами 45 см x1, Грибной Мега Гигант 50 см x1",
-    "line3": "4850 g | 3000 rub | 61.9 rub/100g | Мясной Мега Гигант 50 см x1, Курица-Бекон x1, Курица Чили x1"
+    "lines": [
+      "4400 g | 2950 rub | 67.0 rub/100g | Гигант с Грибами 45 см x1, Грибной Мега Гигант 50 см x1",
+      "4850 g | 3000 rub | 61.9 rub/100g | Мясной Мега Гигант 50 см x1, Курица-Бекон x1, Курица Чили x1",
+      "5100 g | 2800 rub | 54.9 rub/100g | Комбо 3кг x1, Курица Чили x2"
+    ]
   },
   {
     "chain": "pizza_kuba",
@@ -15,16 +17,22 @@
     "items": 44,
     "valid": 4,
     "excluded": 40,
-    "line1": "800 g | 2000 rub | 250.0 rub/100g | ЧИЗКЕЙК КЛУБНИЧНЫЙ x2, ЧИЗКЕЙК ШОКОЛАДНЫЙ x2, ЧИЗКЕЙК NEW YORK x2, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x2",
-    "line2": "800 g | 2000 rub | 250.0 rub/100g | ЧИЗКЕЙК КЛУБНИЧНЫЙ x2, ЧИЗКЕЙК ШОКОЛАДНЫЙ x2, ЧИЗКЕЙК NEW YORK x2, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x2",
-    "line3": "400 g | 1000 rub | 250.0 rub/100g | ЧИЗКЕЙК КЛУБНИЧНЫЙ x1, ЧИЗКЕЙК ШОКОЛАДНЫЙ x1, ЧИЗКЕЙК NEW YORK x1, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x1"
+    "lines": [
+      "800 g | 2000 rub | 250.0 rub/100g | ЧИЗКЕЙК КЛУБНИЧНЫЙ x2, ЧИЗКЕЙК ШОКОЛАДНЫЙ x2, ЧИЗКЕЙК NEW YORK x2, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x2",
+      "400 g | 1000 rub | 250.0 rub/100g | ЧИЗКЕЙК КЛУБНИЧНЫЙ x1, ЧИЗКЕЙК ШОКОЛАДНЫЙ x1, ЧИЗКЕЙК NEW YORK x1, ЧИЗКЕЙК МАНГО-МАРАКУЙЯ x1"
+    ]
   },
   {
     "chain": "ninja_food",
-    "status": "NO_WEIGHT",
-    "items": 123,
-    "valid": 0,
-    "excluded": 123
+    "status": "OK",
+    "items": 312,
+    "valid": 278,
+    "excluded": 26,
+    "lines": [
+      "2875 g | 2824 rub | 98.2 rub/100g | Морс Клюквенный x1, Вок Удон курица грибы x3, Курица Терияки 40см x1, Курочка темпура хот x1",
+      "3990 g | 2967 rub | 74.4 rub/100g | Морс Клюквенный x1, Ланч \\\"Тайм-аут\\\" x1, Набор из 3 пицц 33см x1",
+      "4060 g | 2994 rub | 73.7 rub/100g | Морс Клюквенный x1, Ланч \\\"Тайм-аут\\\" x2, Чизбургер 40см x1, Суп Куриный x2"
+    ]
   },
   {
     "chain": "sushi_time",
@@ -32,9 +40,11 @@
     "items": 251,
     "valid": 234,
     "excluded": 17,
-    "line1": "4520 g | 3000 rub | 66.4 rub/100g | Дружба x2, Рамен со свининой x1, Тяхан вегетарианский x2, Рамен с курицей x2, Рамен со свининой x2",
-    "line2": "3260 g | 2968 rub | 91.0 rub/100g | Пепперони (горчичная основа) x2, Удон с курицей и беконом x3, Сэндвич с беконом x3",
-    "line3": "4275 g | 2999 rub | 70.2 rub/100g | Дружба x1, Огурец x1, Дружба x1, Удон с курицей x1, Рамен со свининой x1, Тяхан вегетарианский x1, Рамен с курицей x1, Рамен с креветками x1, Рамен со свининой x1"
+    "lines": [
+      "2890 g | 2980 rub | 103.1 rub/100g | Морской x1, Удон с курицей и беконом x3, Сэндвич с беконом x2",
+      "3415 g | 2978 rub | 87.2 rub/100g | Морской x1, Тори Темпура x1, Рамен со свининой x1, Тяхан с курицей x1, Тяхан вегетарианский x1, Рамен с курицей x1, Рамен со свининой x1",
+      "3555 g | 2969 rub | 83.5 rub/100g | Морской x1, Огурец x1, Тяхан вегетарианский x2, Рамен с курицей x2, Рамен со свининой x2"
+    ]
   },
   {
     "chain": "sushi_darom",
@@ -42,9 +52,11 @@
     "items": 170,
     "valid": 169,
     "excluded": 1,
-    "line1": "3881 g | 2997 rub | 77.2 rub/100g | Спайси соус 🌶 x2, Палочки x1, Жареный ролл Лава с курочкой x1, И Владу 🌶 x2",
-    "line2": "3350 g | 2618 rub | 78.1 rub/100g | Сет Очень Темное Искусство 🌶 x2",
-    "line3": "3880 g | 2998 rub | 77.3 rub/100g | Имбирь x1, Соевый соус x1, Набор специй 🌶 x1, Спайси соус 🌶 x1, И Владу 🌶 x1, Сет Для Двоих x1, Сет Бонус x1"
+    "lines": [
+      "3350 g | 2618 rub | 78.1 rub/100g | Сет Очень Темное Искусство 🌶 x2",
+      "3880 g | 2998 rub | 77.3 rub/100g | Имбирь x1, Соевый соус x1, Набор специй 🌶 x1, Спайси соус 🌶 x1, И Владу 🌶 x1, Сет Для Двоих x1, Сет Бонус x1",
+      "3881 g | 2997 rub | 77.2 rub/100g | Спайси соус 🌶 x2, Палочки x1, Жареный ролл Лава с курочкой x1, И Владу 🌶 x2"
+    ]
   },
   {
     "chain": "anti_sushi",
@@ -52,9 +64,11 @@
     "items": 52,
     "valid": 52,
     "excluded": 0,
-    "line1": "3750 g | 2994 rub | 79.8 rub/100g | Возьму сам 1 кг x1, Комбо: \"Детское\" x2, Мафия x2, Нежная x1",
-    "line2": "2870 g | 2995 rub | 104.4 rub/100g | Сыр и мясо x3, Цезарь x1, Возьму сам 1 кг x1",
-    "line3": "3635 g | 2946 rub | 81.0 rub/100g | Возьму сам 2 кг x1, Комбо: \"Детское\" x1, Мафия x1, Нежная x1"
+    "lines": [
+      "2870 g | 2995 rub | 104.4 rub/100g | Сыр и мясо x3, Цезарь x1, Возьму сам 1 кг x1",
+      "3635 g | 2946 rub | 81.0 rub/100g | Возьму сам 2 кг x1, Комбо: \"Детское\" x1, Мафия x1, Нежная x1",
+      "3750 g | 2994 rub | 79.8 rub/100g | Возьму сам 1 кг x1, Комбо: \"Детское\" x2, Мафия x2, Нежная x1"
+    ]
   },
   {
     "chain": "dodo",
@@ -62,8 +76,10 @@
     "items": 159,
     "valid": 127,
     "excluded": 32,
-    "line1": "4050 g | 2992 rub | 73.9 rub/100g | Latte x1, Americano x2, Raspberry-Dragon Fruit Milkshake x2, Salted Caramel Milkshake x2, Oreo Milkshake x2, Classic Milkshake x2, Strawberry Milkshake x2, Flat white x2, Triple Chocolate Muffin x1",
-    "line2": "4050 g | 2992 rub | 73.9 rub/100g | Latte x1, Americano x2, Raspberry-Dragon Fruit Milkshake x2, Salted Caramel Milkshake x2, Oreo Milkshake x2, Classic Milkshake x2, Strawberry Milkshake x2, Flat white x2, Triple Chocolate Muffin x1",
-    "line3": "3710 g | 2992 rub | 80.6 rub/100g | Pepperoni Fresh x1, Create your own pizza x1, Ice cappuccino x1, Hazelnut Latte x1, Coconut Latte x1, Latte x1, Americano x1, Raspberry-Dragon Fruit Milkshake x1, Salted Caramel Milkshake x1, Oreo Milkshake x1, Classic Milkshake x1, Strawberry Milkshake x1, Chocolate Milkshake x1, Flat white x1"
+    "lines": [
+      "3020 g | 2989 rub | 99.0 rub/100g | Americano x1, Ham and pickles x2, Pepperoni Fresh x2, Garlic Chicken x1, Create your own pizza x2, Salted Caramel Maffin x2, Chicken Nuggets x1",
+      "2850 g | 2995 rub | 105.1 rub/100g | Americano x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Burger pizza x1, Create your own pizza x1, Horseradish Lunchbox x1, Salted Caramel Maffin x1, Curd fritters without topping x1",
+      "2090 g | 2974 rub | 142.3 rub/100g | Americano x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Dodo x1, Cold chicken roll x1"
+    ]
   }
 ]

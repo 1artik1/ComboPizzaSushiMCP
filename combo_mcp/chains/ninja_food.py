@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 """ninja_food.py — парсер Ninja Food (ninjafood.su).
 
-HTTP: HTML 477KB, 224 product cards (div.catalog_element).
-- div.catalog_element: data-id, data-offers (price)
-- span.old_price: старая цена
-- span.new_price: новая цена (текущая)
-- span.name / span.often_ordered_element_name: название товара
-- Категория: из URL или контекста (Ланчи, Пицца, Роллы, Сеты, и т.д.)
-- Вес: НЕТ на сайте → weight_g=None (это нормально)
-- HTTP-only: парсим статический HTML, Playwright не нужен.
+HTTP: главная — 224 карточки товаров (div.catalog_element), вес на сайте
+только на странице товара: JS-объект BITRUCK с 'OFFERS': [{...}] — каждый
+вариант (размер) имеет NAME, PRICE и DISPLAY_PROPERTIES с <dt>Вес</dt><dd>N</dd>.
+Поэтому: 1) главная → список (url, название), 2) параллельно страницы товаров
+→ офферы (варианты) с ценой и весом. HTTP-only, Playwright не нужен.
 """
 
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor
 from bs4 import BeautifulSoup
 from combo_mcp.chains.base import ChainParser, chain, ChainUnavailable
 from combo_mcp import config as mcp_config
@@ -20,7 +19,7 @@ from combo_mcp import http_client
 
 @chain("ninja_food")
 class NinjaFoodParser(ChainParser):
-    """Ninja Food — Bitrix-сайт. HTTP-only, DOM-атрибуты."""
+    """Ninja Food — Bitrix-сайт. HTTP-only, веса со страниц товаров (OFFERS)."""
 
     id = "ninja_food"
     name = "Ниндзя Фуд"
@@ -29,8 +28,13 @@ class NinjaFoodParser(ChainParser):
     description = "Bitrix-сайт. Пицца, роллы, сеты, вок, ланчи."
     needs_playwright = False
 
+    _WORKERS = 2
+    _PAGE_ATTEMPTS = 3
+    _RETRY_ATTEMPTS = 5
+    _RETRY_DELAY = 3.0
+
     def parse(self):
-        """Распарсить меню Ninja Food из HTML."""
+        """Распарсить меню Ninja Food: главная → карточки, страницы → веса."""
         chain_cfg = mcp_config.get_chain(self.id)
         url = chain_cfg.get("url", self.url)
 
@@ -41,18 +45,39 @@ class NinjaFoodParser(ChainParser):
                 "Последняя попытка: " + url
             )
 
-        return self._parse_html(html)
+        cards = self._parse_cards(html)
+        if not cards:
+            raise ChainUnavailable("Ninja Food: на главной не найдено карточек товаров.")
 
-    def _parse_html(self, html):
-        """Parse products from HTML using raw regex + BS4."""
-        soup = BeautifulSoup(html, "html.parser")
-
-        # --- Extract product cards ---
-        # Each card: <div class="catalog_element box" data-id="40868">
-        # Contains: name, old_price, new_price (price)
         products = []
-        seen_names = set()
+        with ThreadPoolExecutor(max_workers=self._WORKERS) as ex:
+            for offers in ex.map(lambda c: self._parse_product_page(c, chain_cfg), cards):
+                products.extend(offers)
 
+        # Последовательный повтор по страницам, которые не ответили (анти-рейт-лимит)
+        missed = [o.get("product_url") for o in products
+                  if not o.get("weight_g") and o.get("product_url")]
+        if missed:
+            urls_to_retry = sorted(set(missed))
+            for u in urls_to_retry:
+                card = next((c for c in cards if c["url"] == u), None)
+                if card is None:
+                    continue
+                offers = self._parse_product_page(card, chain_cfg, retry_attempts=self._RETRY_ATTEMPTS)
+                retried = any(o.get("weight_g") for o in offers)
+                if retried:
+                    for o in offers:
+                        if o.get("weight_g"):
+                            products.append(o)
+                time.sleep(self._RETRY_DELAY)
+        return products
+
+    # ------------------------------------------------------------------ #
+    def _parse_cards(self, html):
+        """Карточки с главной: список {name, url, category, price_rub}."""
+        soup = BeautifulSoup(html, "html.parser")
+        cards = []
+        seen = set()
         for card in soup.find_all("div", class_=True):
             cls = str(card.get("class") or [])
             if "catalog_element" not in cls:
@@ -62,43 +87,137 @@ class NinjaFoodParser(ChainParser):
             if not pid:
                 continue
 
-            # Extract name from <span class="name"> or <span class="often_ordered_element_name">
+            url = ""
             name = None
             for el in card.find_all(["a", "span"], class_=True):
                 el_cls = str(el.get("class") or [])
+                href = str(el.get("href") or "")
                 if "name" in el_cls and "often_ordered" not in el_cls:
                     t = el.get_text().strip()
-                    if t and t not in seen_names:
+                    if t:
                         name = t
-                        seen_names.add(t)
-                        break
+                if href.startswith("/catalog/") and not url:
+                    url = "https://ninjafood.su" + href
 
-            if not name:
-                continue
-
-            # Extract price from .new_price
             price = None
             for el in card.find_all("span", class_=True):
                 el_cls = str(el.get("class") or [])
                 if "new_price" in el_cls:
-                    t = el.get_text() or ""
-                    digits = re.findall(r"\d+", t)
+                    digits = re.findall(r"\d+", el.get_text() or "")
                     if digits:
                         price = int(digits[0])
                     break
 
-            # Skip items without price
-            if price is None:
+            if not name or not url or url in seen:
                 continue
+            seen.add(url)
 
+            m = re.match(r"^https://ninjafood\.su/catalog/([^/]+)/[^/]+/$", url)
+            cards.append({
+                "name": name,
+                "url": url,
+                "category": m.group(1) if m else "Каталог",
+                "price_rub": price,
+            })
+        return cards
+
+    def _parse_product_page(self, card, chain_cfg, retry_attempts=None):
+        """Страница товара → офферы (варианты) с ценой и весом."""
+        attempts = retry_attempts or self._PAGE_ATTEMPTS
+        html = None
+        for attempt in range(attempts):
+            html = http_client.fetch_html(card["url"], chain_cfg)
+            if html is not None and len(html) > 10000:
+                break
+            time.sleep(0.7 * (attempt + 1))
+        if html is None or len(html) <= 10000:
+            return [self._fallback(card, "нет ответа страницы товара")]
+
+        offers = self._extract_offers(html, card)
+        if not offers:
+            return [self._fallback(card, "не найден блок OFFERS")]
+
+        products = []
+        for off in offers:
+            name = off["name"] or card["name"]
             products.append({
                 "name": name,
-                "weight_g": None,
-                "price_rub": price,
-                "is_from_price": False,
+                "weight_g": off["weight_g"],
+                "price_rub": off["price_rub"],
+                "is_from_price": off["is_from_price"],
                 "description": name,
-                "category": "Каталог",
-                "product_url": "",
+                "category": card["category"],
+                "product_url": card["url"],
+                "extra": {"offer_variant": bool(off["name"])},
             })
-
         return products
+
+    @staticmethod
+    def _fallback(card, reason):
+        """Если страница товара не дала весов — позиция без веса (как раньше)."""
+        return {
+            "name": card["name"],
+            "weight_g": None,
+            "price_rub": card.get("price_rub"),
+            "is_from_price": False,
+            "description": f"{card['name']} ({reason})",
+            "category": card["category"],
+            "product_url": card["url"],
+        }
+
+    @staticmethod
+    def _extract_offers(html, card):
+        """Достать из HTML страницы товара список офферов:
+        [{name, price_rub, weight_g, is_from_price}].
+        """
+        m = re.search(r"'OFFERS':\[", html)
+        if not m:
+            return []
+
+        depth = 0
+        i = m.end() - 1
+        while i < len(html):
+            if html[i] == "[":
+                depth += 1
+            elif html[i] == "]":
+                depth -= 1
+                if depth == 0:
+                    break
+            i += 1
+        block = html[m.start():i + 1]
+
+        offers = []
+        for om in re.finditer(r"\{'ID':'\d+','NAME':'", block):
+            start = om.start()
+            depth = 0
+            j = start
+            while j < len(block):
+                if block[j] == "{":
+                    depth += 1
+                elif block[j] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j += 1
+            chunk = block[start:j + 1]
+            off = NinjaFoodParser._parse_offer_chunk(chunk, card)
+            if off:
+                offers.append(off)
+        return offers
+
+    @staticmethod
+    def _parse_offer_chunk(chunk, card):
+        name_m = re.search(r"'NAME':'((?:[^'\\]|\\.)*)'", chunk)
+        price_m = re.search(r"'PRICE':'(\d+)'", chunk)
+        weight_m = re.search(r"Вес<\\?/dt><dd>(\d+)<\\?/dd>", chunk)
+        diff_m = re.search(r"'DISCOUNT_DIFF':'(\d+)'", chunk)
+        if not name_m or not price_m:
+            return None
+        name = name_m.group(1).replace("\\'", "'").replace("\\/", "/").strip()
+        weight = int(weight_m.group(1)) if weight_m else None
+        return {
+            "name": name if name and name != card["name"] else "",
+            "price_rub": int(price_m.group(1)),
+            "weight_g": weight,
+            "is_from_price": bool(diff_m and diff_m.group(1) != "0"),
+        }

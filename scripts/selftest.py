@@ -80,11 +80,10 @@ def run_selftest():
                 continue
 
             # Calculate combos
-            line1, line2, line3 = calculate_combos(valid_items, budget)
-            print(f"  1) {line1}")
-            print(f"  2) {line2}")
-            print(f"  3) {line3}")
-            results.append({"chain": cid, "status": "OK", "items": len(items), "valid": len(valid_items), "excluded": no_weight, "line1": line1, "line2": line2, "line3": line3})
+            lines = calculate_combos(valid_items, budget, persons=1, variations=3)
+            for i, line in enumerate(lines, 1):
+                print(f"  {i}) {line}")
+            results.append({"chain": cid, "status": "OK", "items": len(items), "valid": len(valid_items), "excluded": no_weight, "lines": lines})
 
         except ChainUnavailable as e:
             print(f"  UNAVAILABLE: {e}")

@@ -21,10 +21,8 @@ if cls:
     print(f"Valid (weight>0): {len(valid)}")
     # Try calculate_combos
     try:
-        line1, line2, line3 = calculate_combos(valid, 3000)
-        print(f"Line1: {line1}")
-        print(f"Line2: {line2}")
-        print(f"Line3: {line3}")
+        for i, line in enumerate(calculate_combos(valid, 3000), 1):
+            print(f"Line{i}: {line}")
     except Exception as e:
         print(f"Error: {e}")
         import traceback
@@ -40,10 +38,8 @@ if cls:
     valid = [i for i in items if i.get("weight_g") and i["weight_g"] > 0]
     print(f"Valid (weight>0): {len(valid)}")
     try:
-        line1, line2, line3 = calculate_combos(valid, 3000)
-        print(f"Line1: {line1}")
-        print(f"Line2: {line2}")
-        print(f"Line3: {line3}")
+        for i, line in enumerate(calculate_combos(valid, 3000), 1):
+            print(f"Line{i}: {line}")
     except Exception as e:
         print(f"Error: {e}")
         import traceback
