@@ -5,7 +5,7 @@
 
 ## Структура
 ```
-project\
+
 ├── combo_mcp\          # пакет MCP-сервера
 │   ├── server.py       # точка входа (stdio)
 │   ├── config.py       # конфиг сетей (config\chains_config.json)
@@ -25,16 +25,16 @@ project\
 ## Запуск
 ```powershell
 # MCP-сервер (регистрируется opencode через opencode.json)
-.\.venv\Scripts\python.exe project\combo_mcp\server.py
+.\.venv\Scripts\python.exe combo_mcp\server.py
 
 # Selftest: все сети + эталоны Ла Пиццы (3000₽ → 5100/2800, 4400/2950, 4850/3000)
-.\.venv\Scripts\python.exe project\scripts\selftest.py
+.\.venv\Scripts\python.exe scripts\selftest.py
 
 # GUI-приложение Ла Пицца
-.\.venv\Scripts\python.exe project\gui\la_pizza_app.py
+.\.venv\Scripts\python.exe gui\la_pizza_app.py
 
 # Очистка кэша
-.\.venv\Scripts\python.exe project\scripts\clear_cache.py
+.\.venv\Scripts\python.exe scripts\clear_cache.py
 ```
 
 ## Инструменты MCP (9)

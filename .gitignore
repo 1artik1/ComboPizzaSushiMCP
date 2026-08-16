@@ -28,7 +28,7 @@ env/
 ENV/
 
 # Project runtime data
-project/cache/
+cache/
 
 # Playwright
 .playwright-mcp/
