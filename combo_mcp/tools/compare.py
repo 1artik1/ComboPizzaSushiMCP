@@ -140,19 +140,18 @@ def _strip_size_suffix(name):
 def _build_item_list(items_str, valid_items):
     """'Имя (500 г) x2, Имя x1' -> [{name, count, price, weight}, ...]."""
     import re
+
     by_name = {}
     for it in valid_items:
-        by_name.setdefault(it["_local_name"], it)
+        by_name.setdefault(it["_local_name"], []).append(it)
 
     item_list = []
-    for chunk in items_str.split(","):
-        chunk = chunk.strip()
-        if not chunk:
-            continue
+    for chunk in _split_items_str(items_str):
         m = re.match(r"^(.*?)\s*x(\d+)$", chunk)
         name = _strip_size_suffix(m.group(1).strip()) if m else _strip_size_suffix(chunk)
         cnt = int(m.group(2)) if m else 1
-        it = by_name.get(name)
+        pool = by_name.get(name)
+        it = pool.pop(0) if pool else None
         item_list.append({
             "name": name,
             "count": cnt,
@@ -160,6 +159,25 @@ def _build_item_list(items_str, valid_items):
             "weight": it["weight_g"] if it else None,
         })
     return item_list
+
+
+def _split_items_str(items_str):
+    """Разбить по запятым вне скобок ('НАГГЕТСЫ (9 шт, 20 г/шт)' — одна часть)."""
+    parts, depth, cur = [], 0, ""
+    for ch in items_str:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        if ch == "," and depth == 0:
+            if cur.strip():
+                parts.append(cur.strip())
+            cur = ""
+        else:
+            cur += ch
+    if cur.strip():
+        parts.append(cur.strip())
+    return parts
 
 
 def _load_items(chain_id):

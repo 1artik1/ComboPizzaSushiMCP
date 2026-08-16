@@ -74,18 +74,34 @@ def _strip_size_suffix(name):
 
 
 def _parse_items_str(items_str):
-    """'Имя (500 г) x2, Имя x1' -> [('Имя', 2), ...]"""
+    """'Имя (500 г) x2, Имя x1' -> [('Имя', 2), ...] (запятая в скобках — одна часть)."""
     parts = []
-    for chunk in items_str.split(","):
-        chunk = chunk.strip()
-        if not chunk:
-            continue
+    for chunk in _split_items_str(items_str):
         m = re.match(r"^(.*?)\s*x(\d+)$", chunk)
         if m:
             parts.append((_strip_size_suffix(m.group(1).strip()), int(m.group(2))))
         else:
             parts.append((_strip_size_suffix(chunk), 1))
     return parts
+
+
+def _split_items_str(items_str):
+    """Разбить по запятым вне скобок ('НАГГЕТСЫ (9 шт, 20 г/шт)' — одна часть)."""
+    chunks, depth, cur = [], 0, ""
+    for ch in items_str:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        if ch == "," and depth == 0:
+            if cur.strip():
+                chunks.append(cur.strip())
+            cur = ""
+        else:
+            cur += ch
+    if cur.strip():
+        chunks.append(cur.strip())
+    return chunks
 
 
 # ---------------------------------------------------------------- блок 1-2

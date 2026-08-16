@@ -86,7 +86,7 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
     except Exception as e:
         return json.dumps({"error": f"Ошибка расчёта: {e}"}, ensure_ascii=False)
 
-    variants = [_build_combo_line(line) for line in lines]
+    variants = [_build_combo_line(line, valid_items) for line in lines]
 
     result = {
         "chain_id": chain_id,
@@ -104,11 +104,11 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
-def _build_combo_line(line):
-    """Разобрать строку комбо в структуру."""
+def _build_combo_line(line, valid_items):
+    """Разобрать строку комбо в структуру + список позиций с весом/ценой."""
     parts = line.split(" | ")
     if len(parts) < 4:
-        return {"line": line, "weight_g": 0, "price_rub": 0, "price_per_100g": 0.0, "items": ""}
+        return {"line": line, "weight_g": 0, "price_rub": 0, "price_per_100g": 0.0, "items": "", "items_list": []}
     try:
         weight_str = parts[0].split()[0]
         price_str = parts[1].split()[0]
@@ -120,9 +120,57 @@ def _build_combo_line(line):
             "price_rub": int(price_str),
             "price_per_100g": float(per100),
             "items": items_str,
+            "items_list": _items_list(items_str, valid_items),
         }
     except (ValueError, IndexError):
-        return {"line": line, "weight_g": 0, "price_rub": 0, "price_per_100g": 0.0, "items": ""}
+        return {"line": line, "weight_g": 0, "price_rub": 0, "price_per_100g": 0.0, "items": "", "items_list": []}
+
+
+def _split_items_str(items_str):
+    """Разбить по запятым вне скобок ('НАГГЕТСЫ (9 шт, 20 г/шт)' — одна часть)."""
+    parts, depth, cur = [], 0, ""
+    for ch in items_str:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        if ch == "," and depth == 0:
+            if cur.strip():
+                parts.append(cur.strip())
+            cur = ""
+        else:
+            cur += ch
+    if cur.strip():
+        parts.append(cur.strip())
+    return parts
+
+
+def _items_list(items_str, valid_items):
+    """'Имя (500 г) x2, Имя x1' -> [{name, count, price_rub, weight_g, weight_source}, ...].
+
+    Повторяющиеся имена (одинаковые товары по разным ценам) маппятся по очереди.
+    """
+    import re
+
+    by_name = {}
+    for it in valid_items:
+        by_name.setdefault(it["_local_name"], []).append(it)
+
+    out = []
+    for chunk in _split_items_str(items_str):
+        m = re.match(r"^(.*?)\s*x(\d+)$", chunk)
+        name = re.sub(r"\s*\([^()]*\)\s*$", "", m.group(1).strip()) if m else chunk
+        cnt = int(m.group(2)) if m else 1
+        pool = by_name.get(name)
+        it = pool.pop(0) if pool else None
+        out.append({
+            "name": name,
+            "count": cnt,
+            "price_rub": it["price_rub"] if it else None,
+            "weight_g": it["weight_g"] if it else None,
+            "weight_source": it.get("weight_source") if it else None,
+        })
+    return out
 
 
 def _load_items(chain_id, refresh=False):

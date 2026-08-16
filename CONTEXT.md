@@ -59,6 +59,8 @@ check_price, health_check, compare, get_chain_info, get_chains, clear_cache, ref
 ## Порядок старта сессии
 
 1. `git fetch origin; git log HEAD..origin/main --oneline; git status --short`
-   (проверка коммитов контрибьютора — см. ROADMAP.md «Проверка контрибьютора»)
+   (проверка коммитов контрибьютора — см. ROADMAP.md «Проверка контрибьютора».
+   ВАЖНО: при наличии чужих коммитов — ВСЕГДА спрашивать пользователя, что делать,
+   не вливать и не откатывать самостоятельно.)
 2. `scripts/autotest.py` — убедиться, что база зелёная.
 3. Дальше — по задачам пользователя.
