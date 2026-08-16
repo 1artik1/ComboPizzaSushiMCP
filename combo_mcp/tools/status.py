@@ -5,6 +5,7 @@ import json
 import time
 from combo_mcp.config import get_chain_meta, get_enabled_chain_ids
 from combo_mcp.cache import load_cache
+from combo_mcp.weights import apply_estimated_weights
 
 
 def status():
@@ -19,12 +20,20 @@ def status():
         fetched_at = None
         age_seconds = None
         items_count = 0
+        items_without_weight = None
 
         cache_data = load_cache(cid)
         if cache_data:
             fetched_at = cache_data.get("fetched_at")
             items = cache_data.get("items", [])
             items_count = len(items)
+            items_without_weight = 0
+            if items:
+                items, _ = apply_estimated_weights(items, cid)
+                items_without_weight = sum(
+                    1 for it in items
+                    if not (it.get("weight_g") or 0) > 0 and (it.get("price_rub") or 0) > 0
+                )
             if fetched_at:
                 age_seconds = time.time() - fetched_at
 
@@ -36,6 +45,7 @@ def status():
             "fetched_at": fetched_at,
             "age_seconds": age_seconds,
             "items_count": items_count,
+            "items_without_weight": items_without_weight,
         }
         result.append(entry)
 

@@ -6,11 +6,13 @@
 """
 
 import json
+from collections import Counter
 from combo_mcp.engines.dp import calculate_combos
 from combo_mcp.engines.taste import count_ingredients
 from combo_mcp.config import get_chain_meta, get_chain_class
 from combo_mcp.cache import load_cache, save_cache
 from combo_mcp.chains.base import ChainUnavailable
+from combo_mcp.weights import apply_estimated_weights
 
 
 def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
@@ -45,13 +47,16 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
     if items is None:
         return json.dumps({"error": "Нет позиций в кэше и парсинг не удался"}, ensure_ascii=False)
 
+    # Apply reference book for items without weight
+    items, estimated_count = apply_estimated_weights(items, chain_id)
+
     # Filter: must have valid weight_g > 0
     no_weight_count = 0
     valid_items = []
     for it in items:
         w = it.get("weight_g")
         if w is not None and w > 0:
-            valid_items.append(dict(it))
+            valid_items.append(it)
         else:
             no_weight_count += 1
 
@@ -62,6 +67,7 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
             "persons": persons,
             "total_items_parsed": len(items),
             "items_with_weight": 0,
+            "items_estimated_from_reference": estimated_count,
             "items_without_weight_excluded": no_weight_count,
             "error": f"Нет позиций с весом для {chain_id} ({len(items)} всего, {no_weight_count} без веса).",
         }, ensure_ascii=False, indent=2)
@@ -86,7 +92,9 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
         "variations_returned": len(variants),
         "total_items_parsed": len(items),
         "items_with_weight": len(valid_items),
+        "items_estimated_from_reference": estimated_count,
         "items_without_weight_excluded": no_weight_count,
+        "weight_sources": dict(Counter(it.get("weight_source", "none") for it in items)),
         "combos": variants,
     }
     return json.dumps(result, ensure_ascii=False, indent=2)

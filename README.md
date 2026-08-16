@@ -1,6 +1,6 @@
 # Combo Engine MCP Server
 
-Расчёт выгодных комбо по сетям доставки Воронежа. MCP-сервер + GUI-приложение + библиотека парсеров.
+Расчёт выгодных комбо по сетям доставки Воронежа. MCP-сервер + библиотека парсеров.
 Всё изолировано в venv: зависимости и браузер Playwright лежат внутри `.venv\` (система не затрагивается).
 
 ## Структура
@@ -11,14 +11,15 @@
 │   ├── config.py       # конфиг сетей (config\chains_config.json)
 │   ├── cache.py        # дисковый кэш + stale-if-error
 │   ├── http_client.py  # requests-обёртка (UA, ретраи, куки)
-│   ├── playwright_client.py  # ленивый браузер
+│   ├── playwright_client.py  # ленивый браузер (фолбэк dodo)
+│   ├── weights.py      # справочник расчётных весов (config\estimated_weights.json)
 │   ├── engines\        # dp.py (комбо), taste.py (вкусность), drinks.py (напитки)
 │   ├── chains\         # 1 файл = 1 сеть (@chain("id"))
 │   └── tools\          # 1 файл = 1 инструмент MCP
-├── gui\la_pizza_app.py # GUI-приложение Ла Пицца
 ├── scripts\            # selftest.py, autotest.py, smoke_test.py, gen_expected.py
 ├── tests\expected.json # эталоны для autotest
 ├── config\chains_config.json
+├── config\estimated_weights.json  # веса позиций без веса на сайте (с источником)
 ├── cache\              # создаётся автоматически
 └── archive\            # старые файлы + референсы разведки (recon\)
 ```
@@ -36,9 +37,6 @@
 
 # Smoke-тест реального MCP-протокола (10 инструментов)
 .\.venv\Scripts\python.exe scripts\smoke_test.py
-
-# GUI-приложение Ла Пицца
-.\.venv\Scripts\python.exe gui\la_pizza_app.py
 
 # Очистка кэша
 .\.venv\Scripts\python.exe scripts\clear_cache.py
@@ -79,5 +77,8 @@
 (см. существующие инструменты) — `server.py` не трогается.
 
 ## Правила данных
-- Вес — только реальный из сайта (иначе `weight_g: None`, позиция исключается из расчёта комбо).
+- Вес позиции: с сайта/API (weight_source `site`), из названия размера (`size_name`,
+  pizza_kuba), из справочника `config\estimated_weights.json` (`reference`, поле `source` —
+  откуда взят вес) или отсутствует (`none`).
+- Позиции без веса исключаются из расчёта комбо (мерч, палочки — намеренно).
 - Недоступные сети честно помечаются в `list_chains`/`compare` с причиной.

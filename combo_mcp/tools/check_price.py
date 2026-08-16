@@ -5,6 +5,7 @@ import json
 from combo_mcp.config import get_chain_meta, get_chain_class
 from combo_mcp.cache import save_cache
 from combo_mcp.chains.base import ChainUnavailable
+from combo_mcp.weights import apply_estimated_weights
 
 
 def check_price(chain_id, item_name, expected_price=None):
@@ -26,6 +27,9 @@ def check_price(chain_id, item_name, expected_price=None):
     except Exception as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
+    # Apply reference book for items without weight
+    items, _ = apply_estimated_weights(items, chain_id)
+
     # Find by substring
     matches = [it for it in items if item_name.lower() in it["name"].lower()]
 
@@ -42,6 +46,7 @@ def check_price(chain_id, item_name, expected_price=None):
         entry = {
             "name": it["name"],
             "weight_g": it.get("weight_g"),
+            "weight_source": it.get("weight_source", "none"),
             "price_rub": it["price_rub"],
             "found": True,
         }

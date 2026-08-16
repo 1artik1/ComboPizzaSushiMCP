@@ -10,11 +10,41 @@ HTTP: главная — 224 карточки товаров (div.catalog_elemen
 
 import re
 import time
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from bs4 import BeautifulSoup
 from combo_mcp.chains.base import ChainParser, chain, ChainUnavailable
 from combo_mcp import config as mcp_config
 from combo_mcp import http_client
+
+
+class _RateGate:
+    """Общий адаптивный рейт-лимит между потоками.
+
+    Пауза перед каждым запросом растёт при неудачах (рейт-лимит сайта)
+    и плавно спадает при успехах. Защита от бана при параллельном обходе.
+    """
+
+    def __init__(self, min_delay=0.15, max_delay=2.5):
+        self._lock = threading.Lock()
+        self._delay = min_delay
+        self._min = min_delay
+        self._max = max_delay
+        self._consecutive_failures = 0
+
+    def wait(self):
+        with self._lock:
+            d = self._delay
+        time.sleep(d)
+
+    def report(self, ok):
+        with self._lock:
+            if ok:
+                self._consecutive_failures = 0
+                self._delay = max(self._min, self._delay * 0.7)
+            else:
+                self._consecutive_failures += 1
+                self._delay = min(self._max, self._delay * 1.6)
 
 
 @chain("ninja_food")
@@ -49,9 +79,10 @@ class NinjaFoodParser(ChainParser):
         if not cards:
             raise ChainUnavailable("Ninja Food: на главной не найдено карточек товаров.")
 
+        gate = _RateGate()
         products = []
         with ThreadPoolExecutor(max_workers=self._WORKERS) as ex:
-            for offers in ex.map(lambda c: self._parse_product_page(c, chain_cfg), cards):
+            for offers in ex.map(lambda c: self._parse_product_page(c, chain_cfg, gate=gate), cards):
                 products.extend(offers)
 
         # Последовательный повтор по страницам, которые не ответили (анти-рейт-лимит)
@@ -63,7 +94,8 @@ class NinjaFoodParser(ChainParser):
                 card = next((c for c in cards if c["url"] == u), None)
                 if card is None:
                     continue
-                offers = self._parse_product_page(card, chain_cfg, retry_attempts=self._RETRY_ATTEMPTS)
+                offers = self._parse_product_page(card, chain_cfg, gate=gate,
+                                                  retry_attempts=self._RETRY_ATTEMPTS)
                 retried = any(o.get("weight_g") for o in offers)
                 if retried:
                     for o in offers:
@@ -121,13 +153,21 @@ class NinjaFoodParser(ChainParser):
             })
         return cards
 
-    def _parse_product_page(self, card, chain_cfg, retry_attempts=None):
-        """Страница товара → офферы (варианты) с ценой и весом."""
+    def _parse_product_page(self, card, chain_cfg, gate=None, retry_attempts=None):
+        """Страница товара → офферы (варианты) с ценой и весом.
+
+        gate — _RateGate: пауза перед запросом и реакция на неудачи.
+        """
         attempts = retry_attempts or self._PAGE_ATTEMPTS
         html = None
         for attempt in range(attempts):
+            if gate:
+                gate.wait()
             html = http_client.fetch_html(card["url"], chain_cfg)
-            if html is not None and len(html) > 10000:
+            ok = html is not None and len(html) > 10000
+            if gate:
+                gate.report(ok)
+            if ok:
                 break
             time.sleep(0.7 * (attempt + 1))
         if html is None or len(html) <= 10000:

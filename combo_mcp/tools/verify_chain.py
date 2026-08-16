@@ -6,6 +6,7 @@ from collections import Counter
 from combo_mcp.config import get_chain_meta, get_chain_class
 from combo_mcp.cache import load_cache, save_cache
 from combo_mcp.chains.base import ChainUnavailable
+from combo_mcp.weights import apply_estimated_weights
 
 
 def verify_chain(chain_id):
@@ -20,6 +21,8 @@ def verify_chain(chain_id):
         return json.dumps({"error": "Не удалось загрузить позиции"}, ensure_ascii=False)
 
     issues = []
+    items, estimated_count = apply_estimated_weights(items, chain_id)
+    weight_sources = dict(Counter(it.get("weight_source", "none") for it in items))
     with_weight = sum(1 for it in items if it.get("weight_g") and it["weight_g"] > 0)
     without_weight = len(items) - with_weight
 
@@ -45,6 +48,8 @@ def verify_chain(chain_id):
         "total_items": len(items),
         "with_weight": with_weight,
         "without_weight": without_weight,
+        "items_estimated_from_reference": estimated_count,
+        "weight_sources": weight_sources,
         "from_prices": len(from_prices),
         "duplicates": duplicates,
         "weight_anomalies": len(weight_anomalies),

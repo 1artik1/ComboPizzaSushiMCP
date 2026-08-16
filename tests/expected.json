@@ -16,10 +16,10 @@
           "items": "Курица-Бекон x1, Курица Чили x1"
         },
         {
-          "weight_g": 2600,
-          "price_rub": 1500,
-          "price_per_100g": 57.7,
-          "items": "Жюльен x1, Курица Чили x2"
+          "weight_g": 2800,
+          "price_rub": 1450,
+          "price_per_100g": 51.8,
+          "items": "Курица Чили x2, Мексиканская x1"
         }
       ],
       "1500_2": [
@@ -36,10 +36,10 @@
           "items": "Курица-Бекон x1, Курица Чили x1"
         },
         {
-          "weight_g": 2600,
-          "price_rub": 1500,
-          "price_per_100g": 57.7,
-          "items": "Жюльен x1, Курица Чили x2"
+          "weight_g": 2800,
+          "price_rub": 1450,
+          "price_per_100g": 51.8,
+          "items": "Курица Чили x2, Мексиканская x1"
         }
       ],
       "3000_1": [
@@ -86,128 +86,164 @@
     "pizza_kuba": {
       "1500_1": [
         {
-          "weight_g": 2100,
-          "price_rub": 1370,
-          "price_per_100g": 65.2,
-          "items": "НАПИТОК ДОБРЫЙ x1, ЭЛЬ-ЮНКЕ x1, ЧИЗКЕЙК КЛУБНИЧНЫЙ x1"
+          "weight_g": 1450,
+          "price_rub": 860,
+          "price_per_100g": 59.3,
+          "items": "НАПИТОК ДОБРЫЙ x1, ЛУКОВЫЕ КОЛЬЦА x3"
+        },
+        {
+          "weight_g": 2260,
+          "price_rub": 1500,
+          "price_per_100g": 66.4,
+          "items": "НАПИТОК ДОБРЫЙ x1, ЭЛЬ-ЮНКЕ x1, КАРТОШКА ПО-ДЕРЕВЕНСКИ x1, ТЫСЯЧА ОСТРОВОВ x1, СЫРНЫЙ x1"
+        },
+        {
+          "weight_g": 2260,
+          "price_rub": 1500,
+          "price_per_100g": 66.4,
+          "items": "НАПИТОК ДОБРЫЙ x1, ЭЛЬ-ЮНКЕ x1, КАРТОШКА ПО-ДЕРЕВЕНСКИ x1, ТЫСЯЧА ОСТРОВОВ x2"
         }
       ],
       "1500_2": [
         {
-          "weight_g": 3000,
-          "price_rub": 1320,
-          "price_per_100g": 44.0,
-          "items": "НАПИТОК ДОБРЫЙ x1, СОК ПЕРСИК x1, ЭЛЬ-ЮНКЕ x1"
+          "weight_g": 2450,
+          "price_rub": 1060,
+          "price_per_100g": 43.3,
+          "items": "НАПИТОК ДОБРЫЙ x1, СОК ПЕРСИК x1, ЛУКОВЫЕ КОЛЬЦА x3"
+        },
+        {
+          "weight_g": 3090,
+          "price_rub": 1470,
+          "price_per_100g": 47.6,
+          "items": "НАПИТОК ДОБРЫЙ x1, СОК ПЕРСИК x1, ЭЛЬ-ЮНКЕ x1, ТЫСЯЧА ОСТРОВОВ x1, СЫРНЫЙ x1, БАРБЕКЮ x1"
+        },
+        {
+          "weight_g": 3090,
+          "price_rub": 1470,
+          "price_per_100g": 47.6,
+          "items": "НАПИТОК ДОБРЫЙ x1, СОК ПЕРСИК x1, ЭЛЬ-ЮНКЕ x1, ТЫСЯЧА ОСТРОВОВ x2, СЫРНЫЙ x1"
         }
       ],
       "3000_1": [
         {
-          "weight_g": 3300,
-          "price_rub": 2820,
-          "price_per_100g": 85.5,
-          "items": "НАПИТОК ДОБРЫЙ x1, ЭЛЬ-ЮНКЕ x2, ЧИЗКЕЙК КЛУБНИЧНЫЙ x2, ЧИЗКЕЙК ШОКОЛАДНЫЙ x1"
+          "weight_g": 1450,
+          "price_rub": 860,
+          "price_per_100g": 59.3,
+          "items": "НАПИТОК ДОБРЫЙ x1, ЛУКОВЫЕ КОЛЬЦА x3"
         },
         {
-          "weight_g": 3300,
-          "price_rub": 2820,
-          "price_per_100g": 85.5,
-          "items": "НАПИТОК ДОБРЫЙ x1, ЭЛЬ-ЮНКЕ x1, МАМБО x1, ЧИЗКЕЙК КЛУБНИЧНЫЙ x1, ЧИЗКЕЙК ШОКОЛАДНЫЙ x1, ЧИЗКЕЙК NEW YORK x1"
+          "weight_g": 3590,
+          "price_rub": 2960,
+          "price_per_100g": 82.5,
+          "items": "НАПИТОК ДОБРЫЙ x1, ЭЛЬ-ЮНКЕ x1, МАМБО x1, ЛУКОВЫЕ КОЛЬЦА x1, НАГГЕТСЫ x1, КАРТОШКА ПО-ДЕРЕВЕНСКИ x1, ТЫСЯЧА ОСТРОВОВ x1, СЫРНЫЙ x1"
+        },
+        {
+          "weight_g": 3610,
+          "price_rub": 2960,
+          "price_per_100g": 82.0,
+          "items": "НАПИТОК ДОБРЫЙ x1, ЭЛЬ-ЮНКЕ x2, НАГГЕТСЫ x1, КАРТОШКА ПО-ДЕРЕВЕНСКИ x2, ТЫСЯЧА ОСТРОВОВ x1"
         }
       ],
       "3000_2": [
         {
-          "weight_g": 4200,
-          "price_rub": 2770,
-          "price_per_100g": 66.0,
-          "items": "НАПИТОК ДОБРЫЙ x1, СОК ПЕРСИК x1, ЭЛЬ-ЮНКЕ x2, ЧИЗКЕЙК КЛУБНИЧНЫЙ x2"
+          "weight_g": 2450,
+          "price_rub": 1060,
+          "price_per_100g": 43.3,
+          "items": "НАПИТОК ДОБРЫЙ x1, СОК ПЕРСИК x1, ЛУКОВЫЕ КОЛЬЦА x3"
         },
         {
-          "weight_g": 4200,
-          "price_rub": 2770,
-          "price_per_100g": 66.0,
-          "items": "НАПИТОК ДОБРЫЙ x1, СОК ПЕРСИК x1, ЭЛЬ-ЮНКЕ x1, МАМБО x1, ЧИЗКЕЙК КЛУБНИЧНЫЙ x1, ЧИЗКЕЙК ШОКОЛАДНЫЙ x1"
+          "weight_g": 4470,
+          "price_rub": 2980,
+          "price_per_100g": 66.7,
+          "items": "НАПИТОК ДОБРЫЙ x1, СОК ПЕРСИК x1, ЭЛЬ-ЮНКЕ x1, МАМБО x1, НАГГЕТСЫ x1, КАРТОШКА ПО-ДЕРЕВЕНСКИ x1, ТЫСЯЧА ОСТРОВОВ x1, СЫРНЫЙ x1, БАРБЕКЮ x1"
+        },
+        {
+          "weight_g": 4490,
+          "price_rub": 2980,
+          "price_per_100g": 66.4,
+          "items": "НАПИТОК ДОБРЫЙ x1, СОК ПЕРСИК x1, ЭЛЬ-ЮНКЕ x2, КАРТОШКА ПО-ДЕРЕВЕНСКИ x2, ТЫСЯЧА ОСТРОВОВ x2, СЫРНЫЙ x1"
         }
       ]
     },
     "ninja_food": {
       "1500_1": [
         {
-          "weight_g": 1570,
-          "price_rub": 1497,
-          "price_per_100g": 95.4,
-          "items": "Морс Клюквенный x1, Вок Удон курица грибы x1, Курица Терияки 40см ТТ x1"
-        },
-        {
-          "weight_g": 2105,
-          "price_rub": 1495,
-          "price_per_100g": 71.0,
-          "items": "Морс Клюквенный x1, Ланч \\\"Сила внутри\\\" x1, Ланч \\\"Тайм-аут\\\" x1, Суп Куриный x1, Соус Фирменный x1"
-        },
-        {
           "weight_g": 2110,
           "price_rub": 1456,
           "price_per_100g": 69.0,
-          "items": "Морс Клюквенный x1, Ланч \\\"Тайм-аут\\\" x2, Удон с овощами x1"
+          "items": "Добрый апельсин витамин С 1л x1, Вок Удон курица грибы x2, Курица Терияки 25см x1"
+        },
+        {
+          "weight_g": 2720,
+          "price_rub": 1496,
+          "price_per_100g": 55.0,
+          "items": "Добрый апельсин витамин С 1л x1, Ланч \\\"Сила внутри\\\" x1, Ланч \\\"Тайм-аут\\\" x1, Удон с овощами x1, Соевый соус 40г x1"
+        },
+        {
+          "weight_g": 2740,
+          "price_rub": 1496,
+          "price_per_100g": 54.6,
+          "items": "Добрый апельсин витамин С 1л x1, Ланч \\\"Тайм-аут\\\" x2, Онигири с крабом x1, Соевый соус 40г x2"
         }
       ],
       "1500_2": [
         {
-          "weight_g": 1560,
-          "price_rub": 1444,
-          "price_per_100g": 92.6,
-          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Вок Удон курица грибы x3, Луковые кольца 8шт x1"
+          "weight_g": 2840,
+          "price_rub": 1355,
+          "price_per_100g": 47.7,
+          "items": "Добрый апельсин витамин С 1л x1, Добрый лимон-лайм 1л x1, Вок Удон курица грибы x3"
         },
         {
-          "weight_g": 2220,
-          "price_rub": 1484,
-          "price_per_100g": 66.8,
-          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Ланч \\\"Тайм-аут\\\" x1, Онигири с крабом x1, Мисо суп с курицей x1, Суп Куриный x1"
+          "weight_g": 3500,
+          "price_rub": 1475,
+          "price_per_100g": 42.1,
+          "items": "Добрый апельсин витамин С 1л x1, Добрый лимон-лайм 1л x1, Ланч \\\"Тайм-аут\\\" x1, Мисо суп с курицей x1, Суп Куриный x1"
         },
         {
-          "weight_g": 2260,
-          "price_rub": 1465,
-          "price_per_100g": 64.8,
-          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Ланч \\\"Тайм-аут\\\" x2, Онигири с крабом x1"
+          "weight_g": 3580,
+          "price_rub": 1496,
+          "price_per_100g": 41.8,
+          "items": "Добрый апельсин витамин С 1л x1, Добрый лимон-лайм 1л x1, Ланч \\\"Тайм-аут\\\" x2, Соевый соус 40г x1"
         }
       ],
       "3000_1": [
         {
-          "weight_g": 2875,
-          "price_rub": 2824,
-          "price_per_100g": 98.2,
-          "items": "Морс Клюквенный x1, Вок Удон курица грибы x3, Курица Терияки 40см x1, Курочка темпура хот x1"
+          "weight_g": 3575,
+          "price_rub": 2884,
+          "price_per_100g": 80.7,
+          "items": "Добрый апельсин витамин С 1л x1, Вок Удон курица грибы x3, Курица Терияки 40см x1, Курочка темпура хот x1"
         },
         {
-          "weight_g": 3990,
-          "price_rub": 2967,
-          "price_per_100g": 74.4,
-          "items": "Морс Клюквенный x1, Ланч \\\"Тайм-аут\\\" x1, Набор из 3 пицц 33см x1"
+          "weight_g": 4600,
+          "price_rub": 2974,
+          "price_per_100g": 64.7,
+          "items": "Добрый апельсин витамин С 1л x1, Ланч \\\"Сила внутри\\\" x1, Ланч \\\"Тайм-аут\\\" x1, От Дона 40см x1, Мисо суп с курицей x1, Суп Куриный x1"
         },
         {
-          "weight_g": 4060,
-          "price_rub": 2994,
-          "price_per_100g": 73.7,
-          "items": "Морс Клюквенный x1, Ланч \\\"Тайм-аут\\\" x2, Чизбургер 40см x1, Суп Куриный x2"
+          "weight_g": 4700,
+          "price_rub": 2974,
+          "price_per_100g": 63.3,
+          "items": "Добрый апельсин витамин С 1л x1, Ланч \\\"Тайм-аут\\\" x2, Пеперони 40см x1, Суп Куриный x2"
         }
       ],
       "3000_2": [
         {
-          "weight_g": 3175,
-          "price_rub": 2933,
-          "price_per_100g": 92.4,
-          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Вок Удон курица грибы x3, Курица Терияки 40см x1, Курочка темпура хот x1"
+          "weight_g": 4260,
+          "price_rub": 2654,
+          "price_per_100g": 62.3,
+          "items": "Добрый апельсин витамин С 1л x1, Добрый лимон-лайм 1л x1, Вок Удон курица грибы x3, Курица Терияки 40см x1"
         },
         {
-          "weight_g": 4160,
-          "price_rub": 2983,
-          "price_per_100g": 71.7,
-          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Ланч \\\"Сила внутри\\\" x1, Ланч \\\"Тайм-аут\\\" x1, Пеперони 40см x1, Мисо суп с курицей x1, Суп Куриный x1"
+          "weight_g": 5400,
+          "price_rub": 2994,
+          "price_per_100g": 55.4,
+          "items": "Добрый апельсин витамин С 1л x1, Добрый лимон-лайм 1л x1, Ланч \\\"Сила внутри\\\" x1, Ланч \\\"Тайм-аут\\\" x1, Нежная 40см x1, Удон с овощами x1, Соевый соус 40г x1"
         },
         {
-          "weight_g": 4240,
-          "price_rub": 2991,
-          "price_per_100g": 70.5,
-          "items": "Морс Клюквенный x1, Морс Смородиновый x1, Ланч \\\"Сила внутри\\\" x1, Ланч \\\"Тайм-аут\\\" x2, Мисо суп с курицей x2, Суп Куриный x2"
+          "weight_g": 5460,
+          "price_rub": 2962,
+          "price_per_100g": 54.2,
+          "items": "Добрый апельсин витамин С 1л x1, Добрый лимон-лайм 1л x1, Ланч \\\"Сила внутри\\\" x2, Ланч \\\"Тайм-аут\\\" x2, Удон с овощами x1, Суп Куриный x1"
         }
       ]
     },
@@ -256,10 +292,10 @@
           "items": "Морской x1, Морская (сливочная основа) x1, Удон с курицей и беконом x1, Сэндвич с беконом x1"
         },
         {
-          "weight_g": 2655,
-          "price_rub": 2968,
-          "price_per_100g": 111.8,
-          "items": "Морской x1, Морская (сливочная основа) x1, Огурец x1, Рамен с курицей x1, Рамен со свининой x1"
+          "weight_g": 2665,
+          "price_rub": 2988,
+          "price_per_100g": 112.1,
+          "items": "Морской x1, Морская (сливочная основа) x1, Огурец x1, Тяхан вегетарианский x1, Рамен с курицей x1, Соевый соус x1, Васаби x1"
         },
         {
           "weight_g": 2690,
@@ -436,82 +472,82 @@
     "dodo": {
       "1500_1": [
         {
-          "weight_g": 1640,
-          "price_rub": 1497,
-          "price_per_100g": 91.3,
-          "items": "Americano x1, Pepperoni Fresh x2, Create your own pizza x2"
+          "weight_g": 6040,
+          "price_rub": 1473,
+          "price_per_100g": 24.4,
+          "items": "BonaAqua Still Water x1, Dobry Lemon-Lime x2, Dobry Kiwi-Grapes x1, Nectar Dobry Multifruit x2, Nectar Dobry Apple-Cherry-Chokeberry x2, Condensed milk x2, Nectar Dobry Multifruit x2"
         },
         {
-          "weight_g": 1550,
-          "price_rub": 1496,
-          "price_per_100g": 96.5,
-          "items": "Americano x1, Ham and pickles x1, Pepperoni Fresh x1, Create your own pizza x1, Cold chicken roll x1, Salted Caramel Maffin x1"
+          "weight_g": 4515,
+          "price_rub": 1482,
+          "price_per_100g": 32.8,
+          "items": "BonaAqua Still Water x1, Create your own pizza x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Nectar Dobry Multifruit x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Salted Caramel Maffin x1, Raspberry sauce x1, Condensed milk x1, Nectar Dobry Multifruit x1"
         },
         {
-          "weight_g": 1200,
-          "price_rub": 1487,
-          "price_per_100g": 123.9,
-          "items": "Americano x1, Roman-style pesto x1, Julienne x1, Curd fritters without topping x1"
+          "weight_g": 4440,
+          "price_rub": 1488,
+          "price_per_100g": 33.5,
+          "items": "BonaAqua Still Water x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Nectar Dobry Multifruit x1, Nectar Dobry Multifruit x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Burger pizza x1, Condensed milk x1"
         }
       ],
       "1500_2": [
         {
-          "weight_g": 1700,
+          "weight_g": 6065,
+          "price_rub": 1498,
+          "price_per_100g": 24.7,
+          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Dobry Lemon-Lime x2, Nectar Dobry Multifruit x2, Nectar Dobry Apple-Cherry-Chokeberry x2, Raspberry sauce x1, Condensed milk x2, Nectar Dobry Multifruit x2"
+        },
+        {
+          "weight_g": 4910,
           "price_rub": 1499,
-          "price_per_100g": 88.2,
-          "items": "Americano x1, Flat white x1, Pepperoni Fresh x1, Create your own pizza x2, Salted Caramel Maffin x2"
+          "price_per_100g": 30.5,
+          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Pepperoni Fresh x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Nectar Dobry Multifruit x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Condensed milk x1, Nectar Dobry Multifruit x1, Condensed milk x1"
         },
         {
-          "weight_g": 1605,
-          "price_rub": 1471,
-          "price_per_100g": 91.7,
-          "items": "Americano x1, Flat white x1, Ham and pickles x1, Pepperoni Fresh x1, Create your own pizza x1, Salted Caramel Maffin x1, Raspberry sauce x1"
-        },
-        {
-          "weight_g": 1260,
-          "price_rub": 1456,
-          "price_per_100g": 115.6,
-          "items": "Americano x1, Flat white x1, Roman-style pesto x1, Julienne x1"
+          "weight_g": 4895,
+          "price_rub": 1499,
+          "price_per_100g": 30.6,
+          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Nectar Dobry Multifruit x1, Nectar Dobry Multifruit x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Pepperoni Fresh x1, Raspberry sauce x1"
         }
       ],
       "3000_1": [
         {
-          "weight_g": 3020,
-          "price_rub": 2989,
-          "price_per_100g": 99.0,
-          "items": "Americano x1, Ham and pickles x2, Pepperoni Fresh x2, Garlic Chicken x1, Create your own pizza x2, Salted Caramel Maffin x2, Chicken Nuggets x1"
+          "weight_g": 8690,
+          "price_rub": 2990,
+          "price_per_100g": 34.4,
+          "items": "BonaAqua Still Water x1, Pepperoni Fresh x1, Create your own pizza x2, Dobry Lemon-Lime x2, Dobry Kiwi-Grapes x2, Dobry Orange x2, Nectar Dobry Multifruit x2, Nectar Dobry Apple-Cherry-Chokeberry x2, Salted Caramel Maffin x1, Nectar Dobry Multifruit x2"
         },
         {
-          "weight_g": 2850,
-          "price_rub": 2995,
-          "price_per_100g": 105.1,
-          "items": "Americano x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Burger pizza x1, Create your own pizza x1, Horseradish Lunchbox x1, Salted Caramel Maffin x1, Curd fritters without topping x1"
+          "weight_g": 5910,
+          "price_rub": 2991,
+          "price_per_100g": 50.6,
+          "items": "BonaAqua Still Water x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Create your own pizza x1, Hashbrowns x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Nectar Dobry Multifruit x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Salted Caramel Maffin x1, Nectar Dobry Multifruit x1"
         },
         {
-          "weight_g": 2090,
-          "price_rub": 2974,
-          "price_per_100g": 142.3,
-          "items": "Americano x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Dodo x1, Cold chicken roll x1"
+          "weight_g": 5440,
+          "price_rub": 2985,
+          "price_per_100g": 54.9,
+          "items": "BonaAqua Still Water x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Nectar Dobry Multifruit x1, Nectar Dobry Multifruit x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Salted Caramel Maffin x1, Condensed milk x1"
         }
       ],
       "3000_2": [
         {
-          "weight_g": 3100,
-          "price_rub": 2979,
-          "price_per_100g": 96.1,
-          "items": "Americano x1, Flat white x1, Ham and pickles x2, Pepperoni Fresh x2, Garlic Chicken x1, Create your own pizza x2, Salted Caramel Maffin x2"
+          "weight_g": 9070,
+          "price_rub": 2986,
+          "price_per_100g": 32.9,
+          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Pepperoni Fresh x1, Create your own pizza x2, Dobry Lemon-Lime x2, Dobry Kiwi-Grapes x2, Dobry Orange x2, Nectar Dobry Multifruit x2, Nectar Dobry Apple-Cherry-Chokeberry x2, Nectar Dobry Multifruit x2"
         },
         {
-          "weight_g": 2930,
-          "price_rub": 2994,
-          "price_per_100g": 102.2,
-          "items": "Americano x1, Flat white x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Burger pizza x1, Create your own pizza x1, Cold chicken roll x1, Salted Caramel Maffin x1, Curd fritters without topping x1"
+          "weight_g": 6330,
+          "price_rub": 2987,
+          "price_per_100g": 47.2,
+          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Create your own pizza x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Nectar Dobry Multifruit x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Salted Caramel Maffin x1, Nectar Dobry Multifruit x1"
         },
         {
-          "weight_g": 2170,
-          "price_rub": 2998,
-          "price_per_100g": 138.2,
-          "items": "Americano x1, Flat white x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Dodo x1, Raspberry sauce x1, Thousand Island x1"
+          "weight_g": 5820,
+          "price_rub": 2981,
+          "price_per_100g": 51.2,
+          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Nectar Dobry Multifruit x1, Nectar Dobry Multifruit x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Condensed milk x1"
         }
       ]
     }

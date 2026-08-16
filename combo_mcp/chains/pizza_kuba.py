@@ -145,13 +145,17 @@ class PizzaKubaParser(ChainParser):
 
                 # Parse weight: item_massa → размер минимальной цены → любой размер
                 weight = None
+                weight_source = "none"
                 massa = item.get("item_massa", "")
                 if isinstance(massa, str) and massa.strip():
                     m = re.search(r"(\d+)", massa)
                     if m:
                         weight = int(m.group(1))
+                        weight_source = "site"
                 if weight is None:
                     weight = self._weight_from_sizes(item.get("prices"), price)
+                    if weight:
+                        weight_source = "size_name"
 
                 # Parse description
                 description = item.get("item_description", "").strip()
@@ -161,6 +165,7 @@ class PizzaKubaParser(ChainParser):
                 products.append({
                     "name": name,
                     "weight_g": weight,
+                    "weight_source": weight_source,
                     "price_rub": price,
                     "is_from_price": True,
                     "description": description,
