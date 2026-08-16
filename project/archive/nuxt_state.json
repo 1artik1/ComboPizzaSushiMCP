@@ -1,0 +1,1932 @@
+[
+  [
+    "ShallowReactive",
+    1
+  ],
+  {
+    "data": 2,
+    "state": 49,
+    "once": 65,
+    "_errors": 69,
+    "serverRendered": 71,
+    "path": 72,
+    "pinia": 73
+  },
+  [
+    "ShallowReactive",
+    3
+  ],
+  {
+    "banners:2014": 4
+  },
+  [
+    5,
+    10,
+    15,
+    19,
+    23,
+    27,
+    32,
+    36,
+    40,
+    44
+  ],
+  {
+    "id": 6,
+    "name": 7,
+    "url": 8,
+    "image": 9
+  },
+  "20438",
+  "ЧИЗКЕЙК",
+  "",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/2000kh754bez1768580449.jpg?w=1280",
+  {
+    "id": 11,
+    "name": 12,
+    "url": 13,
+    "image": 14
+  },
+  "17065",
+  "ВАКАНСИИ",
+  "https://job.pizzacuba.ru/",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/personal2000kh7541728916431.jpg?w=1280",
+  {
+    "id": 16,
+    "name": 17,
+    "url": 8,
+    "image": 18
+  },
+  "4079",
+  "ЭЛЬ ЮНКЕ",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/2000kh7541728916404.jpg?w=1280",
+  {
+    "id": 20,
+    "name": 21,
+    "url": 8,
+    "image": 22
+  },
+  "4041",
+  "Новинки Батиска",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/batistakrevetka2000kh7541728746351.jpg?w=1280",
+  {
+    "id": 24,
+    "name": 25,
+    "url": 8,
+    "image": 26
+  },
+  "3966",
+  "Минус 100 рублей при самовывозе с каждой пиццы!",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/skidka100v1708786525.png?w=1280",
+  {
+    "id": 28,
+    "name": 29,
+    "url": 30,
+    "image": 31
+  },
+  "11674",
+  "Телеграм канал",
+  "https://t.me/pizzacuba_channel",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/telegram22000kh7551751363874.jpg?w=1280",
+  {
+    "id": 33,
+    "name": 34,
+    "url": 8,
+    "image": 35
+  },
+  "3881",
+  "-10 % от 3500 рублей",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/bannersayt71767338516.jpg?w=1280",
+  {
+    "id": 37,
+    "name": 38,
+    "url": 8,
+    "image": 39
+  },
+  "11431",
+  "ЗАКУСКИ",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/2000kh754zakuskivor1736889738.png?w=1280",
+  {
+    "id": 41,
+    "name": 42,
+    "url": 42,
+    "image": 43
+  },
+  "3882",
+  "Доставки бесплатно",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/2000kh754261767338714.jpg?w=1280",
+  {
+    "id": 45,
+    "name": 46,
+    "url": 47,
+    "image": 48
+  },
+  "4080",
+  "Мы в ВК",
+  "https://vk.com/cubavrn/",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/vkontaktecuba1v1708786156.png?w=1280",
+  [
+    "Reactive",
+    50
+  ],
+  {
+    "$srightColumnIsCollaped": 51,
+    "$sshowDesktopNav": 51,
+    "$scityModal": 51,
+    "$sswiperRegistered": 51,
+    "$sswiperLoading": 51,
+    "$sswiperModules": 52,
+    "$ssavedScroll-leftSidebar": 54,
+    "$srobots:bot-context": 55,
+    "$ssite-config": 57
+  },
+  false,
+  [
+    "ShallowRef",
+    53
+  ],
+  [],
+  0,
+  {
+    "isBot": 51,
+    "userAgent": 56
+  },
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  {
+    "_priority": 58,
+    "env": 62,
+    "name": 63,
+    "url": 64
+  },
+  {
+    "name": 59,
+    "env": 60,
+    "url": 61
+  },
+  -10,
+  -15,
+  -4,
+  "production",
+  "nuxt-app",
+  "https://pizzeriacuba.ru/",
+  [
+    "Set",
+    66,
+    67,
+    68
+  ],
+  "$tCAjRWmLl_",
+  "$xl57sF_rv2",
+  "$h7PtF1Ni0X",
+  [
+    "ShallowReactive",
+    70
+  ],
+  {
+    "banners:2014": -1,
+    "showcase_": -1
+  },
+  true,
+  "/",
+  {
+    "app": 74,
+    "order": 546,
+    "auth": 562,
+    "cordova": 568,
+    "vk": 571,
+    "telegram": 575,
+    "max": 577,
+    "catalog": 580,
+    "customer": 592,
+    "toast": 599,
+    "cart": 603
+  },
+  {
+    "deviceId": 75,
+    "cookieMerchantKey": 77,
+    "merchant": 79,
+    "parentMerchant": 540,
+    "merchantSettings": 541,
+    "merchantLoaded": 542,
+    "merchantLoading": 543,
+    "merchantId": 545
+  },
+  [
+    "Ref",
+    76
+  ],
+  "b5892bf4-2dc3-4a16-a40c-e84b61de8d17",
+  [
+    "EmptyRef",
+    78
+  ],
+  "_",
+  [
+    "Ref",
+    80
+  ],
+  [
+    "Reactive",
+    81
+  ],
+  {
+    "id": 82,
+    "name": 83,
+    "domains": 84,
+    "city": 87,
+    "region": 88,
+    "useRegionForAddressSuggestions": 71,
+    "isManyMerchants": 51,
+    "coordinates": 89,
+    "merchantKey": 92,
+    "countryCode": 93,
+    "timezone": 94,
+    "contactPhones": 95,
+    "logo": 98,
+    "favicon": 99,
+    "salePoints": 100,
+    "customPages": 187,
+    "categories": 212,
+    "seo": 254,
+    "seoCatalog": 259,
+    "apps": 263,
+    "social": 266,
+    "orderTypes": 270,
+    "branches": 277,
+    "theme": 296,
+    "themeSettings": 338,
+    "workingHours": 367,
+    "orderFields": 383,
+    "messages": 400,
+    "currency": 402,
+    "auth": 405,
+    "asapOnly": 71,
+    "services": 408,
+    "customContent": 429,
+    "whiteLabelDisabled": 51,
+    "deliveryZones": 434,
+    "deliveryZonesEnabled": 71,
+    "bonusesSystemDisabled": 71,
+    "orderProgress": 51,
+    "mobileApps": 505,
+    "reviews": 512,
+    "promocodeDisabled": 71,
+    "stories": 513,
+    "hideSales": 51,
+    "hideArticles": 71,
+    "sameTimeForAllDeliveryZones": 71,
+    "orderTimes": 514,
+    "orderReleaseTime": 346,
+    "deliveryTimeReserve": 526,
+    "pickupTime": 527,
+    "hideOrderTimer": 51,
+    "serviceFee": 528,
+    "loyaltyConstructor": 529,
+    "units": 530,
+    "giftsEnabled": 51,
+    "additionalSets": 539,
+    "bonusSystemEnabled": 51,
+    "whiteLabel": 71,
+    "promocodeIsActive": 51
+  },
+  2014,
+  "Куба Воронеж",
+  [
+    85,
+    86
+  ],
+  "pizzeriacuba.ru",
+  "resto2014.ve-oblako.ru",
+  "Воронеж",
+  "Воронежская область",
+  [
+    90,
+    91
+  ],
+  39.195948643899534,
+  51.69989478812758,
+  "6be77015e90108fda45c894f345a5769",
+  "RU",
+  "Europe/Moscow",
+  [
+    96,
+    97
+  ],
+  "222-16-16",
+  "+7 952 955-26-16",
+  "https://vsem-edu-oblako.ru/upload/store/merchant2014/32132132131734964674.png?w=600&h=450",
+  "https://image.vsem-edu-oblako.ru/upload/store/merchant2014/faviconv20251763055715.png",
+  [
+    101,
+    111,
+    124,
+    137,
+    146,
+    157,
+    166,
+    179
+  ],
+  {
+    "id": 102,
+    "name": 103,
+    "address": 104,
+    "deliveryZones": 105,
+    "coordinates": 107,
+    "dinein": 51,
+    "default": 51,
+    "timeSettings": 110
+  },
+  1060,
+  "БЕГОВАЯ 2/3",
+  "Воронеж, Беговая улица, 2/3",
+  [
+    106
+  ],
+  "Беговая",
+  {
+    "latitude": 108,
+    "longitude": 109
+  },
+  51.699408,
+  39.195212,
+  null,
+  {
+    "id": 112,
+    "name": 113,
+    "address": 114,
+    "deliveryZones": 115,
+    "coordinates": 121,
+    "dinein": 51,
+    "default": 51,
+    "timeSettings": 110
+  },
+  1061,
+  "ТУПОЛЕВА 27А",
+  "Воронежская Область Город Воронеж Улица Туполева 27а",
+  [
+    116,
+    117,
+    118,
+    119,
+    120
+  ],
+  "Александровка (2) +200",
+  "Александровка +200",
+  "Масловка +200",
+  "Туполева",
+  "Туполева +100",
+  {
+    "latitude": 122,
+    "longitude": 123
+  },
+  51.63626254562359,
+  39.27266215344211,
+  {
+    "id": 125,
+    "name": 126,
+    "address": 127,
+    "deliveryZones": 128,
+    "coordinates": 134,
+    "dinein": 51,
+    "default": 51,
+    "timeSettings": 110
+  },
+  1621,
+  "ЛЕНИНСКИЙ ПР-Т 215",
+  "ленинский проспект 215",
+  [
+    129,
+    130,
+    131,
+    132,
+    133
+  ],
+  "Ленинский +100",
+  "Ленинский(2) +100",
+  "Ленинский",
+  "Ленинский + 200",
+  "Ленинский(3) +100",
+  {
+    "latitude": 135,
+    "longitude": 136
+  },
+  51.70226133243405,
+  39.27394298412976,
+  {
+    "id": 138,
+    "name": 139,
+    "address": 140,
+    "deliveryZones": 141,
+    "coordinates": 143,
+    "dinein": 51,
+    "default": 51,
+    "timeSettings": 110
+  },
+  2640,
+  "ЧАПАЕВА 31В",
+  "Воронеж, улица Чапаева, 31В",
+  [
+    142
+  ],
+  "Чапаева",
+  {
+    "latitude": 144,
+    "longitude": 145
+  },
+  51.641815,
+  39.186399,
+  {
+    "id": 147,
+    "name": 148,
+    "address": 149,
+    "deliveryZones": 150,
+    "coordinates": 154,
+    "dinein": 51,
+    "default": 51,
+    "timeSettings": 110
+  },
+  3850,
+  "МОСКОВСКИЙ ПР-Т 82",
+  "Московский проспект, 82",
+  [
+    151,
+    152,
+    153
+  ],
+  "МП+100",
+  "МП Дальний +100",
+  "МП",
+  {
+    "latitude": 155,
+    "longitude": 156
+  },
+  51.70163,
+  39.182725,
+  {
+    "id": 158,
+    "name": 159,
+    "address": 160,
+    "deliveryZones": 161,
+    "coordinates": 163,
+    "dinein": 51,
+    "default": 51,
+    "timeSettings": 110
+  },
+  4037,
+  "ЛЕНИНСКИЙ ПР-Т 16",
+  "ленинский проспект 16",
+  [
+    162
+  ],
+  "ВОГРЭС",
+  {
+    "latitude": 164,
+    "longitude": 165
+  },
+  51.6382382226552,
+  39.2354696368459,
+  {
+    "id": 167,
+    "name": 168,
+    "address": 169,
+    "deliveryZones": 170,
+    "coordinates": 176,
+    "dinein": 51,
+    "default": 51,
+    "timeSettings": 110
+  },
+  5112,
+  "КЛЮЧНИКОВА 1",
+  "Ключникова, 1",
+  [
+    171,
+    172,
+    173,
+    174,
+    175
+  ],
+  "Шилово",
+  "Шилово +200",
+  "Шилово - 2",
+  "Шилово (лев.берег) +200",
+  "Шилово(2) +200",
+  {
+    "latitude": 177,
+    "longitude": 178
+  },
+  51.56814290117772,
+  39.12227538161422,
+  {
+    "id": 180,
+    "name": 181,
+    "address": 182,
+    "deliveryZones": 183,
+    "coordinates": 184,
+    "dinein": 51,
+    "default": 51,
+    "timeSettings": 110
+  },
+  5601,
+  "ВОЛГОГРАДСКАЯ 45",
+  "волгоградская улица 45",
+  [
+    119,
+    120
+  ],
+  {
+    "latitude": 185,
+    "longitude": 186
+  },
+  51.64386281375699,
+  39.2678551362447,
+  [
+    188,
+    192,
+    196,
+    200,
+    204,
+    208
+  ],
+  {
+    "id": 189,
+    "name": 190,
+    "slug": 191
+  },
+  4220,
+  "Доставка и оплата",
+  "dostavka-i-oplata",
+  {
+    "id": 193,
+    "name": 194,
+    "slug": 195
+  },
+  4449,
+  "Контакты",
+  "kontakty",
+  {
+    "id": 197,
+    "name": 198,
+    "slug": 199
+  },
+  5367,
+  "О компании",
+  "o-kompanii",
+  {
+    "id": 201,
+    "name": 202,
+    "slug": 203
+  },
+  7278,
+  "Условия обслуживания",
+  "usloviia-obsluzivaniia",
+  {
+    "id": 205,
+    "name": 206,
+    "slug": 207
+  },
+  10422,
+  "Работа в Кубе",
+  "rabota-v-kube",
+  {
+    "id": 209,
+    "name": 210,
+    "slug": 211
+  },
+  12652,
+  "Благотворительность",
+  "blagotvoritelnost",
+  [
+    213,
+    222,
+    230,
+    238,
+    246
+  ],
+  {
+    "id": 214,
+    "name": 215,
+    "h1": 216,
+    "slug": 217,
+    "image": 218,
+    "description": 110,
+    "status": 219,
+    "children": 220,
+    "position": 221
+  },
+  10046065,
+  "Пиццы",
+  "Пицца с доставкой по Воронежу",
+  "pizza",
+  "https://image.vsem-edu-oblako.ru/upload/store/merchant2014/elyunke21759227577.png?w=600&h=450",
+  "publish",
+  [],
+  1,
+  {
+    "id": 223,
+    "name": 224,
+    "h1": 225,
+    "slug": 226,
+    "image": 227,
+    "description": 110,
+    "status": 219,
+    "children": 228,
+    "position": 229
+  },
+  10046066,
+  "Закуски",
+  "Закуски и горячие блюда к пицце",
+  "zakuski",
+  "https://image.vsem-edu-oblako.ru/upload/store/merchant2014/kalmar21759227409.png?w=600&h=450",
+  [],
+  2,
+  {
+    "id": 231,
+    "name": 232,
+    "h1": 233,
+    "slug": 234,
+    "image": 235,
+    "description": 110,
+    "status": 219,
+    "children": 236,
+    "position": 237
+  },
+  10163676,
+  "Соусы",
+  "Соусы к закускам и к пицце",
+  "sousi",
+  "https://image.vsem-edu-oblako.ru/upload/store/merchant2014/syrnyi1776857723.png?w=600&h=450",
+  [],
+  3,
+  {
+    "id": 239,
+    "name": 240,
+    "h1": 241,
+    "slug": 242,
+    "image": 243,
+    "description": 110,
+    "status": 219,
+    "children": 244,
+    "position": 245
+  },
+  10046067,
+  "Напитки",
+  "Напитки и соки от Пицца Куба",
+  "napitki",
+  "https://image.vsem-edu-oblako.ru/upload/store/merchant2014/multik1741695099.png?w=600&h=450",
+  [],
+  4,
+  {
+    "id": 247,
+    "name": 248,
+    "h1": 249,
+    "slug": 250,
+    "image": 251,
+    "description": 110,
+    "status": 219,
+    "children": 252,
+    "position": 253
+  },
+  10145995,
+  "Десерты",
+  "Десерты и сладости Пицца Куба",
+  "deserti",
+  "https://image.vsem-edu-oblako.ru/upload/store/merchant2014/chizkeykklubnika21759227485.png?w=600&h=450",
+  [],
+  5,
+  {
+    "title": 255,
+    "description": 256,
+    "keywords": 257,
+    "h1": 258
+  },
+  "Доставка пиццы в Воронеже 24/7 — заказать пиццу на дом | Пицца Куба",
+  "Закажите вкусную пиццу с доставкой на дом в Воронеже 24 часа. Большой выбор пиццы, акции, комбо, бесплатная доставка, горячая пицца и быстрая доставка по всем районам Воронежа.",
+  "пицца воронеж доставка, заказать пиццу воронеж, пицца куба воронеж, доставка еды воронеж, пицца на дом воронеж, горячая пицца воронеж, доставка пиццы круглосуточно, пицца куба меню, самовывоз пиццы воронеж, пицца куба телефон, заказать пиццу воронеж",
+  "Пицца Куба — Круглосуточная доставка пиццы в Воронеже",
+  {
+    "title": 260,
+    "description": 261,
+    "keywords": 262
+  },
+  "Меню Пицца Куба Воронеж — пиццы, закуски, напитки и десерты",
+  "Полное меню Пицца Куба в Воронеже: вкуснейшие пиццы, хрустящие закуски, напитки и десерты. Бесплатная доставка по городу от одной пиццы!",
+  "меню пицца куба, доставка пиццы воронеж, пицца и закуски, заказать пиццу воронеж, десерты куба, доставка еды воронеж, пицца куба меню, доставка напитков, комбо пицца воронеж, самовывоз пиццы",
+  {
+    "android": 264,
+    "ios": 265
+  },
+  "https://app.vsem-edu.ru/merchant/2014/app",
+  "https://apps.apple.com/ru/app/%D0%BF%D0%B8%D1%86%D1%86%D0%B0-%D0%BA%D1%83%D0%B1%D0%B0/id1591609904",
+  {
+    "vk": 267,
+    "telegram": 268,
+    "whatsapp": 110,
+    "ok": 110,
+    "youtube": 110,
+    "max": 269,
+    "instagram": 110,
+    "facebook": 110
+  },
+  "https://vk.com/cubavrn",
+  "https://t.me/pizzacuba",
+  "https://max.ru/u/f9LHodD0cOIaCi8ATcX8IVzLPc1770DfSJF6zTmIm2k2eH3fYW7s6UbImpo",
+  [
+    271,
+    274
+  ],
+  {
+    "label": 272,
+    "code": 273
+  },
+  "Доставка",
+  "delivery",
+  {
+    "label": 275,
+    "code": 276
+  },
+  "Самовывоз",
+  "pickup",
+  [
+    278,
+    284,
+    290
+  ],
+  {
+    "id": 279,
+    "name": 280,
+    "city": 281,
+    "merchantKey": 282,
+    "domain": 283
+  },
+  2068,
+  "Куба Калуга",
+  "Калуга",
+  "d3370f8cddd2ba5edc91de1017841f56",
+  "klg.pizzeriacuba.ru",
+  {
+    "id": 285,
+    "name": 286,
+    "city": 287,
+    "merchantKey": 288,
+    "domain": 289
+  },
+  3440,
+  "Куба Рязань",
+  "Рязань",
+  "0cf6b3f575a8538bffc93c46cdb4dd31",
+  "ryz.pizzeriacuba.ru",
+  {
+    "id": 291,
+    "name": 292,
+    "city": 293,
+    "merchantKey": 294,
+    "domain": 295
+  },
+  2065,
+  "Куба Тула",
+  "Тула",
+  "d4a5c998188feff7e14fa46a4f64cd22",
+  "tula.pizzeriacuba.ru",
+  {
+    "desktop": 297,
+    "mobile": 325
+  },
+  {
+    "primaryColor": 298,
+    "fontFamily": 299,
+    "borderRadiusRatio": 300,
+    "dark": 51,
+    "productCard": 301,
+    "carouselProductCard": 303,
+    "header": 304,
+    "footer": 306,
+    "background": 308,
+    "homePage": 310,
+    "images": 317,
+    "showQRCode": 51,
+    "leftColumn": 319,
+    "rightColumn": 320,
+    "addressSelectRequired": 51,
+    "categoryDescriptionPosition": 321,
+    "categoryCard": 322,
+    "showLeadTime": 71,
+    "productDetailsMode": 324,
+    "showLastOrderedProducts": 51
+  },
+  "#F44336",
+  "Roboto",
+  0.5,
+  {
+    "type": 302
+  },
+  "default",
+  {
+    "type": 302
+  },
+  {
+    "type": 305
+  },
+  "minimalistic",
+  {
+    "type": 307
+  },
+  "logoLeft",
+  {
+    "fixed": 51,
+    "image": 110,
+    "color": 309
+  },
+  "#ffffff",
+  {
+    "products": 311,
+    "categories": 312,
+    "stories": 313,
+    "banners": 314,
+    "addressSelect": 315,
+    "search": 316
+  },
+  {
+    "show": 71
+  },
+  {
+    "show": 51
+  },
+  {
+    "show": 71
+  },
+  {
+    "show": 71
+  },
+  {
+    "show": 71
+  },
+  {
+    "show": 71
+  },
+  {
+    "objectFit": 318
+  },
+  "contain",
+  {
+    "hide": 51
+  },
+  {
+    "collapsed": 51
+  },
+  "top",
+  {
+    "type": 323
+  },
+  "small",
+  "page",
+  {
+    "primaryColor": 298,
+    "fontFamily": 299,
+    "borderRadiusRatio": 300,
+    "dark": 51,
+    "productCard": 326,
+    "carouselProductCard": 327,
+    "homePage": 328,
+    "background": 335,
+    "images": 336,
+    "showQRCode": 51,
+    "addressSelectRequired": 51,
+    "categoryDescriptionPosition": 321,
+    "categoryCard": 337,
+    "showLeadTime": 71,
+    "showLastOrderedProducts": 51
+  },
+  {
+    "type": 302
+  },
+  {
+    "type": 302
+  },
+  {
+    "products": 329,
+    "categories": 330,
+    "stories": 331,
+    "banners": 332,
+    "addressSelect": 333,
+    "search": 334
+  },
+  {
+    "show": 71
+  },
+  {
+    "show": 51
+  },
+  {
+    "show": 71
+  },
+  {
+    "show": 71
+  },
+  {
+    "show": 51
+  },
+  {
+    "show": 51
+  },
+  {
+    "fixed": 51,
+    "image": 110,
+    "color": 309
+  },
+  {
+    "objectFit": 318
+  },
+  {
+    "type": 323
+  },
+  {
+    "style": 339,
+    "homePage": 349,
+    "catalog": 362
+  },
+  {
+    "desktop": 340,
+    "mobile": 347
+  },
+  {
+    "color": 298,
+    "color_custom": 341,
+    "font": 299,
+    "custom_font": 8,
+    "colorScheme": 342,
+    "backgroundOption": 343,
+    "borderRadius": 346
+  },
+  "#000000",
+  "light",
+  {
+    "type": 344,
+    "imageUrl": 345
+  },
+  "standard",
+  "https://image.vsem-edu-oblako.ru/upload/store/merchant2014/theme/fonsayt7.jpg",
+  "50",
+  {
+    "color": 298,
+    "color_custom": 341,
+    "font": 299,
+    "custom_font": 8,
+    "colorScheme": 342,
+    "backgroundOption": 348,
+    "borderRadius": 346
+  },
+  {
+    "type": 344,
+    "imageUrl": 345
+  },
+  {
+    "desktop": 350,
+    "mobile": 359
+  },
+  {
+    "headerDisplay": 351,
+    "sliderType": 352,
+    "menuDisplay": 353,
+    "footerDisplay": 354,
+    "bg": 309,
+    "addrReq": 355,
+    "placeHorizontal": 8,
+    "hideRight": 8,
+    "dishInCarousel": 356,
+    "cookingTime": 357,
+    "categoryTile": 323,
+    "recentOrder": 358
+  },
+  "minimal",
+  "both",
+  "carousel",
+  "left",
+  "can_skip",
+  "short",
+  "output",
+  "dont_output",
+  {
+    "sliderType": 352,
+    "menuDisplay": 353,
+    "turnQR": 360,
+    "search": 361,
+    "addrAndDT": 361,
+    "addrReq": 355,
+    "bg": 309,
+    "dishInCarousel": 356,
+    "cookingTime": 357,
+    "categoryTile": 323,
+    "recentOrder": 358
+  },
+  "off",
+  "hide",
+  {
+    "desktop": 363,
+    "mobile": 366
+  },
+  {
+    "dishCardDisplay": 356,
+    "imageDisplayMode": 318,
+    "descriptionPosition": 364,
+    "openFullItem": 365
+  },
+  "up",
+  "detailed",
+  {
+    "dishCardDisplay": 356,
+    "imageDisplayMode": 318,
+    "descriptionPosition": 364
+  },
+  [
+    368,
+    371,
+    373,
+    375,
+    377,
+    379,
+    381
+  ],
+  {
+    "day": 369,
+    "hours": 370
+  },
+  "monday",
+  "10:00 — 00:00 / 00:01 — 09:00",
+  {
+    "day": 372,
+    "hours": 370
+  },
+  "tuesday",
+  {
+    "day": 374,
+    "hours": 370
+  },
+  "wednesday",
+  {
+    "day": 376,
+    "hours": 370
+  },
+  "thursday",
+  {
+    "day": 378,
+    "hours": 370
+  },
+  "friday",
+  {
+    "day": 380,
+    "hours": 370
+  },
+  "saturday",
+  {
+    "day": 382,
+    "hours": 370
+  },
+  "sunday",
+  {
+    "building": 384,
+    "entrance": 386,
+    "doorphone": 388,
+    "floor": 390,
+    "flat": 392,
+    "persons": 394,
+    "call": 396,
+    "carNumber": 398
+  },
+  {
+    "active": 51,
+    "label": 385
+  },
+  "Корпус",
+  {
+    "active": 71,
+    "label": 387
+  },
+  "Подъезд",
+  {
+    "active": 51,
+    "label": 389
+  },
+  "Домофон",
+  {
+    "active": 71,
+    "label": 391
+  },
+  "Этаж",
+  {
+    "active": 71,
+    "label": 393
+  },
+  "Квартира",
+  {
+    "active": 51,
+    "label": 395
+  },
+  "Кол-во персон",
+  {
+    "active": 51,
+    "label": 397
+  },
+  "Не перезванивать",
+  {
+    "active": 51,
+    "label": 399
+  },
+  "Номер авто",
+  {
+    "successfulOrder": 401
+  },
+  "Спасибо, ваш заказ принят в обработку. Ожидайте звонка оператора.",
+  {
+    "code": 403,
+    "symbol": 404
+  },
+  "RUB",
+  "₽",
+  {
+    "onlyFree": 51,
+    "required": 51,
+    "telegram": 71,
+    "vk": 71,
+    "recaptcha": 51,
+    "flashCall": 51,
+    "personalTelegram": 406,
+    "yandex": 51,
+    "max": 71
+  },
+  {
+    "botName": 407
+  },
+  "pizzeriacubaBot",
+  {
+    "ymaps": 409,
+    "onesignal": 411,
+    "yandexAppMetrica": 413,
+    "yandexMetrica": 415,
+    "yandexSmartCaptcha": 417,
+    "yandexAuth": 418,
+    "topMailRu": 419,
+    "cdp": 420,
+    "yandexReviewsCounter": 421,
+    "2gisReviewsCounter": 423,
+    "vk": 425,
+    "maxAuth": 426,
+    "gtm": 428
+  },
+  {
+    "apiKey": 410,
+    "apiKeyJS": 110
+  },
+  "8192b3bd-5721-464d-9565-2a835953ef5f",
+  {
+    "appId": 412
+  },
+  "964da79d-7f0e-4983-a570-1cdf66923009",
+  {
+    "apiKey": 414
+  },
+  "7dcf10b7-eed3-4f34-918e-b33f5423f206",
+  {
+    "counterId": 416
+  },
+  "95576129",
+  {
+    "clientKey": 110
+  },
+  {
+    "enable": 110,
+    "clientId": 110
+  },
+  {
+    "id": 8
+  },
+  {
+    "isActive": 71,
+    "sourceId": 8,
+    "scriptUrl": 110,
+    "apiUrl": 110
+  },
+  {
+    "id": 422
+  },
+  "241500081030",
+  {
+    "id": 424
+  },
+  "70000001084172700",
+  {
+    "clientId": 110
+  },
+  {
+    "botUrl": 427
+  },
+  "https://max.ru/id366236577710_bot",
+  {
+    "key": 8
+  },
+  {
+    "js": 8,
+    "html": 8,
+    "metaTags": 430
+  },
+  [
+    431
+  ],
+  {
+    "name": 432,
+    "content": 433
+  },
+  "yandex-verification",
+  "8c8232cede97f86c",
+  [
+    435,
+    440,
+    442,
+    447,
+    452,
+    455,
+    458,
+    461,
+    464,
+    466,
+    470,
+    473,
+    475,
+    478,
+    480,
+    482,
+    484,
+    487,
+    490,
+    492,
+    494,
+    496,
+    498,
+    501
+  ],
+  {
+    "name": 142,
+    "displayName": 436,
+    "disabled": 51,
+    "deliveryCost": 54,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 438,
+    "payments": 439
+  },
+  "Бесплатная",
+  "60",
+  900,
+  [],
+  {
+    "name": 171,
+    "displayName": 436,
+    "disabled": 51,
+    "deliveryCost": 54,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 438,
+    "payments": 441
+  },
+  [],
+  {
+    "name": 172,
+    "displayName": 443,
+    "disabled": 51,
+    "deliveryCost": 444,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 445,
+    "payments": 446
+  },
+  "Платная +200",
+  200,
+  3501,
+  [],
+  {
+    "name": 151,
+    "displayName": 448,
+    "disabled": 51,
+    "deliveryCost": 449,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 450,
+    "payments": 451
+  },
+  "Платная",
+  100,
+  2501,
+  [],
+  {
+    "name": 116,
+    "displayName": 443,
+    "disabled": 51,
+    "deliveryCost": 444,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 453,
+    "payments": 454
+  },
+  35001,
+  [],
+  {
+    "name": 129,
+    "displayName": 448,
+    "disabled": 51,
+    "deliveryCost": 449,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 456,
+    "payments": 457
+  },
+  2499,
+  [],
+  {
+    "name": 117,
+    "displayName": 459,
+    "disabled": 51,
+    "deliveryCost": 444,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 453,
+    "payments": 460
+  },
+  "Платная  +200",
+  [],
+  {
+    "name": 118,
+    "displayName": 462,
+    "disabled": 51,
+    "deliveryCost": 444,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 453,
+    "payments": 463
+  },
+  "Платная +200 ",
+  [],
+  {
+    "name": 162,
+    "displayName": 436,
+    "disabled": 51,
+    "deliveryCost": 54,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 438,
+    "payments": 465
+  },
+  [],
+  {
+    "name": 467,
+    "displayName": 448,
+    "disabled": 51,
+    "deliveryCost": 449,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 468,
+    "payments": 469
+  },
+  "Труда +100",
+  2500,
+  [],
+  {
+    "name": 471,
+    "displayName": 436,
+    "disabled": 51,
+    "deliveryCost": 54,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 438,
+    "payments": 472
+  },
+  "Труда",
+  [],
+  {
+    "name": 106,
+    "displayName": 436,
+    "disabled": 51,
+    "deliveryCost": 54,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 438,
+    "payments": 474
+  },
+  [],
+  {
+    "name": 476,
+    "displayName": 448,
+    "disabled": 51,
+    "deliveryCost": 449,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 468,
+    "payments": 477
+  },
+  "Труда дальний  +100",
+  [],
+  {
+    "name": 152,
+    "displayName": 448,
+    "disabled": 51,
+    "deliveryCost": 449,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 468,
+    "payments": 479
+  },
+  [],
+  {
+    "name": 173,
+    "displayName": 436,
+    "disabled": 51,
+    "deliveryCost": 54,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 438,
+    "payments": 481
+  },
+  [],
+  {
+    "name": 130,
+    "displayName": 448,
+    "disabled": 51,
+    "deliveryCost": 449,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 468,
+    "payments": 483
+  },
+  [],
+  {
+    "name": 174,
+    "displayName": 443,
+    "disabled": 51,
+    "deliveryCost": 444,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 485,
+    "payments": 486
+  },
+  3500,
+  [],
+  {
+    "name": 153,
+    "displayName": 488,
+    "disabled": 51,
+    "deliveryCost": 54,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 438,
+    "payments": 489
+  },
+  "Бесплатная ",
+  [],
+  {
+    "name": 131,
+    "displayName": 436,
+    "disabled": 51,
+    "deliveryCost": 54,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 438,
+    "payments": 491
+  },
+  [],
+  {
+    "name": 132,
+    "displayName": 448,
+    "disabled": 51,
+    "deliveryCost": 444,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 445,
+    "payments": 493
+  },
+  [],
+  {
+    "name": 133,
+    "displayName": 448,
+    "disabled": 51,
+    "deliveryCost": 449,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 468,
+    "payments": 495
+  },
+  [],
+  {
+    "name": 175,
+    "displayName": 443,
+    "disabled": 51,
+    "deliveryCost": 444,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 485,
+    "payments": 497
+  },
+  [],
+  {
+    "name": 499,
+    "displayName": 436,
+    "disabled": 51,
+    "deliveryCost": 54,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 438,
+    "payments": 500
+  },
+  "Волгоградская",
+  [],
+  {
+    "name": 502,
+    "displayName": 503,
+    "disabled": 51,
+    "deliveryCost": 449,
+    "deliveryTime": 437,
+    "minOrderSum": 438,
+    "freeDeliverySum": 468,
+    "payments": 504
+  },
+  "Волгоград +100",
+  "Платная +100",
+  [],
+  {
+    "android": 506,
+    "ios": 509,
+    "button": 510,
+    "desktopWidget": 511
+  },
+  {
+    "logo": 507,
+    "name": 508,
+    "url": 264,
+    "description": 8,
+    "apk": 110,
+    "ruStoreUrl": 264,
+    "googlePlayUrl": 110
+  },
+  "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/4a/08/b5/4a08b5db-979c-4367-10ac-3e0c5433ce8c/AppIcon-0-0-1x_U007emarketing-0-11-0-0-85-220.png/200x200ia-75.webp",
+  "Пицца Куба",
+  {
+    "logo": 507,
+    "name": 508,
+    "url": 265,
+    "description": 8
+  },
+  {
+    "text": 8
+  },
+  {
+    "isActive": 51,
+    "title": 110,
+    "description": 110,
+    "image": 110
+  },
+  {
+    "enabled": 51,
+    "foodRating": 51
+  },
+  [],
+  {
+    "delivery": 515,
+    "pickup": 518,
+    "kitchenPressure": 520,
+    "customTimeSettings": 51
+  },
+  {
+    "time": 516,
+    "interval": 517
+  },
+  50,
+  40,
+  {
+    "time": 519,
+    "interval": 519
+  },
+  15,
+  {
+    "delivery": 521,
+    "pickup": 524
+  },
+  {
+    "time": 522,
+    "interval": 523
+  },
+  20,
+  60,
+  {
+    "time": 525,
+    "interval": 523
+  },
+  30,
+  "40",
+  "15",
+  {
+    "isActive": 51
+  },
+  {
+    "active": 71
+  },
+  [
+    531,
+    533,
+    535,
+    537
+  ],
+  {
+    "id": 221,
+    "label": 532
+  },
+  "г",
+  {
+    "id": 229,
+    "label": 534
+  },
+  "кг.",
+  {
+    "id": 237,
+    "label": 536
+  },
+  "л.",
+  {
+    "id": 245,
+    "label": 538
+  },
+  "мл.",
+  {
+    "enabled": 51,
+    "settings": 110
+  },
+  [
+    "EmptyRef",
+    78
+  ],
+  [
+    "EmptyRef",
+    78
+  ],
+  [
+    "Ref",
+    71
+  ],
+  [
+    "EmptyRef",
+    544
+  ],
+  "false",
+  [
+    "Ref",
+    82
+  ],
+  {
+    "dateList": 547,
+    "form": 550,
+    "addressModal": 555,
+    "addressModalRedirectAfterSuccess": 556,
+    "dateTimeDialog": 557,
+    "showCarNumber": 558,
+    "carNumber": 559,
+    "carNumberRegion": 561
+  },
+  [
+    "Ref",
+    548
+  ],
+  [
+    "Reactive",
+    549
+  ],
+  [],
+  [
+    "Ref",
+    551
+  ],
+  [
+    "Reactive",
+    552
+  ],
+  {
+    "orderTypeCode": 273,
+    "asap": 71,
+    "persons": 54,
+    "address": 553,
+    "utm": 554
+  },
+  {},
+  {},
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "EmptyRef",
+    78
+  ],
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "Ref",
+    71
+  ],
+  [
+    "EmptyRef",
+    560
+  ],
+  "\"\"",
+  [
+    "EmptyRef",
+    560
+  ],
+  {
+    "token": 563,
+    "isAuthenticated": 565,
+    "authModal": 566,
+    "pushToken": 567
+  },
+  [
+    "EmptyRef",
+    564
+  ],
+  "null",
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "EmptyRef",
+    78
+  ],
+  {
+    "isCordovaApp": 569,
+    "deviceReady": 570
+  },
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "EmptyRef",
+    544
+  ],
+  {
+    "isVkApp": 572,
+    "groupId": 573,
+    "vkBridge": 574
+  },
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "EmptyRef",
+    564
+  ],
+  [
+    "EmptyRef",
+    564
+  ],
+  {
+    "isTelegramApp": 576
+  },
+  [
+    "EmptyRef",
+    544
+  ],
+  {
+    "isMaxApp": 578,
+    "bridge": 579
+  },
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "EmptyRef",
+    564
+  ],
+  {
+    "productModal": 581,
+    "productId": 582,
+    "productList": 583,
+    "observableCategories": 584,
+    "productsRating": 587,
+    "cartIndex": 588,
+    "categoryScheduleResults": 589
+  },
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "EmptyRef",
+    564
+  ],
+  [
+    "EmptyRef",
+    564
+  ],
+  [
+    "Ref",
+    585
+  ],
+  [
+    "Reactive",
+    586
+  ],
+  [
+    "Map"
+  ],
+  [
+    "EmptyRef",
+    564
+  ],
+  [
+    "EmptyRef",
+    564
+  ],
+  [
+    "Ref",
+    590
+  ],
+  [
+    "Reactive",
+    591
+  ],
+  [],
+  {
+    "profile": 593,
+    "bonuses": 594,
+    "agreement": 595,
+    "personalOffers": 596
+  },
+  [
+    "EmptyRef",
+    78
+  ],
+  [
+    "EmptyRef",
+    78
+  ],
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "Ref",
+    597
+  ],
+  [
+    "Reactive",
+    598
+  ],
+  [],
+  {
+    "toasts": 600
+  },
+  [
+    "Ref",
+    601
+  ],
+  [
+    "Reactive",
+    602
+  ],
+  [],
+  {
+    "cart": 604,
+    "cartPending": 605,
+    "cartReady": 606,
+    "giftList": 607,
+    "recommendations": 608,
+    "giftModal": 609
+  },
+  [
+    "EmptyRef",
+    78
+  ],
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "EmptyRef",
+    544
+  ],
+  [
+    "EmptyRef",
+    564
+  ],
+  [
+    "EmptyRef",
+    564
+  ],
+  [
+    "EmptyRef",
+    544
+  ]
+]

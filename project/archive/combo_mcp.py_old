@@ -1,0 +1,532 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""combo_mcp.py — MCP server for combo calculations across delivery chains.
+
+Usage:
+  python combo_mcp.py              # run as MCP stdio server
+  python combo_mcp.py --selftest   # self-test mode (no MCP transport)
+"""
+
+import sys
+import os
+import time
+import json
+import asyncio
+import threading
+from collections import Counter
+from typing import Any
+
+from mcp.server.fastmcp import FastMCP
+from mcp.types import Tool, TextContent
+
+# ---------------------------------------------------------------------------
+# Import engine + parsers
+# ---------------------------------------------------------------------------
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import combo_engine as engine
+
+# Import la_pizza parser
+import chains_la_pizza as chains_la_pizza
+
+# Import other-chain parsers
+import chains_other as chains_other
+
+# ---------------------------------------------------------------------------
+# Chain metadata
+# ---------------------------------------------------------------------------
+
+CHAINS_META = [
+    {
+        "id": "la_pizza",
+        "name": "Ла Пицца",
+        "city": "Воронеж",
+        "url": "https://la-pizza.pro",
+        "description": "Сеть доставки пиццы. Каталог: обычные, гигант, римские + комбо.",
+    },
+    {
+        "id": "pizza_kuba",
+        "name": "Пицца Куба",
+        "city": "Воронеж",
+        "url": "https://pizzeriacuba.ru",
+        "description": "Пиццерия с доставкой. WordPress, меню на главной по секциям.",
+    },
+    {
+        "id": "san_remo",
+        "name": "Сан Ремо",
+        "city": "Воронеж",
+        "url": "https://sanremo-pizza.com",
+        "description": "Пиццерия. Пицца, роллы, сеты.",
+    },
+    {
+        "id": "ninja_food",
+        "name": "Ниндзя Фуд",
+        "city": "Воронеж",
+        "url": "https://ninjafood.su",
+        "description": "Bitrix-сайт. Пицца, роллы, сеты, вок, ланчи.",
+    },
+    {
+        "id": "sushi_time",
+        "name": "Сушитайм",
+        "city": "Воронеж",
+        "url": "https://sushi-time.ru",
+        "description": "Доставка роллов и суши.",
+    },
+    {
+        "id": "sushi_darom",
+        "name": "Суши Даром",
+        "city": "Воронеж",
+        "url": "https://voronezh.sushi-darom.com",
+        "description": "Сеть роллов и суши. Next.js-приложение.",
+    },
+    {
+        "id": "anti_sushi",
+        "name": "Антисуши",
+        "city": "Воронеж",
+        "url": "https://anti-sushi.ru",
+        "description": "Бренд-сестра Суши Даром. Пицца, роллы, суши, сеты.",
+    },
+    {
+        "id": "dodo",
+        "name": "Додо Пицца",
+        "city": "Воронеж",
+        "url": "https://dodopizza.ru",
+        "description": "Крупная сеть. API может быть заблокирован капчей.",
+    },
+]
+
+
+# ---------------------------------------------------------------------------
+# In-memory cache (TTL 10 min)
+# ---------------------------------------------------------------------------
+
+_cache: dict[str, Any] = {}
+_CACHE_TTL = 600  # 10 minutes
+
+
+def _get_items(chain_id: str):
+    """Get parsed items for a chain, with cache. Returns (items, error_or_None)."""
+    ts = _cache.get(chain_id, {}).get("_ts", 0)
+    if ts and time.time() - ts < _CACHE_TTL:
+        return _cache[chain_id].get("items", []), _cache[chain_id].get("error", None)
+    try:
+        items = _parse_chain(chain_id)
+        _cache[chain_id] = {"items": items, "_ts": time.time(), "error": None}
+        return items, None
+    except Exception as e:
+        _cache[chain_id] = {"items": [], "_ts": time.time(), "error": str(e)}
+        return [], str(e)
+
+
+def _parse_chain(chain_id: str):
+    """Call the right parser for a chain."""
+    if chain_id == "la_pizza":
+        return chains_la_pizza.parse_menu(chain_id)
+    if chain_id == "dodo":
+        return chains_other.parse_dodo()
+    return chains_other.parse_menu(chain_id)
+
+
+# ---------------------------------------------------------------------------
+# Availability check
+# ---------------------------------------------------------------------------
+
+def _check_chain_availability(chain_id: str):
+    """Parse the chain and return (available, items, error_or_None)."""
+    items, err = _get_items(chain_id)
+    if err:
+        return False, [], err
+    if not items:
+        return False, [], "Нет позиций в меню"
+    return True, items, None
+
+
+# ---------------------------------------------------------------------------
+# MCP Server
+# ---------------------------------------------------------------------------
+
+mcp = FastMCP("combo-engine", instructions="Расчёт выгодных комбо по 8 сетям доставки в Воронеже")
+
+
+@mcp.tool()
+def list_chains() -> str:
+    """Список доступных сетей доставки: id, название, город, available, описание."""
+    result = []
+    for c in CHAINS_META:
+        cid = c["id"]
+        try:
+            available, items, err = _check_chain_availability(cid)
+            entry = {
+                "id": c["id"],
+                "name": c["name"],
+                "city": c["city"],
+                "available": available,
+                "description": c["description"],
+            }
+            if not available:
+                entry["reason"] = err
+            if available:
+                entry["items_count"] = len(items)
+            result.append(entry)
+        except Exception as e:
+            result.append({
+                "id": c["id"],
+                "name": c["name"],
+                "city": c["city"],
+                "available": False,
+                "description": c["description"],
+                "reason": str(e),
+            })
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+def parse_menu(chain_id: str) -> str:
+    """Распарсить меню конкретной сети.
+
+    Args:
+        chain_id: ID сети (la_pizza, pizza_kuba, san_remo, ninja_food,
+                  sushi_time, sushi_darom, anti_sushi, dodo).
+    """
+    # Validate chain_id
+    ids = [c["id"] for c in CHAINS_META]
+    if chain_id not in ids:
+        return json.dumps({
+            "error": f"Неизвестная сеть '{chain_id}'. Доступные: {', '.join(ids)}"
+        }, ensure_ascii=False)
+
+    try:
+        items, err = _get_items(chain_id)
+        if err:
+            return json.dumps({"error": err}, ensure_ascii=False)
+        # Strip internal keys
+        clean = []
+        for it in items:
+            clean.append({
+                "name": it["name"],
+                "weight_g": it.get("weight_g"),
+                "price_rub": it["price_rub"],
+                "is_from_price": it.get("is_from_price", False),
+                "description": it.get("description", ""),
+                "category": it.get("category", ""),
+                "product_url": it.get("product_url", ""),
+            })
+        return json.dumps(clean, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+
+@mcp.tool()
+def best_combo(chain_id: str, budget: int) -> str:
+    """Лучшие 3 варианта комбо для сети при заданном бюджете.
+
+    Args:
+        chain_id: ID сети.
+        budget: Бюджет в рублях (int > 0).
+    """
+    if budget <= 0:
+        return json.dumps({"error": "budget должен быть > 0"}, ensure_ascii=False)
+
+    ids = [c["id"] for c in CHAINS_META]
+    if chain_id not in ids:
+        return json.dumps({
+            "error": f"Неизвестная сеть '{chain_id}'. Доступные: {', '.join(ids)}"
+        }, ensure_ascii=False)
+
+    try:
+        items, err = _get_items(chain_id)
+    except RuntimeError as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+    if err:
+        return json.dumps({"error": err}, ensure_ascii=False)
+
+    # PROBLEM 1 FIX: NO DEFAULT_WEIGHTS — exclude items without valid weight_g
+    no_weight_count = 0
+    valid_items = []
+    for it in items:
+        w = it.get("weight_g")
+        if w is not None and w > 0:
+            valid_items.append(dict(it))
+        else:
+            no_weight_count += 1
+
+    if not valid_items:
+        return json.dumps({
+            "chain_id": chain_id,
+            "budget": budget,
+            "total_items_parsed": len(items),
+            "items_with_weight": 0,
+            "items_without_weight_excluded": no_weight_count,
+            "error": f"Нет позиций с весом для {chain_id} ({len(items)} всего, {no_weight_count} без веса).",
+        }, ensure_ascii=False, indent=2)
+
+    # Add taste to items
+    for p in valid_items:
+        p["_taste"] = engine.count_ingredients(p.get("description", ""))
+
+    try:
+        line1, line2, line3 = engine.calculate_combos(valid_items, budget)
+    except Exception as e:
+        return json.dumps({"error": f"Ошибка расчёта: {e}"}, ensure_ascii=False)
+
+    # Build item lists for each combo
+    def _build_combo_line(line):
+        parts = line.split(" | ")
+        if len(parts) < 4:
+            return line
+        weight_str = parts[0].split()[0]
+        price_str = parts[1].split()[0]
+        per100 = parts[2].split()[0]
+        items_str = parts[3]
+        return {
+            "line": line,
+            "weight_g": int(weight_str),
+            "price_rub": int(price_str),
+            "price_per_100g": float(per100),
+            "items": items_str,
+        }
+
+    result = {
+        "chain_id": chain_id,
+        "budget": budget,
+        "total_items_parsed": len(items),
+        "items_with_weight": len(valid_items),
+        "items_without_weight_excluded": no_weight_count,
+        "combo_max_weight": _build_combo_line(line1),
+        "combo_optimum": _build_combo_line(line2),
+        "combo_no_duplicates": _build_combo_line(line3),
+    }
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+def compare(budget: int) -> str:
+    """Сравнить все доступные сети по лучшему комбо при заданном бюджете.
+
+    Args:
+        budget: Бюджет в рублях (int > 0).
+    """
+    if budget <= 0:
+        return json.dumps({"error": "budget должен быть > 0"}, ensure_ascii=False)
+
+    comparisons = []
+    for c in CHAINS_META:
+        cid = c["id"]
+        try:
+            items, err = _get_items(cid)
+            if err or not items:
+                comparisons.append({
+                    "chain_id": cid,
+                    "name": c["name"],
+                    "available": False,
+                    "error": err or "Нет позиций",
+                })
+                continue
+
+            # PROBLEM 1 FIX: exclude items without valid weight_g
+            no_weight = 0
+            valid_items = []
+            for it in items:
+                w = it.get("weight_g")
+                if w is not None and w > 0:
+                    valid_items.append(dict(it))
+                else:
+                    no_weight += 1
+
+            if not valid_items:
+                comparisons.append({
+                    "chain_id": cid,
+                    "name": c["name"],
+                    "available": True,
+                    "total_weight_g": 0,
+                    "total_price_rub": 0,
+                    "price_per_100g": 0,
+                    "num_items": 0,
+                    "items_without_weight_excluded": no_weight,
+                    "error": f"Нет позиций с весом ({no_weight} без веса пропущено)",
+                })
+                continue
+
+            # Calculate best combo (max weight)
+            for p in valid_items:
+                p["_taste"] = engine.count_ingredients(p.get("description", ""))
+
+            indices, total_weight, total_cost = engine.solve_max_weight_double(valid_items, budget)
+
+            # Build item list
+            counts = Counter()
+            for idx, cnt in indices:
+                counts[idx] += cnt
+            item_list = []
+            for idx, cnt in counts.items():
+                it = valid_items[idx]
+                item_list.append({
+                    "name": it["name"],
+                    "count": cnt,
+                    "price": it["price_rub"],
+                    "weight": it["weight_g"],
+                })
+
+            price_per_100 = total_cost / total_weight * 100 if total_weight > 0 else 0
+            comparisons.append({
+                "chain_id": cid,
+                "name": c["name"],
+                "available": True,
+                "total_weight_g": total_weight,
+                "total_price_rub": total_cost,
+                "price_per_100g": round(price_per_100, 2),
+                "num_items": len(item_list),
+                "items": item_list,
+                "items_without_weight_excluded": no_weight,
+            })
+        except Exception as e:
+            comparisons.append({
+                "chain_id": cid,
+                "name": c["name"],
+                "available": False,
+                "error": str(e),
+            })
+
+    # Sort by price_per_100g (lower is better)
+    def _sort_key(x):
+        if "price_per_100g" in x and x["price_per_100g"] > 0:
+            return x["price_per_100g"]
+        return float('inf')
+
+    comparisons.sort(key=_sort_key)
+
+    return json.dumps(comparisons, ensure_ascii=False, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# Self-test mode
+# ---------------------------------------------------------------------------
+
+def run_selftest():
+    """Run self-test without MCP transport."""
+    import codecs
+    import sys as _sys
+    _sys.stdout = codecs.getwriter('utf-8')(_sys.stdout.buffer, 'strict')
+
+    budget = 3000
+    print(f"\n{'='*60}")
+    print(f"  COMBO ENGINE SELF-TEST  (budget={budget} rub)")
+    print(f"{'='*60}\n")
+
+    results = []
+    for c in CHAINS_META:
+        cid = c["id"]
+        print(f"\n--- {c['name']} ({cid}) ---")
+        try:
+            items, err = _get_items(cid)
+            if err:
+                print(f"  ERROR: {err}")
+                results.append({"chain": cid, "status": "ERROR", "items": 0, "error": err})
+                continue
+
+            print(f"  Parsed: {len(items)} items")
+            # Show first 5 items
+            for it in items[:5]:
+                w = it.get("weight_g", "N/A")
+                p = it.get("price_rub", "N/A")
+                cat = it.get("category", "N/A")
+                print(f"  {it['name']} | {w}g | {p}rub | {cat}")
+
+            # Filter valid items (no DEFAULT_WEIGHTS!)
+            no_weight = 0
+            valid_items = []
+            for it in items:
+                w = it.get("weight_g")
+                if w is not None and w > 0:
+                    valid_items.append(dict(it))
+                else:
+                    no_weight += 1
+            print(f"  Valid (weight>0): {len(valid_items)}, excluded: {no_weight}")
+
+            if not valid_items:
+                print(f"  SKIP: нет позиций с весом")
+                results.append({"chain": cid, "status": "NO_WEIGHT", "items": len(items), "valid": 0, "excluded": no_weight})
+                continue
+
+            # Calculate combos
+            line1, line2, line3 = engine.calculate_combos(valid_items, budget)
+            print(f"  1) {line1}")
+            print(f"  2) {line2}")
+            print(f"  3) {line3}")
+            results.append({"chain": cid, "status": "OK", "items": len(items), "valid": len(valid_items), "excluded": no_weight, "line1": line1, "line2": line2, "line3": line3})
+
+        except Exception as e:
+            print(f"  ERROR: {e}")
+            results.append({"chain": cid, "status": "ERROR", "items": 0, "error": str(e)})
+
+    # Compare
+    print(f"\n{'='*60}")
+    print(f"  COMPARE (budget={budget} rub)")
+    print(f"{'='*60}")
+    try:
+        comp = json.loads(compare(budget))
+        if isinstance(comp, list):
+            for i, row in enumerate(comp, 1):
+                name = row.get("name", "?")
+                if "error" in row:
+                    print(f"  {i}. {name}: ERROR - {row['error']}")
+                else:
+                    w = row.get("total_weight_g", 0)
+                    p = row.get("total_price_rub", 0)
+                    pp = row.get("price_per_100g", 0)
+                    n = row.get("num_items", 0)
+                    print(f"  {i}. {name}: {w}g | {p}rub | {pp} rub/100g | {n} items")
+    except Exception as e:
+        print(f"  COMPARE ERROR: {e}")
+
+    # Save to file
+    out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mcp_selftest.txt")
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(f"=== COMBO ENGINE SELF-TEST (budget={budget} rub) ===\n\n")
+        for r in results:
+            f.write(f"\n--- {r['chain']} ---\n")
+            if r["status"] == "OK":
+                f.write(f"  Parsed: {r['items']} items\n")
+                f.write(f"  Valid (weight>0): {r.get('valid', 0)}, Excluded: {r.get('excluded', 0)}\n")
+                f.write(f"  1) {r.get('line1', '')}\n")
+                f.write(f"  2) {r.get('line2', '')}\n")
+                f.write(f"  3) {r.get('line3', '')}\n")
+            elif r["status"] == "NO_WEIGHT":
+                f.write(f"  Parsed: {r['items']} items\n")
+                f.write(f"  Valid: {r.get('valid', 0)}, Excluded: {r.get('excluded', 0)}\n")
+                f.write(f"  SKIP: нет позиций с весом\n")
+            else:
+                f.write(f"  ERROR: {r.get('error', 'unknown')}\n")
+        f.write(f"\n--- COMPARE (budget={budget} rub) ---\n")
+        try:
+            comp = json.loads(compare(budget))
+            if isinstance(comp, list):
+                for i, row in enumerate(comp, 1):
+                    name = row.get("name", "?")
+                    if "error" in row:
+                        f.write(f"  {i}. {name}: ERROR - {row['error']}\n")
+                    else:
+                        w = row.get("total_weight_g", 0)
+                        p = row.get("total_price_rub", 0)
+                        pp = row.get("price_per_100g", 0)
+                        n = row.get("num_items", 0)
+                        f.write(f"  {i}. {name}: {w}g | {p}rub | {pp} rub/100g | {n} items\n")
+        except Exception as e:
+            f.write(f"  COMPARE ERROR: {e}\n")
+        f.write(f"\nOK\n")
+
+    print(f"\nSelftest saved to {out_path}")
+    print("\nDONE")
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    if "--selftest" in sys.argv:
+        run_selftest()
+    else:
+        # Run as MCP stdio server
+        mcp.run()

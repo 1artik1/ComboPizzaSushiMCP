@@ -1,0 +1,5 @@
+mcp
+requests
+beautifulsoup4
+lxml
+playwright

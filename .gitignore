@@ -27,6 +27,9 @@ venv/
 env/
 ENV/
 
+# Project runtime data
+project/cache/
+
 # Playwright
 .playwright-mcp/
 .browsers/

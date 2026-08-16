@@ -1,0 +1,242 @@
+# -*- coding: utf-8 -*-
+"""dp.py — solve_max_weight_single, solve_max_weight_double, _pareto_dominates,
+_pareto_filter, format_combo, solve_optimum, _solve_optimum_pareto, calculate_combos.
+
+Перенос 1:1 из combo_engine.py.
+"""
+
+from collections import Counter
+from combo_mcp.engines.taste import count_ingredients
+
+
+def solve_max_weight_single(items, budget):
+    """Each item at most 1x. Max weight within budget."""
+    dp = [(-1, []) for _ in range(budget + 1)]
+    dp[0] = (0, [])
+    for i, item in enumerate(items):
+        cost = item["price_rub"]
+        w = item["weight_g"]
+        if cost > budget or cost == 0:
+            continue
+        for j in range(budget, cost - 1, -1):
+            prev_weight, prev_indices = dp[j - cost]
+            if prev_weight >= 0:
+                new_weight = prev_weight + w
+                if new_weight > dp[j][0]:
+                    dp[j] = (new_weight, prev_indices + [i])
+    best_w = 0
+    best_indices = []
+    for j in range(budget + 1):
+        w, indices = dp[j]
+        if w > best_w:
+            best_w = w
+            best_indices = indices
+    return best_indices, best_w
+
+
+def solve_max_weight_double(items, budget):
+    """Each item up to 2x. Max weight within budget.
+
+    DP stores full history in states: dp[j] = (weight, history),
+    where history is a list of (item_idx, copies) pairs.
+    """
+    # dp[j] = (weight, history) where history = [(idx, copies), ...]
+    dp = [(-1, [])] * (budget + 1)
+    dp[0] = (0, [])
+
+    for i, item in enumerate(items):
+        cost = item["price_rub"]
+        w = item["weight_g"]
+        if cost <= 0 or cost > budget:
+            continue
+        for _ in range(2):
+            for j in range(budget, cost - 1, -1):
+                prev_w, prev_hist = dp[j - cost]
+                if prev_w >= 0:
+                    new_w = prev_w + w
+                    if new_w > dp[j][0]:
+                        new_hist = list(prev_hist) + [(i, 1)]
+                        dp[j] = (new_w, new_hist)
+
+    best_j = 0
+    for j in range(budget + 1):
+        if dp[j][0] > dp[best_j][0]:
+            best_j = j
+
+    _, hist = dp[best_j]
+    # Build counts from history
+    counts = Counter()
+    for idx, cnt in hist:
+        counts[idx] += cnt
+    final = [(idx, cnt) for idx, cnt in counts.items()]
+    total_weight = dp[best_j][0]
+    return final, total_weight, best_j
+
+
+def _pareto_dominates(a, b):
+    """Return True if tuple a dominates tuple b.
+    a dominates b if a has >= weight AND >= taste_sum AND <= count,
+    with at least one strict improvement.
+    (Fewer items is better because score = weight * (taste_sum / count).)
+    """
+    return (a[0] >= b[0] and a[1] >= b[1] and a[2] <= b[2]
+            and (a[0] > b[0] or a[1] > b[1] or a[2] < b[2]))
+
+
+def _pareto_filter(states):
+    """Remove dominated states from a list of (weight, taste_sum, count, history) tuples."""
+    if not states:
+        return []
+    # Sort by weight desc, then taste_sum desc, then count asc
+    states = sorted(states, key=lambda x: (-x[0], -x[1], x[2]))
+    result = []
+    for s in states:
+        dominated = False
+        for r in result:
+            if _pareto_dominates(r, s):
+                dominated = True
+                break
+        if not dominated:
+            result.append(s)
+    return result
+
+
+def format_combo(items, indices, budget):
+    """Format combo string."""
+    total_weight = 0
+    total_price = 0
+    parts = []
+    for item_idx, count in indices:
+        item = items[item_idx]
+        total_weight += item["weight_g"] * count
+        total_price += item["price_rub"] * count
+        if count == 1:
+            parts.append(f"{item['name']} x1")
+        else:
+            parts.append(f"{item['name']} x{count}")
+    price_per_100 = total_price / total_weight * 100 if total_weight > 0 else 0
+    line = f"{total_weight} g | {total_price} rub | {price_per_100:.1f} rub/100g | {', '.join(parts)}"
+    return line
+
+
+def solve_optimum(items, budget):
+    """Exclude items with taste=0. Maximize weight * avg_taste.
+
+    Uses Pareto-optimal DP. Items without valid weight_g are excluded.
+    For large item sets, only top-N items by taste are used to avoid
+    O(n * budget * states) explosion.
+    """
+    # Filter: must have valid weight_g > 0 AND taste > 0
+    filtered = []
+    for idx, item in enumerate(items):
+        w = item.get("weight_g")
+        if w is None or w <= 0:
+            continue
+        taste = item.get("_taste", 0)
+        if taste > 0:
+            filtered.append((idx, item))
+
+    if not filtered:
+        # Fallback: use solve_max_weight_double with all valid-weight items
+        valid = [i for i, it in enumerate(items) if it.get("weight_g") and it["weight_g"] > 0]
+        if not valid:
+            return [], 0, 0
+        valid_items = [items[i] for i in valid]
+        indices, weight, cost = solve_max_weight_double(valid_items, budget)
+        # Map back to original indices (indices are into valid_items, need original item indices)
+        if indices:
+            final = [(valid[i], cnt) for i, cnt in indices]
+        else:
+            final = []
+        return final, weight, cost
+
+    # Limit to top 40 items by taste to keep DP tractable
+    filtered.sort(key=lambda x: x[1].get("_taste", 0), reverse=True)
+    filtered = filtered[:40]
+
+    return _solve_optimum_pareto(items, budget, filtered)
+
+
+def _solve_optimum_pareto(items, budget, filtered):
+    """Pareto-optimal DP for solve_optimum.
+
+    For each cost c, store all non-dominated (weight, taste_sum, count) tuples.
+    Domination: a dominates b if a has >= weight AND >= taste_sum AND <= count,
+    with at least one strict improvement.
+    """
+    # dp[c] = list of Pareto-optimal (weight, taste_sum, count, history)
+    dp = {0: [(0, 0, 0, [])]}
+
+    for fi, (orig_idx, item) in enumerate(filtered):
+        cost = item["price_rub"]
+        w = item["weight_g"]
+        t = item["_taste"]
+        if cost <= 0 or cost > budget:
+            continue
+        for copies in range(1, 3):
+            item_cost = cost * copies
+            item_w = w * copies
+            item_t = t * copies
+            item_cnt = copies
+            # Collect new states to add
+            new_states = []
+            for c in range(budget + 1 - item_cost):
+                if c not in dp:
+                    continue
+                for state in dp[c]:
+                    old_w, old_ts, old_cnt, hist = state
+                    new_hist = hist + [(orig_idx, copies)]
+                    new_w = old_w + item_w
+                    new_ts = old_ts + item_t
+                    new_cnt = old_cnt + item_cnt
+                    new_states.append((new_w, new_ts, new_cnt, new_hist, c + item_cost))
+            # Merge new states into dp
+            for new_w, new_ts, new_cnt, new_hist, target_c in new_states:
+                if target_c not in dp:
+                    dp[target_c] = []
+                dp[target_c].append((new_w, new_ts, new_cnt, new_hist))
+                # Pareto-filter at this cost
+                dp[target_c] = _pareto_filter(dp[target_c])
+
+    # Find best score across all costs <= budget
+    best_score = 0
+    best_state = None
+    for c in range(budget + 1):
+        if c not in dp:
+            continue
+        for state in dp[c]:
+            w, ts, cnt, hist = state
+            if cnt == 0:
+                continue
+            score = w * (ts / cnt)
+            if score > best_score or (score == best_score and w > (best_state[0] if best_state else 0)):
+                best_score = score
+                best_state = state
+
+    if best_state is None:
+        return solve_max_weight_double(items, budget)
+
+    _, _, _, hist = best_state
+    # Build counts from history, respecting the count in each (idx, cnt) pair
+    counts = Counter()
+    for idx, cnt in hist:
+        counts[idx] += cnt
+    total_weight = best_state[0]
+    total_cost = 0
+    for idx, cnt in counts.items():
+        total_cost += items[idx]["price_rub"] * cnt
+    final = [(idx, cnt) for idx, cnt in counts.items()]
+    return final, total_weight, total_cost
+
+
+def calculate_combos(products, budget):
+    """Calculate 3 combo variants."""
+    for p in products:
+        p["_taste"] = count_ingredients(p["description"])
+    indices1, weight1, cost1 = solve_max_weight_double(products, budget)
+    line1 = format_combo(products, indices1, budget)
+    indices2, weight2, cost2 = solve_optimum(products, budget)
+    line2 = format_combo(products, indices2, budget)
+    indices3, weight3 = solve_max_weight_single(products, budget)
+    line3 = format_combo(products, [(idx, 1) for idx in indices3], budget)
+    return line1, line2, line3

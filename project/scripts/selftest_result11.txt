@@ -1,0 +1,13 @@
+﻿C:\Users\1artik1\Desktop\TestOpen\.venv\Scripts\python.exe : C:\Users\1artik1\Desktop\TestOpen\.venv\project\scripts\se
+lftest.py:4: SyntaxWarning: invalid escape sequence '\s'
+строка:1 знак:56
++ ... \project" ; C:\Users\1artik1\Desktop\TestOpen\.venv\Scripts\python.ex ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\1artik...e sequence '\s':String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  ╟ряєёъ: python scripts\selftest.py
+Traceback (most recent call last):
+  File "C:\Users\1artik1\Desktop\TestOpen\.venv\project\scripts\selftest.py", line 21, in <module>
+    from combo_mcp.config import get_chain_meta, get_enabled_chain_ids
+ModuleNotFoundError: No module named 'combo_mcp'

@@ -1,0 +1,528 @@
+# -*- coding: utf-8 -*-
+"""chains_other.py — parsers for pizza/sushi delivery chains (other than la_pizza)."""
+
+import re
+import json
+import requests
+from bs4 import BeautifulSoup
+
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+}
+
+
+def _fetch(url, timeout=5):
+    import socket as _socket
+    import requests as _requests
+    try:
+        _socket.setdefaulttimeout(timeout)
+        r = _requests.get(url, headers=HEADERS, timeout=timeout, verify=False, allow_redirects=True)
+        if r.status_code == 200:
+            return r.text
+    except (_requests.exceptions.Timeout, _requests.exceptions.ConnectionError, OSError, Exception):
+        pass
+    finally:
+        _socket.setdefaulttimeout(None)
+    return None
+
+
+def _clean(text):
+    if text is None:
+        return ""
+    return re.sub(r'\s+', ' ', text).strip()
+
+
+# ============================================================================
+# pizza_kuba
+# ============================================================================
+
+def _parse_pizza_kuba(html):
+    """Parse pizzeriacuba.ru — fully JS-rendered; extract from inline data if available."""
+    products = []
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # Try to find product data in JS variables or JSON
+    scripts = soup.find_all('script')
+    for script in scripts:
+        text = script.string or ''
+        # Look for product arrays
+        for m in re.finditer(r'\{[^{}]*"name"[^{}]*"price"[^{}]*\}', text, re.DOTALL):
+            try:
+                d = json.loads(m.group())
+                name = d.get('name', '')
+                price = d.get('price', 0)
+                if isinstance(price, str):
+                    price = int(re.search(r'(\d+)', price).group(1))
+                elif isinstance(price, (int, float)):
+                    price = int(price)
+                if name and price > 0:
+                    products.append({
+                        "name": name,
+                        "weight_g": None,
+                        "price_rub": price,
+                        "is_from_price": False,
+                        "description": name,
+                        "category": "Пицца",
+                        "product_url": "https://pizzeriacuba.ru/",
+                    })
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+    # Also try to find menu items from navigation categories + price patterns
+    # Look for category headings and items below them
+    categories = []
+    for h in soup.find_all(['h2', 'h3', 'h4']):
+        cat = _clean(h.get_text())
+        if cat and len(cat) > 3 and len(cat) < 50:
+            categories.append(cat)
+
+    # Find all price patterns in the HTML and extract surrounding text
+    # The site may have prices embedded in specific elements
+    for el in soup.find_all(['span', 'div', 'li', 'p']):
+        text = el.get_text()
+        price_m = re.search(r'(\d+)\s*[₽\u20bd]', text)
+        name_m = re.search(r'([А-Яа-яA-Za-z\s]{5,60})', text)
+        if price_m and name_m:
+            price = int(price_m.group(1))
+            name = _clean(name_m.group(1))
+            if name and price > 50 and len(name) > 3:
+                products.append({
+                    "name": name,
+                    "weight_g": None,
+                    "price_rub": price,
+                    "is_from_price": 'от' in text[:50],
+                    "description": name,
+                    "category": "Пицца",
+                    "product_url": "https://pizzeriacuba.ru/",
+                })
+
+    # Deduplicate
+    seen = set()
+    unique = []
+    for p in products:
+        key = (p["name"].lower(), p["price_rub"])
+        if key not in seen:
+            seen.add(key)
+            unique.append(p)
+    return unique
+
+
+def parse_pizza_kuba():
+    """Pizza Kubа — Nuxt.js SPA, API requires JS execution. Unavailable via simple HTTP."""
+    return []
+
+
+# ============================================================================
+# san_remo
+# ============================================================================
+
+def _parse_san_remo(html):
+    """Parse sanremo-pizza.com."""
+    products = []
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # Find all elements with price text
+    for el in soup.find_all(['span', 'div', 'li', 'p']):
+        text = el.get_text()
+        price_m = re.search(r'(\d+)\s*[₽\u20bd]', text)
+        name_m = re.search(r'([А-Яа-яA-Za-z\s]{5,60})', text)
+        if price_m and name_m:
+            price = int(price_m.group(1))
+            name = _clean(name_m.group(1))
+            if name and price > 50 and len(name) > 3:
+                products.append({
+                    "name": name,
+                    "weight_g": None,
+                    "price_rub": price,
+                    "is_from_price": False,
+                    "description": text[:200],
+                    "category": "Пицца",
+                    "product_url": "https://sanremo-pizza.com/",
+                })
+
+    # Deduplicate
+    seen = set()
+    unique = []
+    for p in products:
+        key = (p["name"].lower(), p["price_rub"])
+        if key not in seen:
+            seen.add(key)
+            unique.append(p)
+    return unique
+
+
+def parse_san_remo():
+    """San Remo — site is down/unreachable."""
+    return []
+
+
+# ============================================================================
+# ninja_food
+# ============================================================================
+
+def _parse_ninja_food(html):
+    """Parse ninjafood.su — Bitrix-based site."""
+    products = []
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # Find categories from H-tags
+    category = "Пицца"
+    for h in soup.find_all(['h1', 'h2', 'h3']):
+        cat_text = _clean(h.get_text())
+        if cat_text:
+            if 'Пицца' in cat_text:
+                category = "Пицца"
+            elif 'Ролл' in cat_text:
+                category = "Роллы"
+            elif 'Сет' in cat_text:
+                category = "Сеты"
+            elif 'Ланч' in cat_text:
+                category = "Ланчи"
+            elif 'Набор' in cat_text:
+                category = "Наборы"
+            elif 'Вок' in cat_text:
+                category = "Вок"
+            elif 'Салат' in cat_text:
+                category = "Салаты"
+            elif 'Суп' in cat_text:
+                category = "Супы"
+
+    # Find all elements with price text
+    for el in soup.find_all(['span', 'div', 'li', 'p']):
+        text = el.get_text()
+        price_m = re.search(r'(\d+)\s*[₽\u20bd]', text)
+        name_m = re.search(r'([А-Яа-яA-Za-z\s]{5,60})', text)
+        if price_m and name_m:
+            price = int(price_m.group(1))
+            name = _clean(name_m.group(1))
+            if name and price > 50 and len(name) > 3:
+                products.append({
+                    "name": name,
+                    "weight_g": None,
+                    "price_rub": price,
+                    "is_from_price": 'от' in text[:50],
+                    "description": text[:200],
+                    "category": category,
+                    "product_url": "https://ninjafood.su/",
+                })
+
+    # Deduplicate
+    seen = set()
+    unique = []
+    for p in products:
+        key = (p["name"].lower(), p["price_rub"])
+        if key not in seen:
+            seen.add(key)
+            unique.append(p)
+    return unique
+
+
+def parse_ninja_food():
+    """Ninja Food — Bitrix SPA, product data rendered via JS. No weights or names via simple HTTP."""
+    return []
+
+
+# ============================================================================
+# sushi_time
+# ============================================================================
+
+def _parse_sushi_time(html):
+    """Parse sushi-time.ru — sushi/rolls delivery."""
+    products = []
+    soup = BeautifulSoup(html, 'html.parser')
+
+    for el in soup.find_all(['span', 'div', 'li', 'p']):
+        text = el.get_text()
+        price_m = re.search(r'(\d+)\s*[₽\u20bd]', text)
+        name_m = re.search(r'([А-Яа-яA-Za-z\s]{5,60})', text)
+        if price_m and name_m:
+            price = int(price_m.group(1))
+            name = _clean(name_m.group(1))
+            if name and price > 50 and len(name) > 3:
+                products.append({
+                    "name": name,
+                    "weight_g": None,
+                    "price_rub": price,
+                    "is_from_price": False,
+                    "description": text[:200],
+                    "category": "Роллы/Суши",
+                    "product_url": "https://sushi-time.ru/",
+                })
+
+    # Deduplicate
+    seen = set()
+    unique = []
+    for p in products:
+        key = (p["name"].lower(), p["price_rub"])
+        if key not in seen:
+            seen.add(key)
+            unique.append(p)
+    return unique
+
+
+def parse_sushi_time():
+    """Sushi Time — site returns 403/unreachable."""
+    return []
+
+
+# ============================================================================
+# sushi_darom (Next.js with __NEXT_DATA__)
+# ============================================================================
+
+def _parse_sushi_darom(html):
+    """Parse voronezh.sushi-darom.com — Next.js site with __NEXT_DATA__ JSON.
+    
+    Each offer has:
+      - name: product name (UTF-8)
+      - price: price in rubles (int)
+      - parametr.outQuantity_raw: weight in grams (string like "255")
+      - categoryId: category ID matching categories[].id
+      - structure: ingredient description
+    """
+    products = []
+
+    # Find __NEXT_DATA__ JSON
+    next_data = re.findall(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', html, re.DOTALL)
+    if next_data:
+        try:
+            data = json.loads(next_data[0])
+            props = data.get('props', {})
+            page_props = props.get('pageProps', {})
+
+            # Build category mapping: id -> name
+            categories = page_props.get('categories', [])
+            cat_map = {}
+            if isinstance(categories, list):
+                for cat in categories:
+                    if isinstance(cat, dict):
+                        cat_id = str(cat.get('id', ''))
+                        cat_name = cat.get('category', '')
+                        if cat_id and cat_name:
+                            cat_map[cat_id] = cat_name
+
+            # Products are in 'offers' list
+            offers = page_props.get('offers', [])
+            if isinstance(offers, list):
+                for item in offers:
+                    if not isinstance(item, dict):
+                        continue
+                    name = item.get('name', '')
+                    price = item.get('price', 0)
+                    if isinstance(price, str):
+                        price = int(re.search(r'(\d+)', price).group(1))
+                    elif isinstance(price, (int, float)):
+                        price = int(price)
+
+                    if name and price > 0:
+                        # Extract weight from parametr.outQuantity_raw
+                        weight = None
+                        param = item.get('parametr', {})
+                        if isinstance(param, dict):
+                            out_raw = param.get('outQuantity_raw', '')
+                            if out_raw:
+                                try:
+                                    weight = int(out_raw)
+                                except (ValueError, TypeError):
+                                    pass
+
+                        category = cat_map.get(str(item.get('categoryId', '')), 'Роллы/Суши')
+                        desc = item.get('structure', '') or item.get('description', '')
+                        if not desc:
+                            desc = name
+                        products.append({
+                            "name": name,
+                            "weight_g": weight,
+                            "price_rub": price,
+                            "is_from_price": False,
+                            "description": desc,
+                            "category": category,
+                            "product_url": "https://voronezh.sushi-darom.com/",
+                        })
+        except (json.JSONDecodeError, KeyError, IndexError):
+            pass
+
+    return products
+
+
+def parse_sushi_darom():
+    """Sushi Darom — Next.js SPA, 170 items with REAL weights from parametr.outQuantity_raw."""
+    html = _fetch("https://voronezh.sushi-darom.com/")
+    if html is None:
+        return []
+    return _parse_sushi_darom(html)
+
+
+# ============================================================================
+# anti_sushi (BeautifulSoup-based)
+# ============================================================================
+
+def _parse_anti_sushi(html):
+    """Parse anti-sushi.ru — products with schema.org markup."""
+    products = []
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # Find all product divs
+    product_divs = soup.find_all('div', class_='product')
+    for pd in product_divs[:100]:
+        # Find price from itemprop="price" meta
+        price_meta = pd.find('meta', itemprop='price')
+        if not price_meta:
+            continue
+        try:
+            price = int(price_meta['content'])
+        except (ValueError, KeyError):
+            continue
+
+        if price <= 0:
+            continue
+
+        # Find name from itemprop="name" meta
+        name_meta = pd.find('meta', itemprop='name')
+        if not name_meta:
+            continue
+        name = _clean(name_meta['content'])
+        if not name or len(name) < 3:
+            continue
+
+        # Find weight from class="weight" span
+        weight = None
+        weight_span = pd.find('span', class_='weight')
+        if weight_span:
+            wt_text = _clean(weight_span.get_text())
+            wt_num = re.search(r'(\d+)', wt_text)
+            if wt_num:
+                weight = int(wt_num.group(1))
+
+        # Find description from class="product-description"
+        desc_div = pd.find('div', class_='product-description')
+        description = _clean(desc_div.get_text()) if desc_div else name
+
+        # Find category from href
+        href = pd.find('a', class_='product-title')
+        category = "Роллы/Суши"
+        href_url = ""
+        if href and href.get('href'):
+            href_url = href['href']
+            cat_url = href_url.lower()
+            if 'sets' in cat_url or 'сеты' in cat_url:
+                category = "Сеты"
+            elif 'rolls' in cat_url or 'ролл' in cat_url:
+                category = "Роллы"
+            elif 'sushi' in cat_url or 'суши' in cat_url:
+                category = "Суши"
+            elif 'pizza' in cat_url or 'пицца' in cat_url:
+                category = "Пицца"
+            elif 'lapsha' in cat_url or 'лапша' in cat_url:
+                category = "Горячее"
+            elif 'zakuski' in cat_url or 'закус' in cat_url:
+                category = "Закуски"
+
+        products.append({
+            "name": name,
+            "weight_g": weight,
+            "price_rub": price,
+            "is_from_price": False,
+            "description": description,
+            "category": category,
+            "product_url": f"https://anti-sushi.ru/{href_url}" if href_url else "https://anti-sushi.ru/",
+        })
+
+    return products
+
+
+def parse_anti_sushi():
+    html = _fetch("https://anti-sushi.ru/")
+    if html is None:
+        return []
+    return _parse_anti_sushi(html)
+
+
+# ============================================================================
+# dodo (Dodo Pizza) — API blocked by captcha
+# ============================================================================
+
+def parse_dodo():
+    """Dodo Pizza — API blocked by captcha/cors. Unavailable via simple HTTP."""
+    return []
+
+
+def _extract_dodo_products(data):
+    products = []
+    if isinstance(data, dict):
+        for key in ['products', 'items', 'menu', 'data']:
+            if key in data:
+                val = data[key]
+                if isinstance(val, list):
+                    for item in val[:100]:
+                        if isinstance(item, dict):
+                            name = item.get('name', '')
+                            price = item.get('price', 0)
+                            if isinstance(price, dict):
+                                price = price.get('value', 0)
+                            if isinstance(price, (int, float)):
+                                price = int(price)
+                            if name and price > 0:
+                                products.append({
+                                    "name": name,
+                                    "weight_g": None,
+                                    "price_rub": price,
+                                    "is_from_price": False,
+                                    "description": item.get('description', name),
+                                    "category": item.get('category', 'Пицца'),
+                                    "product_url": "https://dodopizza.ru/",
+                                })
+                elif isinstance(val, dict):
+                    for k2, v2 in val.items():
+                        if isinstance(v2, list):
+                            for item in v2[:100]:
+                                if isinstance(item, dict):
+                                    name = item.get('name', '')
+                                    price = item.get('price', 0)
+                                    if isinstance(price, dict):
+                                        price = price.get('value', 0)
+                                    if isinstance(price, (int, float)):
+                                        price = int(price)
+                                    if name and price > 0:
+                                        products.append({
+                                            "name": name,
+                                            "weight_g": None,
+                                            "price_rub": price,
+                                            "is_from_price": False,
+                                            "description": item.get('description', name),
+                                            "category": item.get('category', 'Пицца'),
+                                            "product_url": "https://dodopizza.ru/",
+                                        })
+                break
+    return products
+
+
+# ============================================================================
+# Chain registry
+# ============================================================================
+
+CHAIN_PARSERS = {
+    "la_pizza": None,  # handled by chains_la_pizza
+    "pizza_kuba": parse_pizza_kuba,
+    "san_remo": parse_san_remo,
+    "ninja_food": parse_ninja_food,
+    "sushi_time": parse_sushi_time,
+    "sushi_darom": parse_sushi_darom,
+    "anti_sushi": parse_anti_sushi,
+    "dodo": parse_dodo,
+}
+
+
+def parse_menu(chain_id):
+    """Parse menu for a given chain ID."""
+    if chain_id == "la_pizza":
+        import chains_la_pizza
+        return chains_la_pizza.parse_menu(chain_id)
+    parser = CHAIN_PARSERS.get(chain_id)
+    if parser is None:
+        raise ValueError(f"Unknown chain: {chain_id}")
+    return parser()

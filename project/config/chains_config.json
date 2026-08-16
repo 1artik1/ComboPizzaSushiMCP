@@ -1,0 +1,11 @@
+{
+  "chains": {
+    "la_pizza":    {"url": "https://la-pizza.pro", "enabled": true,  "ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "sushi_darom": {"url": "https://voronezh.sushi-darom.com/", "enabled": true, "ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "anti_sushi":  {"url": "https://anti-sushi.ru/", "enabled": true, "ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "sushi_time":  {"url": "https://суши-тайм.рф/Voronezh/", "enabled": true, "ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "ninja_food":  {"url": "https://ninjafood.su/", "enabled": true, "ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "pizza_kuba":  {"url": "https://pizzeriacuba.ru/", "enabled": true, "ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "dodo":        {"url": "https://dodopizza.ru/", "enabled": true, "ttl_minutes": 240, "headers": {}, "cookies": {}}
+  }
+}

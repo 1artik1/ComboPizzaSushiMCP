@@ -1,0 +1,54 @@
+﻿URL: https://╤Б╤Г╤И╨╕-╤В╨░╨╣╨╝.╤А╤Д/Voronezh/
+HTML length: 1928508
+data-id elements: 251
+data-title elements: 753
+data-category-name elements: 251
+vess_preview spans: 0
+sale-price spans: 54
+First data-id element: div ['tovar_small', 'NoClass_sets'] {'class': ['tovar_small', 'NoClass_sets'], 'data-filter-product': 'sets ', 'style': '', 'itemprop': 'itemListElement', 'itemscope': '', 'itemtype': 'http://schema.org/Product', 'id': 'tovar_n_1643', 'data-ingredients': '  ', 'data-id': '1643', 'data-menu-stop-preorder-only': '0', 'data-menu-stop-offers': '[]', 'data-menu-stop-add-disabled': '0', 'data-menu-stop-add-reason': ''}
+First data-id text: 
+
+
+
+
+
+
+900 ╨│╤А
+
+
+
+
+╨Ф╤А╤Г╨╢╨▒╨░
+
+            i
+        
+
+
+
+
+╨ж╤Л╨┐╨░, ╤В╨░╨╣, ╤Б╨┐╨░╨╣╤Б╨╕ ╨║╤А╨░╨▒, ╤Б╨┐╨░╨╣╤Б╨╕ ╨║╤Г╤А╨╕╤Ж╨░
+
+
+
+ 28
+First data-title element: a ['linknoactive'] {'class': ['linknoactive'], 'count-data': '1', 'url-data': 'dryjba', 'id-data': '1643', 'id-category': '48', 'data-category-name': '╨б╨║╨╕╨┤╨║╨╕', 'data-category-url': 'sales', 'data-title': '╨Ф╤А╤Г╨╢╨▒╨░', 'data-seo-title': '╨б╨║╨╕╨┤╨║╨╕: ╨Ф╤А╤Г╨╢╨▒╨░. ╨Ф╨╛╤Б╤В╨░╨▓╨║╨░ ╨┐╨╛ ╨│╨╛╤А╨╛╨┤╤Г ╨Т╨╛╤А╨╛╨╜╨╡╨╢ | ╨Ф╨╛╤Б╤В╨░╨▓╨╕╨╝ ╨┐╤А╤П╨╝╨╛ ╨║ ╨Т╨░╨╝ ╨┤╨╛╨╝╨╛╨╣!', 'data-modify': '0', 'data-has-modify': '0', 'href': '/Voronezh/catalog/sales/dryjba', 'onclick': "ModalTovarFull('1643','48','sales','dryjba',this.getAttribute('data-title'));return false;", 'style': 'cursor:pointer;'}
+First data-title text: 
+
+
+
+
+900 ╨│╤А
+
+
+  data-id=1643 children: 43
+    div class=['center_preview'] title=None
+    a class=['linknoactive'] title=╨Ф╤А╤Г╨╢╨▒╨░
+    div class=['type_product_modifer'] title=None
+  data-id=1644 children: 43
+    div class=['center_preview'] title=None
+    a class=['linknoactive'] title=╨Ъ╨░╨╗╨╡╨╣╨┤╨╛╤Б╨║╨╛╨┐
+    div class=['type_product_modifer'] title=None
+  data-id=1645 children: 43
+    div class=['center_preview'] title=None
+    a class=['linknoactive'] title=╨б╨╛╤З╨╕ 
+    div class=['type_product_modifer'] title=None

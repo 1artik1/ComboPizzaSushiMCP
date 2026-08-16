@@ -1,0 +1,15 @@
+﻿Keys: ['code', 'msg', 'details', 'get', 'post']
+code: 1
+msg: 
+get: {
+  "device_id": "b14ed9d1-1adf-4778-90cf-32e234d7d66b",
+  "device_platform": "desktop",
+  "merchant_keys": "6be77015e90108fda45c894f345a5769",
+  "transaction_type": "delivery",
+  "json": "true",
+  "lang": "ru",
+  "frontend": "modern",
+  "full": "true"
+}
+details keys: ['data']
+merchant_key: N/A

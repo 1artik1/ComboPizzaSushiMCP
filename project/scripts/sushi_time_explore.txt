@@ -1,0 +1,26 @@
+﻿Size: 1928508
+data-title found: 753
+data-category-name found: 251
+data-id found: 260
+data-price NOT found
+data-weight NOT found
+Top 20 classes: [('clr', 1011), ('but_in_kor_pluse', 266), ('counter_tovar', 262), ('minuses_b IconBlocks minusButtonIcon', 262), ('pluses_b IconBlocks pluseButtonIcon', 262), ('RublBold', 255), ('center_preview', 252), ('linknoactive', 252), ('img_tovar', 252), ('lazy', 252), ('title_preview', 252), ('features_tovar_list', 252), ('text_preview', 252), ('linknoactive open_i', 251), ('kbju-info-badge', 251), ('variant', 251), ('price_preview', 251), ('vess_preview', 237), ('', 197), ('new', 179)]
+vess span matches: 237
+  900 уЁ
+  1200 уЁ
+  1600 уЁ
+sale-price span matches: 109
+C:\Users\1artik1\Desktop\TestOpen\.venv\Scripts\python.exe : Traceback (most recent call last):
+строка:1 знак:1
++ C:\Users\1artik1\Desktop\TestOpen\.venv\Scripts\python.exe C:\Users\1 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\1artik1\Desktop\TestOpen\.venv\project\scripts\_explore_sushi_time.py", line 38, in <module>
+    print('  ' + clean[:100])
+    ~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\1artik1\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1251.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u20bd' in position 12: character maps to <undefined>

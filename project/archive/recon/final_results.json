@@ -1,0 +1,96 @@
+{
+  "sushi_time": {
+    "strategy": "HTTP",
+    "url": "xn----8sbwgpzjf9b.xn--p1ai",
+    "status": "200",
+    "examples": [
+      {
+        "name": "Дружба",
+        "weight": "900g",
+        "price": "650₽",
+        "category": "Скидки"
+      },
+      {
+        "name": "Сет 1",
+        "weight": "1000g",
+        "price": "890₽",
+        "category": "Сеты"
+      },
+      {
+        "name": "Пеперони",
+        "weight": "500g",
+        "price": "450₽",
+        "category": "Пицца"
+      },
+      {
+        "name": "Калифорния",
+        "weight": "300g",
+        "price": "350₽",
+        "category": "Роллы"
+      },
+      {
+        "name": "Набор 1",
+        "weight": "1500g",
+        "price": "1200₽",
+        "category": "Наборы"
+      }
+    ],
+    "real_weights": true,
+    "problems": "HTML 1.9MB, Schema.org markup, data-id for products"
+  },
+  "ninja_food": {
+    "strategy": "Playwright",
+    "url": "ninjafood.su",
+    "status": "200",
+    "examples": [
+      {
+        "name": "Пицца Пеперони",
+        "weight": "550g",
+        "price": "589₽",
+        "category": "Пицца"
+      },
+      {
+        "name": "Роллы Калифорния Классик",
+        "weight": "240g",
+        "price": "429₽",
+        "category": "Роллы"
+      },
+      {
+        "name": "Сеты Ниндзя 8 (40 шт)",
+        "weight": "740g",
+        "price": "1199₽",
+        "category": "Сеты"
+      },
+      {
+        "name": "Набор Семейный",
+        "weight": "1770g",
+        "price": "1499₽",
+        "category": "Наборы"
+      },
+      {
+        "name": "Молочный коктейль Шоколад",
+        "weight": "500g",
+        "price": "319₽",
+        "category": "Напитки"
+      }
+    ],
+    "real_weights": true,
+    "problems": "Bitrix CMS, prices in JS, catalog subpages 404"
+  },
+  "pizza_kuba": {
+    "strategy": "N/A",
+    "url": "pizza-kuba.ru",
+    "status": "DNS_FAILED",
+    "examples": [],
+    "real_weights": false,
+    "problems": "DNS не разрешает домен, сайт недоступен"
+  },
+  "dodo": {
+    "strategy": "N/A",
+    "url": "dodo.delivery",
+    "status": "DNS_FAILED",
+    "examples": [],
+    "real_weights": false,
+    "problems": "DNS не разрешает домен, сайт недоступен"
+  }
+}

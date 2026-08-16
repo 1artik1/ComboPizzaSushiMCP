@@ -1,0 +1,35 @@
+﻿C:\Users\1artik1\Desktop\TestOpen\.venv\Scripts\python.exe : Traceback (most recent call last):
+строка:1 знак:1
++ C:\Users\1artik1\Desktop\TestOpen\.venv\Scripts\python.exe C:\Users\1 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\1artik1\Desktop\TestOpen\.venv\project\scripts\_debug_combos.py", line 24, in <module>
+    line1, line2, line3 = calculate_combos(valid, 3000)
+                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\1artik1\Desktop\TestOpen\.venv\project\combo_mcp\engines\dp.py", line 238, in calculate_combos
+    line2 = format_combo(products, indices2, budget)
+  File "C:\Users\1artik1\Desktop\TestOpen\.venv\project\combo_mcp\engines\dp.py", line 109, in format_combo
+    for item_idx, count in indices:
+        ^^^^^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2)
+Traceback (most recent call last):
+  File "C:\Users\1artik1\Desktop\TestOpen\.venv\project\scripts\_debug_combos.py", line 43, in <module>
+    line1, line2, line3 = calculate_combos(valid, 3000)
+                          ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\1artik1\Desktop\TestOpen\.venv\project\combo_mcp\engines\dp.py", line 238, in calculate_combos
+    line2 = format_combo(products, indices2, budget)
+  File "C:\Users\1artik1\Desktop\TestOpen\.venv\project\combo_mcp\engines\dp.py", line 109, in format_combo
+    for item_idx, count in indices:
+        ^^^^^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2)
+Testing dodo...
+Parsed 159 items
+Valid (weight>0): 127
+Error: too many values to unpack (expected 2)
+
+Testing pizza_kuba...
+Parsed 44 items
+Valid (weight>0): 4
+Error: too many values to unpack (expected 2)

@@ -1,0 +1,44 @@
+﻿Item 0: ╫шъхэ сюьсюэш
+  size=25  ёь price=595.0 weight=400
+  size=25  ёь price=595.0 weight=330
+  size=30  ёь price=899.0 weight=670
+  size=30  ёь price=899.0 weight=530
+  size=35  ёь price=1149.0 weight=900
+  size=35  ёь price=1149.0 weight=750
+  size=20  ёь price=365.0 weight=270
+
+Item 1: ╫шчшсрщЄё
+  size=25  ёь price=519.0 weight=330
+  size=30  ёь price=739.0 weight=520
+  size=30  ёь price=739.0 weight=390
+  size=35  ёь price=999.0 weight=750
+  size=35  ёь price=999.0 weight=600
+  size=20  ёь price=329.0 weight=220
+
+Item 2: р-ы  ┴юыюэ№хчх
+  size=25  ёь price=459.0 weight=360
+  size=25  ёь price=459.0 weight=260
+  size=30  ёь price=699.0 weight=540
+  size=30  ёь price=699.0 weight=430
+  size=35  ёь price=899.0 weight=750
+  size=35  ёь price=899.0 weight=640
+  size=20  ёь price=319.0 weight=220
+
+Item 3: ╧шЎЎр ╥юь  ь
+  size=25  ёь price=529.0 weight=390
+  size=25  ёь price=529.0 weight=300
+  size=30  ёь price=769.0 weight=570
+  size=30  ёь price=769.0 weight=460
+  size=35  ёь price=1035.0 weight=850
+  size=35  ёь price=1035.0 weight=700
+  size=20  ёь price=345.0 weight=250
+
+Item 4: ╥Ё■Їхы№эр 
+  size=25  ёь price=549.0 weight=400
+  size=25  ёь price=549.0 weight=310
+  size=30  ёь price=915.0 weight=620
+  size=30  ёь price=915.0 weight=520
+  size=35  ёь price=1099.0 weight=790
+  size=35  ёь price=1099.0 weight=720
+  size=20  ёь price=365.0 weight=260
+

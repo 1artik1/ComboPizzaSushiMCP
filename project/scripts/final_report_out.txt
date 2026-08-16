@@ -1,0 +1,55 @@
+﻿python : Traceback (most recent call last):
+строка:1 знак:1
++ python -c "
++ ~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "<string>", line 6, in <module>
+    print(str(i) + ': ' + line)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\1artik1\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1251.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u20bd' in position 32: character maps to <undefined>
+0: 
+1: # ╘шэры№э√щ юЄў╕Є: 4 ёрщЄр фюёЄртъш хф√ т ┬юЁюэхцх
+2: # ─рЄр: 2026-08-16
+3: 
+4: ## 1. sushi_time (sushi-time.ru)
+5: - **─юьхэ:** sushi-time.ru (xn----8sbwgpzjf9b.xn--p1ai)
+6: - **╤ЄЁрЄхуш :** HTTP (requests)
+7: - **Schema.org:** фр, itemprop="name", itemprop="description", itemprop="image"
+8: - **┬хё:** span#vess_preview_XXXX (XXXX = data-id), ЇюЁьрЄ "900 уЁ"
+9: - **╓хэр:** span.sale-price-current (JS-rendered, т ёЄрЄшъх эх тёхуфр хёЄ№)
+10: - **data-title:** эрчтрэшх сы■фр
+11: - **data-category-name:** ърЄхуюЁш 
+12: - **data-id:** ID ЄютрЁр
+13: - **╨хры№э√щ тхё:** ─└ (т уЁрььрї)
+14: - **╧Ёюсыхь√:** Ўхэ√ JS-rendered, эєцэю Playwright фы  Єюўэ√ї Ўхэ
+15: 
+16: ## 2. ninja_food (ninjafood.su)
+17: - **─юьхэ:** ninjafood.su
+18: - **╤ЄЁрЄхуш :** Playwright (JS-rendered)
+19: - **CMS:** Bitrix
+20: - **╓хэ√:** JS-rendered, тшфэ√ т DOM яюёых ЁхэфхЁр
+21: - **╨хры№э√щ тхё:** ═┼╥ (тхёр эхЄ т HTML, Єюы№ъю Ўхэ√)
+22: - **╧Ёюсыхь√:** эхЄ тхёют, Bitrix CMS, JS-rendered Ўхэ√
+23: 
+24: ## 3. pizzeria_cuba (pizzeriacuba.ru)
+25: - **─юьхэ:** pizzeriacuba.ru
+26: - **╤ЄЁрЄхуш :** HTTP (requests)
+27: - **API:** https://vsem-edu-oblako.ru/singlemerchant/api/getHomeProducts
+28: - **╨хры№э√щ тхё:** ═┼╥ (item_massa яєёЄющ)
+29: - **╧Ёюсыхь√:** эхЄ Ёхры№э√ї тхёют, Ўхэ√ т JSON ъръ {"size_id":"price"}
+30: 
+31: ## 4. dodopizza (dodopizza.ru)
+32: - **─юьхэ:** dodopizza.ru
+33: - **╤ЄЁрЄхуш :** Playwright + API intercept
+34: - **API:** https://dodopizza.ru/api/v5/menu/delivery/countries/643/localities/00000193-0000-0000-0000-000000000000
+35: - **╨хры№э√щ тхё:** ─└ (foodValue.weight)
+36: - **╧Ёюсыхь√:** cookies эх эєцэ√ фы  API, 187 items, ьэюую трЁшрЎшщ
+37: 
+38: ## 5 яЁшьхЁют эр ърцф√щ ёрщЄ
+39: 
+40: ### sushi_time - 5 яЁшьхЁют:

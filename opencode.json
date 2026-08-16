@@ -3,7 +3,7 @@
   "mcp": {
     "combo-engine": {
       "type": "local",
-      "command": [".venv/Scripts/python.exe", ".venv/project/combo_mcp/server.py"],
+      "command": [".venv/Scripts/python.exe", "project/combo_mcp/server.py"],
       "enabled": true,
       "environment": {"PYTHONUTF8": "1", "PLAYWRIGHT_BROWSERS_PATH": "C:\\Users\\1artik1\\Desktop\\TestOpen\\.venv\\.browsers"}
     }

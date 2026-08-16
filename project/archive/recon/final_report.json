@@ -1,0 +1,258 @@
+{
+  "report_date": "2026-08-16",
+  "sites": [
+    {
+      "name": "sushi_time",
+      "domain": "sushi-time.ru",
+      "strategy": "HTTP",
+      "schema_org": true,
+      "api": false,
+      "has_weight": true,
+      "prices_js": true
+    },
+    {
+      "name": "ninja_food",
+      "domain": "ninjafood.su",
+      "strategy": "Playwright",
+      "schema_org": false,
+      "api": false,
+      "has_weight": false,
+      "prices_js": true
+    },
+    {
+      "name": "pizzeria_cuba",
+      "domain": "pizzeriacuba.ru",
+      "strategy": "HTTP",
+      "schema_org": true,
+      "api": true,
+      "has_weight": false,
+      "prices_js": false
+    },
+    {
+      "name": "dodopizza",
+      "domain": "dodopizza.ru",
+      "strategy": "Playwright+API",
+      "schema_org": true,
+      "api": true,
+      "has_weight": true,
+      "prices_js": false
+    }
+  ],
+  "products": [
+    {
+      "site": "sushi_time",
+      "name": "Дружба",
+      "category": "Скидки",
+      "weight": "900 гр",
+      "price": 650,
+      "ingredients": "Цыпа, тай, спайси краб, спайси курица",
+      "strategy": "HTTP",
+      "has_weight": true,
+      "prices_js": true
+    },
+    {
+      "site": "sushi_time",
+      "name": "Калейдоскоп",
+      "category": "Скидки",
+      "weight": "1200 гр",
+      "price": 300,
+      "ingredients": "Тигр, шримп, робин гуд, квин",
+      "strategy": "HTTP",
+      "has_weight": true,
+      "prices_js": true
+    },
+    {
+      "site": "sushi_time",
+      "name": "Сочи ",
+      "category": "Скидки",
+      "weight": "1600 гр",
+      "price": 400,
+      "ingredients": "Тай, бриз, тигр, токио, робин гуд, спайси курица",
+      "strategy": "HTTP",
+      "has_weight": true,
+      "prices_js": true
+    },
+    {
+      "site": "sushi_time",
+      "name": "Большой куш",
+      "category": "Скидки",
+      "weight": "2000 гр",
+      "price": 500,
+      "ingredients": "Асама, конг, гринч, эби макс, тори темпура, спайси краб, цыпа",
+      "strategy": "HTTP",
+      "has_weight": true,
+      "prices_js": true
+    },
+    {
+      "site": "sushi_time",
+      "name": "Пляжная вечеринка",
+      "category": "Скидки",
+      "weight": "2000 гр",
+      "price": 500,
+      "ingredients": "Шанхай, Фудзияма, Мадагаскар, Цзинь, Мажор, Вакай, Огурец, Курица шеф",
+      "strategy": "HTTP",
+      "has_weight": true,
+      "prices_js": true
+    },
+    {
+      "site": "ninja_food",
+      "name": "Итальянская",
+      "price": 849,
+      "weight": null,
+      "ingredients": "Ветчина, Шампиньоны, сыр Моцарелла, маслины, соус Фирменный, прованские травы",
+      "strategy": "Playwright",
+      "has_weight": false,
+      "prices_js": true
+    },
+    {
+      "site": "ninja_food",
+      "name": "Ниндзя 7 40 шт",
+      "price": 1379,
+      "weight": null,
+      "ingredients": "Треугольник с крабом, Треугольник с лососем, запеченные Маки с крабом, запеченные Маки Барбекю, Калифорния с курочкой, Норвежский",
+      "strategy": "Playwright",
+      "has_weight": false,
+      "prices_js": true
+    },
+    {
+      "site": "ninja_food",
+      "name": "Ланч Сила внутри",
+      "price": 499,
+      "weight": null,
+      "ingredients": "Удон курица грибы + Мисо суп с курицей",
+      "strategy": "Playwright",
+      "has_weight": false,
+      "prices_js": true
+    },
+    {
+      "site": "ninja_food",
+      "name": "Набор Семейный",
+      "price": 1499,
+      "weight": null,
+      "ingredients": "Пицца Мясная 33см + сет Треугольники темпура 16 шт",
+      "strategy": "Playwright",
+      "has_weight": false,
+      "prices_js": true
+    },
+    {
+      "site": "ninja_food",
+      "name": "Пеперони",
+      "price": 589,
+      "weight": null,
+      "ingredients": "Пеперони, ветчина, сыр Моцарелла, помидор, соус Фирменный",
+      "strategy": "Playwright",
+      "has_weight": false,
+      "prices_js": true
+    },
+    {
+      "site": "pizzeria_cuba",
+      "name": "ЭЛЬ-ЮНКЕ",
+      "category": "Пиццы",
+      "weight": "",
+      "price": "950",
+      "ingredients": "",
+      "strategy": "HTTP",
+      "has_weight": false,
+      "prices_js": false
+    },
+    {
+      "site": "pizzeria_cuba",
+      "name": "САНТЬЯГО",
+      "category": "Пиццы",
+      "weight": "",
+      "price": "1150",
+      "ingredients": "",
+      "strategy": "HTTP",
+      "has_weight": false,
+      "prices_js": false
+    },
+    {
+      "site": "pizzeria_cuba",
+      "name": "БАТИСТА С КРЕВЕТКАМИ",
+      "category": "Пиццы",
+      "weight": "",
+      "price": "1250",
+      "ingredients": "",
+      "strategy": "HTTP",
+      "has_weight": false,
+      "prices_js": false
+    },
+    {
+      "site": "pizzeria_cuba",
+      "name": "ВАРАДЕРО",
+      "category": "Пиццы",
+      "weight": "",
+      "price": "1100",
+      "ingredients": "",
+      "strategy": "HTTP",
+      "has_weight": false,
+      "prices_js": false
+    },
+    {
+      "site": "pizzeria_cuba",
+      "name": "МАЧЕТЕ",
+      "category": "Пиццы",
+      "weight": "",
+      "price": "1300",
+      "ingredients": "",
+      "strategy": "HTTP",
+      "has_weight": false,
+      "prices_js": false
+    },
+    {
+      "site": "dodopizza",
+      "name": "Чикен бомбони",
+      "size": "25  см",
+      "price": 595.0,
+      "weight": 400,
+      "ingredients": "Тесто 25, Куриные кусочки, Сладкий перец, Сыры чеддер и пармезан, Моцарелла, Красный лук, Соус сладкий чили, Фирменный соус альфредо",
+      "strategy": "Playwright+API",
+      "has_weight": true,
+      "prices_js": false
+    },
+    {
+      "site": "dodopizza",
+      "name": "Чизибайтс",
+      "size": "25  см",
+      "price": 519.0,
+      "weight": 330,
+      "ingredients": "Тесто 25, Чизибайтсы, Соус Брусничный, Моцарелла, Фирменный соус альфредо, Пряная говядина, Моцарелла, Сыры чеддер и пармезан",
+      "strategy": "Playwright+API",
+      "has_weight": true,
+      "prices_js": false
+    },
+    {
+      "site": "dodopizza",
+      "name": "а-ля Болоньезе",
+      "size": "25  см",
+      "price": 459.0,
+      "weight": 360,
+      "ingredients": "Тесто 25, Рубленая курочка, Свежие томаты, Сыры чеддер и пармезан, Моцарелла, Итальянские травы, Фирменный томатный соус, Пряная говядина",
+      "strategy": "Playwright+API",
+      "has_weight": true,
+      "prices_js": false
+    },
+    {
+      "site": "dodopizza",
+      "name": "Пицца Том ям",
+      "size": "25  см",
+      "price": 529.0,
+      "weight": 390,
+      "ingredients": "Тесто 25, Нежный цыпленок, соус том ям, Сладкий перец, Шампиньоны, Свежие томаты, Моцарелла, Фирменный соус альфредо",
+      "strategy": "Playwright+API",
+      "has_weight": true,
+      "prices_js": false
+    },
+    {
+      "site": "dodopizza",
+      "name": "Трюфельная",
+      "size": "25  см",
+      "price": 549.0,
+      "weight": 400,
+      "ingredients": "Тесто 25, Балыковая колбаса, Шампиньоны, Соус трюфельный, Фирменный соус альфредо, Моцарелла, Пряная говядина, Моцарелла",
+      "strategy": "Playwright+API",
+      "has_weight": true,
+      "prices_js": false
+    }
+  ]
+}

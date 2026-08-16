@@ -1,0 +1,169 @@
+# -*- coding: utf-8 -*-
+"""pizza_kuba.py — парсер Pizza Kubа (pizzeriacuba.ru).
+
+HTTP: API https://vsem-edu-oblako.ru/singlemerchant/api/getHomeProducts
+с GET-параметрами (device_id, merchant_keys, и т.д.)
+- category.name: категория
+- item_name: название
+- price: JSON {"size_id": "price"} → берём минимальную цену
+- item_massa: обычно пустой → weight_g=None
+- item_description: состав (если есть)
+"""
+
+import re
+import json
+from combo_mcp.chains.base import ChainParser, chain, ChainUnavailable
+from combo_mcp import config as mcp_config
+from combo_mcp import http_client
+
+
+@chain("pizza_kuba")
+class PizzaKubaParser(ChainParser):
+    """Pizza Kubа — API на платформе vsem-edu-oblako."""
+
+    id = "pizza_kuba"
+    name = "Пицца Куба"
+    city = "Воронеж"
+    url = "https://pizzeriacuba.ru/"
+    description = "Пиццерия с доставкой. API vsem-edu-oblako."
+    needs_playwright = False
+
+    API_URL = "https://vsem-edu-oblako.ru/singlemerchant/api/getHomeProducts"
+
+    API_PARAMS = {
+        "device_id": "b14ed9d1-1adf-4778-90cf-32e234d7d66b",
+        "device_platform": "desktop",
+        "merchant_keys": "6be77015e90108fda45c894f345a5769",
+        "transaction_type": "delivery",
+        "json": "true",
+        "lang": "ru",
+        "frontend": "modern",
+        "full": "true",
+    }
+
+    def parse(self):
+        """Распарсить меню Pizza Kubа через API."""
+        chain_cfg = mcp_config.get_chain(self.id)
+        api_url = self.API_URL
+
+        try:
+            session, timeout = http_client.get_session(chain_cfg)
+            session.headers.update({
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/120.0.0.0 Safari/537.36"
+                ),
+                "Accept": "application/json, text/plain, */*",
+                "Referer": "https://pizzeriacuba.ru/",
+            })
+            r = session.get(
+                api_url,
+                params=self.API_PARAMS,
+                timeout=timeout,
+                verify=False,
+                allow_redirects=True,
+            )
+
+            if r.status_code != 200:
+                raise ChainUnavailable(
+                    f"Pizza Kubа API вернул {r.status_code}. "
+                    "Требуется авторизация или другой эндпоинт."
+                )
+
+            text = r.text.strip()
+            # Handle JSONP wrapper: ({...})
+            if text.startswith("(") and text.endswith(")"):
+                text = text[1:-1]
+
+            data = json.loads(text)
+        except ChainUnavailable:
+            raise
+        except Exception as e:
+            raise ChainUnavailable(
+                f"Pizza Kubа API недоступен: {e}. "
+                "Эндпоинт: " + api_url
+            )
+
+        products = self._parse_api(data)
+
+        if not products:
+            raise ChainUnavailable(
+                "Pizza Kubа: API вернул пустой результат. "
+                "Структура API могла измениться."
+            )
+
+        return products
+
+    def _parse_api(self, data):
+        """Parse products from API response."""
+        products = []
+        details = data.get("details", {})
+        categories = details.get("data", [])
+
+        if not isinstance(categories, list):
+            return []
+
+        for cat in categories:
+            if not isinstance(cat, dict):
+                continue
+            cat_name = cat.get("name", "Каталог")
+            items = cat.get("items", [])
+            if not isinstance(items, list):
+                continue
+
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+
+                name = item.get("item_name", "").strip()
+                if not name:
+                    continue
+
+                # Parse price: JSON string like {"size_id": "price"}
+                price_raw = item.get("price", "")
+                price = None
+                if isinstance(price_raw, str):
+                    try:
+                        price_dict = json.loads(price_raw)
+                        if isinstance(price_dict, dict):
+                            # Find minimum price
+                            min_price = None
+                            for v in price_dict.values():
+                                try:
+                                    p = int(float(str(v)))
+                                    if min_price is None or p < min_price:
+                                        min_price = p
+                                except (ValueError, TypeError):
+                                    pass
+                            price = min_price
+                    except (json.JSONDecodeError, ValueError, TypeError):
+                        pass
+
+                if price is None or price <= 0:
+                    continue
+
+                # Parse weight
+                weight = None
+                massa = item.get("item_massa", "")
+                if isinstance(massa, str) and massa.strip():
+                    m = re.search(r"(\d+)", massa)
+                    if m:
+                        weight = int(m.group(1))
+
+                # Parse description
+                description = item.get("item_description", "").strip()
+                if not description:
+                    description = name
+
+                products.append({
+                    "name": name,
+                    "weight_g": weight,
+                    "price_rub": price,
+                    "is_from_price": True,
+                    "description": description,
+                    "category": cat_name,
+                    "product_url": self.url,
+                })
+
+        return products

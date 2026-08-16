@@ -1,0 +1,21 @@
+﻿Size: 1026413
+Script tags: 44
+Product divs: 441
+Price divs: 32
+Section divs: 3
+Unique short texts: 245
+  .smart-captcha{min-width:300px;height:118px}.smart-captcha_invisible{height:0}
+C:\Users\1artik1\Desktop\TestOpen\.venv\Scripts\python.exe : Traceback (most recent call last):
+строка:1 знак:1
++ C:\Users\1artik1\Desktop\TestOpen\.venv\Scripts\python.exe C:\Users\1 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\1artik1\Desktop\TestOpen\.venv\project\scripts\_explore_dodo.py", line 42, in <module>
+    print('  ' + t)
+    ~~~~~^^^^^^^^^^
+  File "C:\Users\1artik1\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1251.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 12-13: character maps to <undefined>
