@@ -28,6 +28,7 @@ except AttributeError:
 from combo_mcp.cache import load_cache
 from combo_mcp.config import get_chain_meta
 from combo_mcp.engines.drinks import is_drink
+from combo_mcp.names import localize
 from combo_mcp.tools.best_combo import best_combo
 from combo_mcp.tools.health_check import health_check
 
@@ -64,8 +65,13 @@ def _norm_name(name):
     return name.replace('\\"', '"')
 
 
+def _strip_size_suffix(name):
+    """'Имя (500 г) x1' → 'Имя' (отрезаем подпись размера из items-строки)."""
+    return re.sub(r"\s*\([^()]*\)\s*$", "", name)
+
+
 def _parse_items_str(items_str):
-    """'Имя x2, Имя x1' -> [('Имя', 2), ...]"""
+    """'Имя (500 г) x2, Имя x1' -> [('Имя', 2), ...]"""
     parts = []
     for chunk in items_str.split(","):
         chunk = chunk.strip()
@@ -73,9 +79,9 @@ def _parse_items_str(items_str):
             continue
         m = re.match(r"^(.*?)\s*x(\d+)$", chunk)
         if m:
-            parts.append((m.group(1).strip(), int(m.group(2))))
+            parts.append((_strip_size_suffix(m.group(1).strip()), int(m.group(2))))
         else:
-            parts.append((chunk, 1))
+            parts.append((_strip_size_suffix(chunk), 1))
     return parts
 
 
@@ -133,7 +139,7 @@ def _check_invariants(cid, key, budget, persons, raw, exp):
     cache_items = load_cache(cid).get("items", []) or []
     by_name = {}
     for it in cache_items:
-        by_name.setdefault(_norm_name(it["name"]), it)
+        by_name.setdefault(localize(cid, _norm_name(it["name"])), it)
 
     # ровно persons напитков (сколько реально доступно с весом)
     valid_drinks = sorted(
@@ -208,7 +214,7 @@ def check_dishes():
         items = load_cache(cid).get("items", []) or []
         by_name = {}
         for it in items:
-            by_name.setdefault(_norm_name(it["name"]), it)
+            by_name.setdefault(localize(cid, _norm_name(it["name"])), it)
         for d in list_dishes:
             found = by_name.get(_norm_name(d["name"]))
             if found is None:

@@ -111,10 +111,13 @@ def format_combo(items, indices, budget):
         item = items[item_idx]
         total_weight += item["weight_g"] * count
         total_price += item["price_rub"] * count
+        label = item.get("_size_label", "")
+        display_name = item.get("_local_name") or item["name"]
+        name = f"{display_name} ({label})" if label else display_name
         if count == 1:
-            parts.append(f"{item['name']} x1")
+            parts.append(f"{name} x1")
         else:
-            parts.append(f"{item['name']} x{count}")
+            parts.append(f"{name} x{count}")
     price_per_100 = total_price / total_weight * 100 if total_weight > 0 else 0
     line = f"{total_weight} g | {total_price} rub | {price_per_100:.1f} rub/100g | {', '.join(parts)}"
     return line

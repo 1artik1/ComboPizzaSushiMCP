@@ -13,6 +13,7 @@ from combo_mcp.config import get_chain_meta, get_chain_class
 from combo_mcp.cache import load_cache, save_cache
 from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.weights import apply_estimated_weights
+from combo_mcp.names import localize, item_size_label
 
 
 def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
@@ -75,6 +76,9 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
     # Add taste
     for p in valid_items:
         p["_taste"] = count_ingredients(p.get("description", ""))
+        p["_orig_name"] = p.get("name", "")
+        p["_local_name"] = localize(chain_id, p.get("name", ""))
+        p["_size_label"] = item_size_label(p)
 
     # Calculate combos
     try:

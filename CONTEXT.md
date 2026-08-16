@@ -29,6 +29,11 @@ check_price, health_check, compare, get_chain_info, get_chains, clear_cache, ref
   `config/estimated_weights.json` (weight_source="reference", поле source — откуда взят вес).
   `weight_source`: site | size_name (pizza_kuba из названий размеров) | reference | none.
 - Позиции без веса из комбо исключаются (мерч додо, палочки — намеренно).
+- Локализация: `config/translations.json` (додо), модуль names.py: localize() + item_size_label().
+  В комбо имена русские (бренды как есть), у каждой позиции вес единицы:
+  «Пицца Пепперони Фреш (370 г) x2», справочные закуски «(9 шт, 20 г/шт)».
+  ВАЖНО: в данных (кэш) имена оригинальные — перевод только в выводе (dp.format_combo,
+  best_combo ставит _local_name/_size_label; детекция напитков по _orig_name).
 - Кэш: cache\, stale-if-error; ninja_food обходится с адаптивным рейт-гейтом (_RateGate).
 - LSP-варнинги в проекте — ложные (mcp.server.mcpserver import, reconfigure,
   .get на None в autotest.py) — не чинить.

@@ -23,7 +23,9 @@ from combo_mcp.cache import load_cache, save_cache
 from combo_mcp.chains.base import get_chain_class, ChainUnavailable
 from combo_mcp.engines.dp import calculate_combos
 from combo_mcp.engines.taste import count_ingredients
+from combo_mcp.names import localize, item_size_label
 from combo_mcp.tools.compare import compare as _compare
+from combo_mcp.weights import apply_estimated_weights
 
 
 def run_selftest():
@@ -50,6 +52,9 @@ def run_selftest():
                 else:
                     items = []
 
+            # Apply reference book for items without weight
+            items, _ = apply_estimated_weights(items, cid)
+
             print(f"  Parsed: {len(items)} items")
             for it in items[:5]:
                 w = it.get("weight_g", "N/A")
@@ -66,7 +71,11 @@ def run_selftest():
                 p = it.get("price_rub")
                 if p is not None and p > 0:
                     if w is not None and w > 0:
-                        valid_items.append(dict(it))
+                        p_item = dict(it)
+                        p_item["_orig_name"] = p_item.get("name", "")
+                        p_item["_local_name"] = localize(cid, p_item.get("name", ""))
+                        p_item["_size_label"] = item_size_label(p_item)
+                        valid_items.append(p_item)
                     else:
                         no_weight += 1
                 else:
