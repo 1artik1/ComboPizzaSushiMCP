@@ -9,6 +9,8 @@
 - [x] Порядок вариаций: Оптимум → Без повторов → Макс. вес → доп. стратегии (variations > 3)
 - [x] Детекция напитков: категория (napitki/Напитки/drinks) + эвристика по названию (RU/EN),
       без ложных срабатываний (ГУАНТАНАМО, Мини Колада, Фреш)
+- [x] Фикс подстрок в напитках: \bcola\b (chocolate ≠ cola), \bморс\b (Морской ≠ морс);
+      добавлены бренды/типы додо (Dobry, Nectar, BonaAqua, lemon-lime, kiwi-grapes, fruit drink)
 - [x] health_check — 10-й MCP-инструмент (HTTP, парсинг, кол-во позиций; refresh=false — по кэшу)
 - [x] Автотесты scripts/autotest.py без record-режима:
       эталоны комбо (tests/expected.json), инварианты данных, контрольные блюда, связка с health_check

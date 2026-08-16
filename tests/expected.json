@@ -250,58 +250,82 @@
     "sushi_time": {
       "1500_1": [
         {
-          "weight_g": 1150,
-          "price_rub": 1470,
-          "price_per_100g": 127.8,
-          "items": "Морской x1"
+          "weight_g": 1570,
+          "price_rub": 1370,
+          "price_per_100g": 87.3,
+          "items": "Чеддер x1, Удон с курицей и беконом x3"
+        },
+        {
+          "weight_g": 2205,
+          "price_rub": 1498,
+          "price_per_100g": 67.9,
+          "items": "Тори Темпура x1, Хоккайдо x1, Тяхан с курицей x1, Тяхан вегетарианский x1, Рамен с курицей x1, Рамен со свининой x1"
+        },
+        {
+          "weight_g": 2405,
+          "price_rub": 1499,
+          "price_per_100g": 62.3,
+          "items": "Огурец x1, Тяхан вегетарианский x2, Рамен с курицей x2, Рамен со свининой x2"
         }
       ],
       "1500_2": [
         {
-          "weight_g": 1150,
-          "price_rub": 1470,
-          "price_per_100g": 127.8,
-          "items": "Морской x1"
+          "weight_g": 1570,
+          "price_rub": 1370,
+          "price_per_100g": 87.3,
+          "items": "Чеддер x1, Удон с курицей и беконом x3"
+        },
+        {
+          "weight_g": 2205,
+          "price_rub": 1498,
+          "price_per_100g": 67.9,
+          "items": "Тори Темпура x1, Хоккайдо x1, Тяхан с курицей x1, Тяхан вегетарианский x1, Рамен с курицей x1, Рамен со свининой x1"
+        },
+        {
+          "weight_g": 2405,
+          "price_rub": 1499,
+          "price_per_100g": 62.3,
+          "items": "Огурец x1, Тяхан вегетарианский x2, Рамен с курицей x2, Рамен со свининой x2"
         }
       ],
       "3000_1": [
         {
-          "weight_g": 2890,
-          "price_rub": 2980,
-          "price_per_100g": 103.1,
-          "items": "Морской x1, Удон с курицей и беконом x3, Сэндвич с беконом x2"
+          "weight_g": 3260,
+          "price_rub": 2968,
+          "price_per_100g": 91.0,
+          "items": "Пепперони (горчичная основа) x2, Удон с курицей и беконом x3, Сэндвич с беконом x3"
         },
         {
-          "weight_g": 3415,
-          "price_rub": 2978,
-          "price_per_100g": 87.2,
-          "items": "Морской x1, Тори Темпура x1, Рамен со свининой x1, Тяхан с курицей x1, Тяхан вегетарианский x1, Рамен с курицей x1, Рамен со свининой x1"
+          "weight_g": 4275,
+          "price_rub": 2999,
+          "price_per_100g": 70.2,
+          "items": "Дружба x1, Огурец x1, Дружба x1, Удон с курицей x1, Рамен со свининой x1, Тяхан вегетарианский x1, Рамен с курицей x1, Рамен с креветками x1, Рамен со свининой x1"
         },
         {
-          "weight_g": 3555,
-          "price_rub": 2969,
-          "price_per_100g": 83.5,
-          "items": "Морской x1, Огурец x1, Тяхан вегетарианский x2, Рамен с курицей x2, Рамен со свининой x2"
+          "weight_g": 4520,
+          "price_rub": 3000,
+          "price_per_100g": 66.4,
+          "items": "Дружба x2, Рамен со свининой x1, Тяхан вегетарианский x2, Рамен с курицей x2, Рамен со свининой x2"
         }
       ],
       "3000_2": [
         {
-          "weight_g": 2410,
-          "price_rub": 2959,
-          "price_per_100g": 122.8,
-          "items": "Морской x1, Морская (сливочная основа) x1, Удон с курицей и беконом x1, Сэндвич с беконом x1"
+          "weight_g": 3260,
+          "price_rub": 2968,
+          "price_per_100g": 91.0,
+          "items": "Пепперони (горчичная основа) x2, Удон с курицей и беконом x3, Сэндвич с беконом x3"
         },
         {
-          "weight_g": 2665,
-          "price_rub": 2988,
-          "price_per_100g": 112.1,
-          "items": "Морской x1, Морская (сливочная основа) x1, Огурец x1, Тяхан вегетарианский x1, Рамен с курицей x1, Соевый соус x1, Васаби x1"
-        },
-        {
-          "weight_g": 2690,
+          "weight_g": 4275,
           "price_rub": 2999,
-          "price_per_100g": 111.5,
-          "items": "Морской x1, Морская (сливочная основа) x1, Фреш x1, Тяхан вегетарианский x2"
+          "price_per_100g": 70.2,
+          "items": "Дружба x1, Огурец x1, Дружба x1, Удон с курицей x1, Рамен со свининой x1, Тяхан вегетарианский x1, Рамен с курицей x1, Рамен с креветками x1, Рамен со свининой x1"
+        },
+        {
+          "weight_g": 4520,
+          "price_rub": 3000,
+          "price_per_100g": 66.4,
+          "items": "Дружба x2, Рамен со свининой x1, Тяхан вегетарианский x2, Рамен с курицей x2, Рамен со свининой x2"
         }
       ]
     },
@@ -472,82 +496,82 @@
     "dodo": {
       "1500_1": [
         {
-          "weight_g": 6040,
-          "price_rub": 1473,
-          "price_per_100g": 24.4,
-          "items": "BonaAqua Still Water x1, Dobry Lemon-Lime x2, Dobry Kiwi-Grapes x1, Nectar Dobry Multifruit x2, Nectar Dobry Apple-Cherry-Chokeberry x2, Condensed milk x2, Nectar Dobry Multifruit x2"
+          "weight_g": 1970,
+          "price_rub": 1490,
+          "price_per_100g": 75.6,
+          "items": "BonaAqua Still Water x1, Pepperoni Fresh x1, Create your own pizza x2, Triple Chocolate Muffin x1, Condensed milk x2, Triple Chocolate Muffin x2"
         },
         {
-          "weight_g": 4515,
-          "price_rub": 1482,
-          "price_per_100g": 32.8,
-          "items": "BonaAqua Still Water x1, Create your own pizza x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Nectar Dobry Multifruit x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Salted Caramel Maffin x1, Raspberry sauce x1, Condensed milk x1, Nectar Dobry Multifruit x1"
+          "weight_g": 1890,
+          "price_rub": 1486,
+          "price_per_100g": 78.6,
+          "items": "BonaAqua Still Water x1, Pepperoni Fresh x1, Cheesy x1, Create your own pizza x1, Triple Chocolate Muffin x1, Salted Caramel Maffin x1, Triple Chocolate Muffin x1"
         },
         {
-          "weight_g": 4440,
-          "price_rub": 1488,
-          "price_per_100g": 33.5,
-          "items": "BonaAqua Still Water x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Nectar Dobry Multifruit x1, Nectar Dobry Multifruit x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Burger pizza x1, Condensed milk x1"
+          "weight_g": 1520,
+          "price_rub": 1493,
+          "price_per_100g": 98.2,
+          "items": "BonaAqua Still Water x1, Roman-style pesto x1, Julienne x1, Curd fritters without topping x1, Condensed milk x1"
         }
       ],
       "1500_2": [
         {
-          "weight_g": 6065,
-          "price_rub": 1498,
-          "price_per_100g": 24.7,
-          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Dobry Lemon-Lime x2, Nectar Dobry Multifruit x2, Nectar Dobry Apple-Cherry-Chokeberry x2, Raspberry sauce x1, Condensed milk x2, Nectar Dobry Multifruit x2"
+          "weight_g": 2350,
+          "price_rub": 1486,
+          "price_per_100g": 63.2,
+          "items": "BonaAqua Still Water x1, Nectar Dobry Multifruit x1, Pepperoni Fresh x1, Create your own pizza x2, Condensed milk x2, Triple Chocolate Muffin x2"
         },
         {
-          "weight_g": 4910,
-          "price_rub": 1499,
-          "price_per_100g": 30.5,
-          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Pepperoni Fresh x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Nectar Dobry Multifruit x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Condensed milk x1, Nectar Dobry Multifruit x1, Condensed milk x1"
+          "weight_g": 2290,
+          "price_rub": 1497,
+          "price_per_100g": 65.4,
+          "items": "BonaAqua Still Water x1, Nectar Dobry Multifruit x1, Pepperoni Fresh x1, Cheesy x1, Create your own pizza x1, Triple Chocolate Muffin x1, Condensed milk x1, Triple Chocolate Muffin x1"
         },
         {
-          "weight_g": 4895,
-          "price_rub": 1499,
-          "price_per_100g": 30.6,
-          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Nectar Dobry Multifruit x1, Nectar Dobry Multifruit x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Pepperoni Fresh x1, Raspberry sauce x1"
+          "weight_g": 1915,
+          "price_rub": 1493,
+          "price_per_100g": 78.0,
+          "items": "BonaAqua Still Water x1, Nectar Dobry Multifruit x1, Roman-style pesto x1, Julienne x1, Raspberry sauce x1, Condensed milk x1"
         }
       ],
       "3000_1": [
         {
-          "weight_g": 8690,
-          "price_rub": 2990,
-          "price_per_100g": 34.4,
-          "items": "BonaAqua Still Water x1, Pepperoni Fresh x1, Create your own pizza x2, Dobry Lemon-Lime x2, Dobry Kiwi-Grapes x2, Dobry Orange x2, Nectar Dobry Multifruit x2, Nectar Dobry Apple-Cherry-Chokeberry x2, Salted Caramel Maffin x1, Nectar Dobry Multifruit x2"
+          "weight_g": 3420,
+          "price_rub": 2992,
+          "price_per_100g": 87.5,
+          "items": "BonaAqua Still Water x1, Ham and pickles x2, Pepperoni Fresh x2, Create your own pizza x2, Triple Chocolate Muffin x2, Salted Caramel Maffin x2, Condensed milk x2, Triple Chocolate Muffin x2, Condensed milk x1"
         },
         {
-          "weight_g": 5910,
-          "price_rub": 2991,
-          "price_per_100g": 50.6,
-          "items": "BonaAqua Still Water x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Create your own pizza x1, Hashbrowns x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Nectar Dobry Multifruit x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Salted Caramel Maffin x1, Nectar Dobry Multifruit x1"
+          "weight_g": 3210,
+          "price_rub": 3000,
+          "price_per_100g": 93.5,
+          "items": "BonaAqua Still Water x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Burger pizza x1, Create your own pizza x1, Ham & Cheese Pocket Pizza x1, Triple Chocolate Muffin x1, Salted Caramel Maffin x1, Triple Chocolate Muffin x1"
         },
         {
-          "weight_g": 5440,
-          "price_rub": 2985,
-          "price_per_100g": 54.9,
-          "items": "BonaAqua Still Water x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Nectar Dobry Multifruit x1, Nectar Dobry Multifruit x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Salted Caramel Maffin x1, Condensed milk x1"
+          "weight_g": 2410,
+          "price_rub": 2980,
+          "price_per_100g": 123.7,
+          "items": "BonaAqua Still Water x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Dodo x1, Cold chicken roll x1, Condensed milk x1"
         }
       ],
       "3000_2": [
         {
-          "weight_g": 9070,
-          "price_rub": 2986,
-          "price_per_100g": 32.9,
-          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Pepperoni Fresh x1, Create your own pizza x2, Dobry Lemon-Lime x2, Dobry Kiwi-Grapes x2, Dobry Orange x2, Nectar Dobry Multifruit x2, Nectar Dobry Apple-Cherry-Chokeberry x2, Nectar Dobry Multifruit x2"
+          "weight_g": 3800,
+          "price_rub": 2988,
+          "price_per_100g": 78.6,
+          "items": "BonaAqua Still Water x1, Nectar Dobry Multifruit x1, Ham and pickles x2, Pepperoni Fresh x2, Create your own pizza x2, Triple Chocolate Muffin x2, Salted Caramel Maffin x1, Condensed milk x2, Triple Chocolate Muffin x2, Condensed milk x1"
         },
         {
-          "weight_g": 6330,
-          "price_rub": 2987,
-          "price_per_100g": 47.2,
-          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Create your own pizza x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Nectar Dobry Multifruit x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Salted Caramel Maffin x1, Nectar Dobry Multifruit x1"
+          "weight_g": 3620,
+          "price_rub": 2994,
+          "price_per_100g": 82.7,
+          "items": "BonaAqua Still Water x1, Nectar Dobry Multifruit x1, Ham and pickles x1, Pepperoni Fresh x1, Garlic Chicken x1, Cheesy x1, Burger pizza x1, Create your own pizza x1, Triple Chocolate Muffin x1, Salted Caramel Maffin x1, Condensed milk x1, Chicken Nuggets x1, Triple Chocolate Muffin x1"
         },
         {
-          "weight_g": 5820,
-          "price_rub": 2981,
-          "price_per_100g": 51.2,
-          "items": "BonaAqua Still Water x1, Dobry Apple Juice x1, Nectar Dobry Apple-Cherry-Chokeberry x1, Nectar Dobry Multifruit x1, Nectar Dobry Multifruit x1, Dobry Lemon-Lime x1, Dobry Kiwi-Grapes x1, Dobry Orange x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Condensed milk x1"
+          "weight_g": 2850,
+          "price_rub": 2990,
+          "price_per_100g": 104.9,
+          "items": "BonaAqua Still Water x1, Nectar Dobry Multifruit x1, Roman-style pesto x1, Julienne x1, Shrimp and pesto x1, Dodo x1, Triple Chocolate Muffin x1"
         }
       ]
     }

@@ -12,9 +12,9 @@ _DRINK_CATEGORIES = {"napitki", "напитки", "drinks", "напиток"}
 
 _DRINK_PATTERNS = [
     r"лимонад|lemonade",
-    r"морс|квас|kvas|сбитень",
+    r"\bморс\b|квас|kvas|сбитень",
     r"сок|juice",
-    r"\bкола\b|cola|coca|pepsi|спрайт|sprite|фанта|fanta|миринда|soda",
+    r"\bкола\b|\bcola\b|coca|pepsi|спрайт|sprite|фанта|fanta|миринда|soda",
     r"напиток|drink",
     r"чай|tea",
     r"кофе|капучино|латте|эспрессо|американо|latte|americano|cappuccino|flat white|coffee",
@@ -26,6 +26,13 @@ _DRINK_PATTERNS = [
     r"энергетик|energy",
     r"айран",
     r"мохито|mojito|cocoa|какао|ice tea|айс ти",
+    r"\bдобрый\b|\bdobry\b",
+    r"nectar|нектар",
+    r"мультифрукт|multifruit",
+    r"lemon-lime|лимон-лайм",
+    r"kiwi-grapes",
+    r"bonaaqua|бонаква|bona aqua",
+    r"fruit drink|фруктовый напиток",
 ]
 
 _DRINK_RE = re.compile("|".join(_DRINK_PATTERNS), re.IGNORECASE)
