@@ -36,7 +36,7 @@ EXPECTED_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__f
 
 MIN_ITEMS = {
     "la_pizza": 30,
-    "pizza_kuba": 4,
+    "pizza_kuba": 25,
     "ninja_food": 100,
     "sushi_time": 150,
     "sushi_darom": 100,

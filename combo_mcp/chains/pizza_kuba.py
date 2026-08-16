@@ -6,7 +6,7 @@ HTTP: API https://vsem-edu-oblako.ru/singlemerchant/api/getHomeProducts
 - category.name: категория
 - item_name: название
 - price: JSON {"size_id": "price"} → берём минимальную цену
-- item_massa: обычно пустой → weight_g=None
+- item_massa: обычно пустой → вес из названия размера: "33см (1кг)", "41см (1.5кг)", "150 г", "1 литр"
 - item_description: состав (если есть)
 """
 
@@ -143,13 +143,15 @@ class PizzaKubaParser(ChainParser):
                 if price is None or price <= 0:
                     continue
 
-                # Parse weight
+                # Parse weight: item_massa → размер минимальной цены → любой размер
                 weight = None
                 massa = item.get("item_massa", "")
                 if isinstance(massa, str) and massa.strip():
                     m = re.search(r"(\d+)", massa)
                     if m:
                         weight = int(m.group(1))
+                if weight is None:
+                    weight = self._weight_from_sizes(item.get("prices"), price)
 
                 # Parse description
                 description = item.get("item_description", "").strip()
@@ -167,3 +169,45 @@ class PizzaKubaParser(ChainParser):
                 })
 
         return products
+
+    def _weight_from_sizes(self, prices, min_price):
+        """Вес из названия размера: '33см (1кг)', '41см (1.5кг)', '150 г', '1 литр'.
+
+        Сначала размер, соответствующий минимальной цене, затем любой с весом.
+        """
+        if not isinstance(prices, list):
+            return None
+
+        for p in prices:
+            if not isinstance(p, dict):
+                continue
+            if p.get("price") == min_price:
+                w = self._weight_from_size(p.get("size", ""))
+                if w:
+                    return w
+
+        for p in prices:
+            if not isinstance(p, dict):
+                continue
+            w = self._weight_from_size(p.get("size", ""))
+            if w:
+                return w
+
+        return None
+
+    @staticmethod
+    def _weight_from_size(size):
+        """Извлечь вес из строки размера. Возвращает граммы или None."""
+        if not isinstance(size, str):
+            return None
+        size = size.strip().lower()
+        m = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:кг|kg)", size)
+        if m:
+            return int(float(m.group(1).replace(",", ".")) * 1000)
+        m = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:гр?а?мм?|г|g)\b", size)
+        if m:
+            return int(float(m.group(1).replace(",", ".")))
+        m = re.search(r"(\d+(?:[.,]\d+)?)\s*л(?:ит(?:р(?:а|ов)?)?)?\b", size)
+        if m:
+            return int(float(m.group(1).replace(",", ".")) * 1000)
+        return None
