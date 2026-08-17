@@ -1,4 +1,5 @@
 {
+  "extra_refresh_at": "11:00",
   "chains": {
     "la_pizza":    {"url": "https://la-pizza.pro", "enabled": true,  "ttl_minutes": 120, "headers": {}, "cookies": {}},
     "sushi_darom": {"url": "https://voronezh.sushi-darom.com/", "enabled": true, "ttl_minutes": 120, "headers": {}, "cookies": {}},

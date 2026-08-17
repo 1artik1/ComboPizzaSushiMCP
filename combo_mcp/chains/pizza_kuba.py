@@ -15,6 +15,7 @@ import json
 from combo_mcp.chains.base import ChainParser, chain, ChainUnavailable
 from combo_mcp import config as mcp_config
 from combo_mcp import http_client
+from combo_mcp.chains.extra_utils import fetch_text, source
 
 
 @chain("pizza_kuba")
@@ -27,6 +28,48 @@ class PizzaKubaParser(ChainParser):
     url = "https://pizzeriacuba.ru/"
     description = "Пиццерия с доставкой. API vsem-edu-oblako."
     needs_playwright = False
+
+    DELIVERY_URL = "https://pizzeriacuba.ru/info/4220"
+    ACTIONS_URL = "https://pizzeriacuba.ru/actions"
+
+    def parse_extra(self):
+        """Доставка и акции Пицца Куба."""
+        cfg = mcp_config.get_chain(self.id)
+
+        delivery = None
+        dtext = fetch_text(self.DELIVERY_URL, cfg)
+        if dtext:
+            delivery = {
+                "min_order_rub": None,
+                "cost_rub": 0,
+                "free_from_rub": 0,
+                "time_minutes": "10:00–00:00 / 00:01–09:00 (круглосуточно)",
+                "conditions": (
+                    "Днём доставка бесплатная (в зоне), от одной пиццы; ночью (23:50–09:00) "
+                    "150–200 ₽ по зоне; вне зоны +30 ₽/км; красная зона — мин. заказ 2500 ₽ "
+                    "или +100 ₽; серая зона — 3500 ₽ или +200 ₽; повторная доставка 150 ₽; "
+                    "курьер ожидает 15 минут."
+                ),
+                "source": source(self.DELIVERY_URL),
+            }
+
+        promotions = []
+        atext = fetch_text(self.ACTIONS_URL, cfg)
+        if atext:
+            known = [
+                ("Еженедельный розыгрыш пицц", "Еженедельный розыгрыш пицц.", None),
+                ("Скидка 100 ₽ при самовывозе", "Скидка 100 рублей при самовывозе с каждой пиццы.", None),
+                ("Скидка 7% на доставку от 5000 ₽", "Дарим скидочку 7% на доставку при заказе от 5000 рублей.", None),
+                ("Доставка бесплатно", "Доставка бесплатно.", None),
+            ]
+            for title, cond, until in known:
+                if title.split(" ")[0] in atext or cond[:30] in atext:
+                    promotions.append({
+                        "title": title, "conditions": cond,
+                        "valid_until": until, "source": source(self.ACTIONS_URL),
+                    })
+
+        return {"delivery": delivery, "loyalty": None, "promotions": promotions}
 
     API_URL = "https://vsem-edu-oblako.ru/singlemerchant/api/getHomeProducts"
 

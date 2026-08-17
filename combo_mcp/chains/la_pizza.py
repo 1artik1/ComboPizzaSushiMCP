@@ -8,6 +8,7 @@ import re
 from combo_mcp.chains.base import ChainParser, chain, ChainUnavailable
 from combo_mcp import config as mcp_config
 from combo_mcp import http_client
+from combo_mcp.chains.extra_utils import fetch_text, source
 
 
 @chain("la_pizza")
@@ -20,6 +21,50 @@ class LaPizzaParser(ChainParser):
     url = "https://la-pizza.pro"
     description = "Сеть доставки пиццы. Каталог: обычные, гигант, римские + комбо."
     needs_playwright = False
+
+    DELIVERY_URL = "https://la-pizza.pro/info/9707"
+    ACTIONS_URL = "https://la-pizza.pro/actions"
+
+    def parse_extra(self):
+        """Доставка и акции La Pizza (страницы «Доставка и оплата», «Акции»)."""
+        cfg = mcp_config.get_chain(self.id)
+
+        delivery = None
+        dtext = fetch_text(self.DELIVERY_URL, cfg)
+        if dtext:
+            min_order = None
+            m = re.search(r"Минимальная сумма заказа составляет (\d+) рублей", dtext)
+            if m:
+                min_order = int(m.group(1))
+            delivery = {
+                "min_order_rub": min_order,
+                "cost_rub": None,
+                "free_from_rub": None,
+                "time_minutes": "09:00–23:00",
+                "conditions": (
+                    "Стоимость доставки уточняется у оператора. Курьер ожидает 10 минут; "
+                    "повторная доставка от 180 ₽; заказы от 5000 ₽ — полная предоплата; "
+                    "первый заказ от 3000 ₽ — предоплата; самовывоз до 23:30; "
+                    "скидки не суммируются с акциями."
+                ),
+                "source": source(self.DELIVERY_URL),
+            }
+
+        promotions = []
+        atext = fetch_text(self.ACTIONS_URL, cfg)
+        if atext:
+            m = re.search(r"При самовывозе скидка 100 рублей", atext)
+            if m:
+                promotions.append({
+                    "title": "Скидка 100 ₽ при самовывозе",
+                    "conditions": (
+                        "Распространяется только на пиццу. Акции не суммируются."
+                    ),
+                    "valid_until": None,
+                    "source": source(self.ACTIONS_URL),
+                })
+
+        return {"delivery": delivery, "loyalty": None, "promotions": promotions}
 
     CATALOGS = [
         "/catalog/picci-41-sm-33-sm-i-21-sm",

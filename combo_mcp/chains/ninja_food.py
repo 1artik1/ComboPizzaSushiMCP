@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 from combo_mcp.chains.base import ChainParser, chain, ChainUnavailable
 from combo_mcp import config as mcp_config
 from combo_mcp import http_client
+from combo_mcp.chains.extra_utils import fetch_text, find_promos, source
 
 
 class _RateGate:
@@ -261,3 +262,70 @@ class NinjaFoodParser(ChainParser):
             "weight_g": weight,
             "is_from_price": bool(diff_m and diff_m.group(1) != "0"),
         }
+
+    # ------------------------------------------------------------------
+    # Доп. информация: доставка, лояльность, акции
+    # ------------------------------------------------------------------
+
+    DELIVERY_URL = "https://ninjafood.su/about/delivery/"
+    ACTIONS_URL = "https://ninjafood.su/akcii/"
+
+    def parse_extra(self):
+        """Доставка (зоны/мин. заказ), лояльность «Путь Ниндзя», акции с промокодами."""
+        cfg = mcp_config.get_chain(self.id)
+
+        delivery = None
+        dtext = fetch_text(self.DELIVERY_URL, cfg)
+        if dtext:
+            zones = re.findall(r"Минимальная сумма доставки (\d+)₽", dtext)
+            zone_min = sorted({int(z) for z in zones})
+            min_order = zone_min[0] if zone_min else None
+            delivery = {
+                "min_order_rub": min_order,
+                "cost_rub": None,
+                "free_from_rub": None,
+                "time_minutes": "Вс–Чт 10:00–23:00, Пт–Сб 10:00–24:00",
+                "conditions": (
+                    "Минимальная сумма зависит от зоны: "
+                    + (" / ".join(str(z) for z in zone_min) if zone_min else "см. карту")
+                    + " ₽ (по районам). Актуальную стоимость уточняйте при оформлении."
+                ),
+                "source": source(self.DELIVERY_URL),
+            }
+
+        loyalty = None
+        atext = fetch_text(self.ACTIONS_URL, cfg)
+        if atext and "Путь Ниндзя" in atext:
+            loyalty = {
+                "program": "Путь Ниндзя (многоуровневая бонусная программа)",
+                "details": (
+                    "Уровни: Ученик (0–6999 ₽), Мастер (7000–15999 ₽), Ниндзя (16000 ₽+). "
+                    "1 ниндзя-рубль = 1 ₽; оплата бонусами до 30% заказа; срок бонусов 365 дней; "
+                    "начисляются при заказе через сайт/приложение/оператора, кроме наборов, "
+                    "ланчей и блюд недели."
+                ),
+                "source": source(self.ACTIONS_URL),
+            }
+
+        promotions = []
+        if atext:
+            for p in find_promos(atext, max_items=10):
+                promotions.append({
+                    "title": p["title"],
+                    "conditions": p["conditions"],
+                    "valid_until": None,
+                    "source": source(self.ACTIONS_URL),
+                })
+            if "59 минут" in atext:
+                promotions.append({
+                    "title": "Доставка за 59 минут",
+                    "conditions": (
+                        "Если не успеем за 59 минут в красную/оранжевую зону — большая пицца "
+                        "1 кг в подарок (промокод в личном кабинете, 1 месяц). В заказе — "
+                        "максимум 1 пицца + 1 закуска и/или напиток."
+                    ),
+                    "valid_until": None,
+                    "source": source(self.ACTIONS_URL),
+                })
+
+        return {"delivery": delivery, "loyalty": loyalty, "promotions": promotions}

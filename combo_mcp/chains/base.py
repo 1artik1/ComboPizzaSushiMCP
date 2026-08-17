@@ -36,6 +36,14 @@ class ChainParser(ABC):
         """Распарсить меню и вернуть list[dict] позиций."""
         raise NotImplementedError
 
+    def parse_extra(self) -> dict:
+        """Доп. информация о сети: доставка, лояльность, акции.
+
+        Вернуть dict: {"delivery": {...}|None, "loyalty": {...}|None,
+        "promotions": [...]} или None, если не реализовано.
+        """
+        return {}
+
 
 # ---------------------------------------------------------------------------
 # Декоратор @chain("id")

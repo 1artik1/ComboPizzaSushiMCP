@@ -6,8 +6,9 @@
 
 MCP-сервер (Python, stdio, mcp) «ComboPizzaSushiMCP»: комбо-подборщик по 7 сетям
 доставки Воронежа (la_pizza, pizza_kuba, ninja_food, sushi_time, sushi_darom,
-anti_sushi, dodo). 10 MCP-инструментов: status, verify_chain, best_combo,
-check_price, health_check, compare, get_chain_info, get_chains, clear_cache, refresh_cache.
+anti_sushi, dodo). 11 MCP-инструментов: status, verify_chain, best_combo,
+check_price, health_check, compare, get_chain_info, get_chains, clear_cache,
+refresh_cache, chain_info.
 
 ## Как запускать
 
@@ -35,26 +36,42 @@ check_price, health_check, compare, get_chain_info, get_chains, clear_cache, ref
   ВАЖНО: в данных (кэш) имена оригинальные — перевод только в выводе (dp.format_combo,
   best_combo ставит _local_name/_size_label; детекция напитков по _orig_name).
 - Кэш: cache\, stale-if-error; ninja_food обходится с адаптивным рейт-гейтом (_RateGate).
+- Доп. информация (chain_info, 11-й инструмент): доставка/акции/лояльность.
+  Парсеры: base.parse_extra() (дефолт {}), extra_utils.py (fetch_text/clean_text/
+  find_promos/ocr_image/render_text), 7 парсеров реализуют parse_extra()
+  (sushi_darom — Next data API `_next/data/{buildId}/index.json?tenant=sushidarom&subdomain=voronezh`,
+  pageProps.banners/promotions на ТОП-уровне; dodo — Playwright /voronezh + /bonusactions).
+  Срез `cache/extra_<cid>.json` {fetched_at, extra, last_error, stale}; обновление
+  раз в день в момент `extra_refresh_at` (корневой ключ chains_config.json, по
+  умолчанию "11:00", валидация в check_config); ленивый механизм: до HH:MM отдаём
+  срез без сети, первый вызов после HH:MM — перепарсинг; ошибка → stale-if-error.
+  Формат: delivery{min_order_rub,cost_rub,free_from_rub,time_minutes,conditions,source},
+  loyalty{program,details,source}, promotions[{title,conditions,valid_until,source}].
+  OCR (Tesseract) установлен, но почти не нужен — акции всех сетей текстовые.
 - LSP-варнинги в проекте — ложные (mcp.server.mcpserver import, reconfigure,
-  .get на None в autotest.py) — не чинить.
+  .get на None в autotest.py, BS4 AttributeValue, pytesseract/playwright import) — не чинить.
 - Кэш ninja хранит имена с литеральными `\"` — нормализация `_norm_name` в autotest.py.
 
-## Состояние на 2026-08-16
+## Состояние на 2026-08-17
 
 - git: ветка main, remote github.com/1artik1/ComboPizzaSushiMCP.
-- Сделано: persons/variations, health_check (10-й инструмент), автотесты с эталонами,
-  веса pizza_kuba из названий размеров, справочник estimated_weights.json (~97 позиций:
-  закуски «N шт», соусы, напитки 0,5/1 л — с полем source), адаптивный рейт-гейт ninja_food
-  (полный парсинг ~72 с, все 290 позиций с весом), GUI удалён, CONTEXT.md-чекпоинт,
-  ROADMAP с субагент-делегированием и проверкой контрибьютора, локализация названий
-  (translations.json + names.py, вес единицы в выборке: «Пицца Пепперони Фреш (370 г) x2»),
-  compare с persons + блок 5 автотеста (compare == первая вариация best_combo,
-  напитки = min(persons, доступных)).
-- Инструменты: weight_source (site|size_name|reference|none) в best_combo/verify_chain/
-  check_price/status; gen_expected.py сохраняет раздел dishes; compare(budget, persons=1).
-- Открыто: drinks.py под новые сети; TTL в config; проверка комбо-состава
-  с reference-весами (оценки, не фактические данные сайта); pizza_kuba: фактические
-  веса закусок «N шт», если появятся на карточках.
+- Опубликовано fd87d5f «разнообразные вариации (variations>3)» (seed в ответе,
+  dp.py: int(time.time()*1000)); notify.js: звук на question.v2.asked (нужен рестарт opencode).
+- Сделано: блок «доп. информация» — extra_utils.py, parse_extra() в 7 парсерах
+  (la_pizza/pizza_kuba/ninja_food/sushi_time/anti_sushi — HTML, sushi_darom — Next
+  data API (buildId из HTML, pageProps на топ-уровне!), dodo — Playwright fetch_text
+  в playwright_client.py), extra_cache.py (ленивый дневной рефреш по extra_refresh_at,
+  stale-if-error), tools/chain_info.py (11-й инструмент, зарегистрирован в server.py),
+  check_config валидирует extra_refresh_at "HH:MM", autotest блок 7. Автотест: 7/7
+  блоков зелёные. Срезы в cache/extra_*.json.
+- Данные на 2026-08-17: la_pizza — мин 650₽, 09:00–23:00, акция самовывоза −100₽;
+  pizza_kuba — бесплатно в зоне, 4 акции; ninja_food — зоны от 849₽, «Путь Ниндзя»,
+  8 промокодов; sushi_time — 5 зон, «Таймы» 3%, 4 акции; sushi_darom — 10:00–22:00,
+  ~90 мин, платная зона 99₽ (600–999₽), 16 акций с датами; anti_sushi — 10:00–24:00,
+  бонусные рубли 3/5/10%, 15 акций; dodo — 36 мин/4.88, 7 акций + кешбэк 5%.
+- Открыто: OCR (Tesseract) установлен, но используется мало; проверка качества
+  акций anti_sushi (заголовки с мусором из меню); drinks.py под новые сети;
+  фактические веса pizza_kuba для закусок «N шт».
 
 ## Порядок старта сессии
 

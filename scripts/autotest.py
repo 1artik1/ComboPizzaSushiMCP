@@ -34,6 +34,7 @@ from combo_mcp.names import localize
 from combo_mcp.tools.best_combo import best_combo
 from combo_mcp.tools.compare import compare as _compare
 from combo_mcp.tools.health_check import health_check
+from combo_mcp.tools.chain_info import chain_info
 
 EXPECTED_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                              "tests", "expected.json")
@@ -370,6 +371,32 @@ def check_diverse():
             _fail("diverse", f"{cid}: variations=1/2 ведут себя нестандартно")
 
 
+# ---------------------------------------------------------------- блок 7
+def check_extra():
+    print("Блок 7: доп. информация (доставка, акции, лояльность)")
+    for c in get_chain_meta():
+        cid = c["id"]
+        r = json.loads(chain_info(cid, refresh=False))
+        if "error" in r:
+            _fail("extra", f"{cid}: {r['error']}")
+            continue
+        state = r.get("source_state")
+        if state == "error":
+            _fail("extra", f"{cid}: {r.get('last_error')}")
+            continue
+        _ok("extra", f"{cid}: state={state}, акций={len(r.get('promotions') or [])}")
+
+        delivery = r.get("delivery") or {}
+        if delivery:
+            if not delivery.get("source"):
+                _fail("extra", f"{cid}: delivery без source")
+        promos = r.get("promotions") or []
+        for p in promos:
+            if not p.get("title") or not p.get("source"):
+                _fail("extra", f"{cid}: промо без title/source")
+                break
+
+
 def main():
     check_combos()
     check_boundary()
@@ -377,6 +404,7 @@ def main():
     check_health()
     check_compare()
     check_diverse()
+    check_extra()
     print()
     if _FAILED:
         print(f"ИТОГ: FAIL ({len(_FAILED)} проверок провалено)")

@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from combo_mcp.chains.base import ChainParser, chain, ChainUnavailable
 from combo_mcp import config as mcp_config
 from combo_mcp import http_client
+from combo_mcp.chains.extra_utils import fetch_text, find_promos, source
 
 
 @chain("anti_sushi")
@@ -21,6 +22,9 @@ class AntiSushiParser(ChainParser):
     url = "https://anti-sushi.ru/"
     description = "Бренд-сестра Суши Даром. Пицца, роллы, суши, сеты."
     needs_playwright = False
+
+    DELIVERY_URL = "https://anti-sushi.ru/delivery/"
+    SALES_URL = "https://anti-sushi.ru/sales/"
 
     def _clean(self, text):
         if text is None:
@@ -102,3 +106,71 @@ class AntiSushiParser(ChainParser):
             })
 
         return products
+
+    # ------------------------------------------------------------------
+    # Доп. информация: доставка, бонусы, акции с промокодами
+    # ------------------------------------------------------------------
+
+    def parse_extra(self):
+        """Доставка (карта/зоны), бонусные рубли, акции с промокодами."""
+        cfg = mcp_config.get_chain(self.id)
+
+        delivery = None
+        dtext = fetch_text(self.DELIVERY_URL, cfg)
+        if dtext:
+            delivery = {
+                "min_order_rub": None,
+                "cost_rub": None,
+                "free_from_rub": None,
+                "time_minutes": "10:00–24:00, от 45 минут",
+                "conditions": (
+                    "Стоимость доставки и минимальный заказ зависят от района (на карте "
+                    "сайта, в некоторые районы — бесплатно); заказы от 3000 ₽ — предоплата "
+                    "50%; курьер ожидает не более 10 минут, повторный довоз платный; "
+                    "минимальный заказ на доставку — 750 ₽."
+                ),
+                "source": source(self.DELIVERY_URL),
+            }
+
+        loyalty = None
+        stext = fetch_text(self.SALES_URL, cfg)
+        if stext and "можно оплачивать" in stext.lower():
+            loyalty = {
+                "program": "Бонусные рубли",
+                "details": (
+                    "1 бонус = 1 ₽; оплата до 30% заказа; начисление: 3% с первого заказа, "
+                    "5% после 5000 ₽, 10% после 10000 ₽ (сумма заказов за 6 месяцев); "
+                    "бонусы не начисляются с акционных товаров; списание недоступно при "
+                    "использовании промокода на акцию."
+                ),
+                "source": source(self.SALES_URL),
+            }
+
+        promotions = []
+        if stext:
+            for p in find_promos(stext, max_items=12):
+                promotions.append({
+                    "title": p["title"],
+                    "conditions": p["conditions"],
+                    "valid_until": None,
+                    "source": source(self.SALES_URL),
+                })
+            known = [
+                ("Подарок в день рождения", "Подарок в день рождения",
+                 "Заказ от 1500 ₽: сет «Умамини» или пицца «Ранчо» 25 см, ±3 дня от ДР, "
+                 "единоразово, предъявить паспорт."),
+                ("Бонусы за отзывы", "Бонусы отзывчивым",
+                 "100 бонусов за текстовый отзыв, 200 за фото (Яндекс/Google/Отзовик/2GIS/VK), "
+                 "указать номер заказа."),
+                ("Опоздали — пицца в подарок", "Привезем вовремя или пицца в подарок",
+                 "Если заказ опоздал более чем на 15 минут — пицца в подарок к следующему "
+                 "заказу от 999 ₽; пн–чт; не действует на заказы свыше 3000 ₽."),
+            ]
+            for title, marker, cond in known:
+                if marker in stext:
+                    promotions.append({
+                        "title": title, "conditions": cond,
+                        "valid_until": None, "source": source(self.SALES_URL),
+                    })
+
+        return {"delivery": delivery, "loyalty": loyalty, "promotions": promotions}

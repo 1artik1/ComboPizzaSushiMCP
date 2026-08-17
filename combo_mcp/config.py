@@ -54,6 +54,16 @@ def get_enabled_chain_ids():
     return [cid for cid, cdata in chains.items() if cdata.get("enabled", True)]
 
 
+def get_extra_refresh_at():
+    """Время суток ежедневного обновления доп. данных ("HH:MM"), по умолчанию "11:00"."""
+    cfg = _load_config()
+    val = cfg.get("extra_refresh_at", "11:00")
+    if not (isinstance(val, str) and len(val) == 5 and val[2] == ":"
+            and val[:2].isdigit() and val[3:].isdigit()):
+        return "11:00"
+    return val
+
+
 def get_chain_meta():
     """Get chain metadata (id, name, city, url, description)."""
     return [

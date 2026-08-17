@@ -14,6 +14,7 @@ from combo_mcp.chains.base import ChainParser, chain, ChainUnavailable
 from combo_mcp import config as mcp_config
 from combo_mcp import http_client
 from combo_mcp import playwright_client
+from combo_mcp.chains.extra_utils import render_text, source
 
 
 @chain("dodo")
@@ -194,3 +195,74 @@ class DodoParser(ChainParser):
             })
 
         return products
+
+    # ------------------------------------------------------------------
+    # Доп. информация: доставка (время/рейтинг), акции и кешбэк
+    # ------------------------------------------------------------------
+
+    def parse_extra(self):
+        """Доставка и акции Додо Пиццы Воронеж через Playwright.
+
+        Главная /voronezh: время и рейтинг доставки; /voronezh/bonusactions:
+        текстовые акции и «Вкусный кешбэк» (5% додокоинами).
+        """
+        chain_cfg = mcp_config.get_chain(self.id)
+        base = (chain_cfg.get("url") or self.url).rstrip("/")
+        vrn = f"{base}/voronezh"
+
+        delivery = None
+        main_text = playwright_client.fetch_text(vrn, timeout_ms=45000)
+        if main_text:
+            m = re.search(r"Доставка пиццы Воронеж\s*([\d.,]+)\s*мин", main_text)
+            rating = re.search(r"Доставка пиццы Воронеж\s*[\d.,]+\s*мин[^\d]*([\d.,]+)",
+                               main_text)
+            delivery = {
+                "min_order_rub": None,
+                "cost_rub": None,
+                "free_from_rub": None,
+                "time_minutes": None,
+                "conditions": (
+                    "Доставка пиццы по Воронежу: среднее время "
+                    + (f"{m.group(1)} минут" if m else "см. сайт")
+                    + (f", оценка {rating.group(1)}" if rating else "")
+                    + "; точные стоимость и минимальный заказ зависят от адреса "
+                    "и показываются в корзине."
+                ),
+                "source": source(vrn),
+            }
+
+        promotions = []
+        actions_text = playwright_client.fetch_text(f"{vrn}/bonusactions",
+                                                    timeout_ms=45000)
+        if actions_text:
+            known = [
+                ("20% на первый заказ", "M99"),
+                ("Чизкейк Нью-Йорк", "СK26"),
+                ("25% на первый заказ в приложении", "FIRST25"),
+                ("15% на первый заказ на сайте", "15%"),
+                ("Додо Комбо до −15%", "Додо Комбо"),
+                ("Подарок на день рождения", "день рождения"),
+                ("Поворотный момент", "Поворотный момент"),
+            ]
+            added = set()
+            for title, marker in known:
+                if marker in actions_text and title not in added:
+                    added.add(title)
+                    promotions.append({
+                        "title": title,
+                        "conditions": title + " — акция Додо Пиццы (см. страницу акций).",
+                        "valid_until": None,
+                        "source": source(f"{vrn}/bonusactions"),
+                    })
+            if "кешбэк" in actions_text:
+                promotions.append({
+                    "title": "Вкусный кешбэк: 5% додокоинами",
+                    "conditions": (
+                        "5% от заказа додокоинами (1 коин = 1 ₽), действует в приложении "
+                        "и на сайте; начисление по завершении заказа."
+                    ),
+                    "valid_until": None,
+                    "source": source(f"{vrn}/bonusactions"),
+                })
+
+        return {"delivery": delivery, "loyalty": None, "promotions": promotions}

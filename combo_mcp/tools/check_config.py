@@ -3,6 +3,7 @@
 
 import json
 import socket
+import re
 from combo_mcp.config import _load_config
 
 
@@ -13,6 +14,16 @@ def check_config():
 
     issues = []
     valid_count = 0
+
+    # extra_refresh_at: "HH:MM"
+    extra_refresh = cfg.get("extra_refresh_at", "11:00")
+    if not (isinstance(extra_refresh, str)
+            and re.fullmatch(r"[0-2]\d:[0-5]\d", extra_refresh)
+            and int(extra_refresh[:2]) < 24):
+        issues.append(
+            f"extra_refresh_at: некорректный формат '{extra_refresh}' "
+            "(ожидается 'HH:MM')"
+        )
 
     required_fields = ["url"]
 

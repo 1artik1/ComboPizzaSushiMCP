@@ -23,6 +23,7 @@ from combo_mcp.tools.check_price import check_price as _check_price
 from combo_mcp.tools.diff_menu import diff_menu as _diff_menu
 from combo_mcp.tools.check_config import check_config as _check_config
 from combo_mcp.tools.health_check import health_check as _health_check
+from combo_mcp.tools.chain_info import chain_info as _chain_info
 
 # Create server
 mcp = MCPServer(
@@ -91,6 +92,12 @@ mcp.add_tool(
     _health_check,
     name="health_check",
     description="health_check: стабильность получения данных с сайтов — HTTP, парсинг, кол-во позиций.",
+)
+
+mcp.add_tool(
+    _chain_info,
+    name="chain_info",
+    description="chain_info: доставка, акции, лояльность сети (обновление раз в день в extra_refresh_at).",
 )
 
 

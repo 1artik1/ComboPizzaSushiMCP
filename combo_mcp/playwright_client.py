@@ -58,3 +58,38 @@ def get_cookies(url):
         cookies = page.context.cookies()
         browser.close()
         return cookies
+
+
+def fetch_text(url, timeout_ms=40000, wait_ms=3000):
+    """Открыть страницу в headless chromium и вернуть текст body (None при ошибке).
+
+    Закрывает браузер; повторная попытка при ошибке загрузки.
+    """
+    if not _PLAYWRIGHT_AVAILABLE:
+        return None
+    import re
+    last = None
+    for attempt in range(2):
+        try:
+            with sync_playwright() as pw:
+                browser = pw.chromium.launch(
+                    headless=True,
+                    args=["--disable-blink-features=AutomationControlled"],
+                )
+                context = browser.new_context(
+                    user_agent=(
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/120.0.0.0 Safari/537.36"
+                    ),
+                    locale="ru-RU",
+                )
+                page = context.new_page()
+                page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
+                page.wait_for_timeout(wait_ms)
+                text = page.inner_text("body") or ""
+                browser.close()
+                return re.sub(r"\s+", " ", text)
+        except Exception as exc:
+            last = exc
+    return None

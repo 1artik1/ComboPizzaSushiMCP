@@ -9,6 +9,7 @@ import json
 from combo_mcp.chains.base import ChainParser, chain, ChainUnavailable
 from combo_mcp import config as mcp_config
 from combo_mcp import http_client
+from combo_mcp.chains.extra_utils import clean_promo_desc, source
 
 
 @chain("sushi_darom")
@@ -95,3 +96,90 @@ class SushiDaromParser(ChainParser):
                 pass
 
         return products
+
+    # ------------------------------------------------------------------
+    # Доп. информация: доставка, акции (Next.js data API)
+    # ------------------------------------------------------------------
+
+    def parse_extra(self):
+        """Доставка (время/ожидание) и акции из _next/data index.json.
+
+        Акции: promotions[] (title/description) + banners[] (сроки) в pageProps
+        главной страницы; buildId берём из HTML.
+        """
+        cfg = mcp_config.get_chain(self.id)
+        url = cfg.get("url", self.url)
+        base = url.rstrip("/")
+
+        # --- доставка: время работы и ожидание из JSON на странице /delivery ---
+        delivery = None
+        try:
+            dhtml = http_client.fetch_html(f"{base}/delivery", cfg)
+            if dhtml:
+                wt = re.search(r'"work_time":\[\{"start":"(\d+:\d+):00","end":"(\d+:\d+):00"',
+                               dhtml)
+                td = re.search(r'"time_default_delivery":"(\d+)"', dhtml)
+                pd_name = re.search(r'"name":"(Платная доставка[^"]*)"', dhtml)
+                pd_min = re.search(r'"min_price":"(\d+)"', dhtml)
+                pd_max = re.search(r'"max_price":"(\d+)"', dhtml)
+                if wt or td or pd_name:
+                    hours = f"{wt.group(1)}–{wt.group(2)}" if wt else "см. сайт"
+                    min_order = int(pd_min.group(1)) if pd_min else None
+                    cost = 99 if pd_name else None
+                    delivery = {
+                        "min_order_rub": min_order,
+                        "cost_rub": cost,
+                        "free_from_rub": None,
+                        "time_minutes": hours,
+                        "conditions": (
+                            "Среднее время доставки "
+                            + (f"~{td.group(1)} мин" if td else "см. сайт")
+                            + (f"; «{pd_name.group(1)}»: заказы "
+                               f"{pd_min.group(1)}–{pd_max.group(1)} ₽" if pd_name
+                               else "; условия по адресу — на Яндекс-карте "
+                                   "на странице «Доставка и самовывоз»")
+                            + "."
+                        ),
+                        "source": source(f"{base}/delivery"),
+                    }
+        except Exception:
+            delivery = None
+
+        # --- акции: Next.js data API ---
+        promotions = []
+        try:
+            main_html = http_client.fetch_html(base + "/", cfg)
+            build = None
+            if main_html:
+                m = re.search(r'"buildId"\s*:\s*"([^"]+)"', main_html)
+                if m:
+                    build = m.group(1)
+            if build:
+                api = (f"{base}/_next/data/{build}/index.json"
+                       f"?tenant=sushidarom&subdomain=voronezh")
+                data = http_client.fetch_html(api, cfg)
+                if data:
+                    j = json.loads(data)
+                    pp = j.get("pageProps") or {}
+                    banners = pp.get("banners", {}) or {}
+                    promos = pp.get("promotions", {}) or {}
+                    for bid, b in banners.items():
+                        if not isinstance(b, dict):
+                            continue
+                        title = b.get("title") or ""
+                        if not title:
+                            continue
+                        p = promos.get(str(b.get("promo_id", "")), {})
+                        desc = clean_promo_desc(p.get("description") or "")
+                        if not desc:
+                            desc = title
+                        promotions.append({
+                            "title": title,
+                            "conditions": desc[:400],
+                            "valid_until": b.get("date_visible_end"),
+                            "source": source(base + "/"),
+                        })
+        except Exception:
+            pass
+
+        return {"delivery": delivery, "loyalty": None, "promotions": promotions}
