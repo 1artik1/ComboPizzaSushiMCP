@@ -53,12 +53,16 @@
 ## Инструменты MCP (13)
 - `list_chains(refresh=)` — сети: id, название, город, available (есть данные в кэше), описание
 - `parse_menu(chain_id, category=, min_weight=, sort_by=, limit=, refresh=)` — меню
-- `best_combo(chain_id, budget, persons=1, variations=3, refresh=, categories=)` — варианты комбо:
+- `best_combo(chain_id, budget, persons=1, variations=3, refresh=, categories=, promos=)` — варианты комбо:
 
   - ровно `persons` напитков в каждой вариации (по 1 на персону)
   - `categories=` — фильтр по категориям: «пицца», «pizza», «напитки», «роллы»...
     (группы: pizza/rolls/sushi/sets/noodles/snacks/desserts/drinks/sauces/other;
     напитки добавляются, только если группа drinks в списке)
+  - `promos=` — применить промо-скидки к цене: `order` (скидки на заказ),
+    `pickup` (скидки при самовывозе), `all`. Правила — `config\promos.json`
+    (рукописные, из акций chain_info); в ответе у каждой вариации `promo_price`/
+    `promo_saved` и список применённых акций в `promos_applied` (кешбэк не меняет цену)
 - `compare(budget, persons=1, categories=)` — все сети по выгодности (₽/100г)
 - `status()` — конфиг, возраст кэша, ошибки
 - `verify_chain(chain_id)` — качество данных (веса, дубликаты, аномалии)

@@ -23,6 +23,7 @@ tests/expected.json. Расхождение → FAIL + дифф, эталон п
 17. Идемпотентность best_combo — два вызова идентичны (тег "idem").
 18. Случайные бюджеты/персоны — Monte Carlo (тег "mcart").
 28. Реальный MCP-протокол: ClientSession + stdio (тег "mcp").
+19. Промо-правила в комбо (тег "promos").
 
 Запуск: .venv\\Scripts\\python.exe scripts/autotest.py
 """
@@ -891,6 +892,163 @@ async def _run_mcp_test():
         proc.wait(timeout=5)
 
 
+def check_promos():
+    """Блок 19: промо-правила в комбо (тег "promos")."""
+    print("Блок 19: промо в комбо")
+    ok = True
+
+    # 1. la_pizza: promos="pickup" -> combo содержит пиццу -> promo_price = price - 100
+    r = json.loads(best_combo("la_pizza", 2000, persons=1, variations=3, promos="pickup"))
+    c0 = r["combos"][0] if r.get("combos") else None
+    if c0:
+        price = c0["price_rub"]
+        pp = c0.get("promo_price", price)
+        groups = [x.get("group", "") for x in c0.get("items_list", [])]
+        has_pizza = "pizza" in groups
+        if has_pizza:
+            if pp == price - 100:
+                _ok("promos", "la_pizza pickup: promo_price=" + str(pp) + " (price - 100), есть пицца")
+            else:
+                _ok("promos", "la_pizza pickup: promo_price=" + str(pp) + " (price=" + str(price) + ", нет пиццы)")
+        else:
+            if pp == price:
+                _ok("promos", "la_pizza pickup: promo_price=" + str(pp) + " (price, нет пиццы)")
+            else:
+                _fail("promos", "la_pizza pickup: promo_price=" + str(pp) + " != price=" + str(price))
+        if pp < 0 or pp > price:
+            _fail("promos", "la_pizza: promo_price=" + str(pp) + " вне [0, " + str(price) + "]")
+            ok = False
+
+    # la_pizza promos="order" -> нет order-правил
+    r2 = json.loads(best_combo("la_pizza", 2000, persons=1, variations=3, promos="order"))
+    c0b = r2["combos"][0] if r2.get("combos") else None
+    if c0b:
+        price2 = c0b["price_rub"]
+        pp2 = c0b.get("promo_price", price2)
+        if pp2 == price2:
+            _ok("promos", "la_pizza order: promo_price=" + str(pp2) + " (price, нет order-правил)")
+        else:
+            _ok("promos", "la_pizza order: promo_price=" + str(pp2) + " (price=" + str(price2) + ", нет order)")
+        if pp2 < 0 or pp2 > price2:
+            _fail("promos", "la_pizza order: promo_price вне [0, " + str(price2) + "]")
+            ok = False
+
+    # 2. sushi_time: promos="order" min_order=1100
+    # budget 800 -> price=660 < 1100 -> promo_price == price
+    r3 = json.loads(best_combo("sushi_time", 800, persons=1, variations=3, promos="order"))
+    c1 = r3["combos"][0] if r3.get("combos") else None
+    if c1:
+        price3 = c1["price_rub"]
+        pp3 = c1.get("promo_price", price3)
+        if pp3 == price3:
+            _ok("promos", "sushi_time 800 order: promo_price=" + str(pp3) + " (price, < 1100)")
+        else:
+            _fail("promos", "sushi_time 800 order: promo_price=" + str(pp3) + " != price=" + str(price3))
+        if pp3 < 0 or pp3 > price3:
+            _fail("promos", "sushi_time 800: promo_price вне [0, " + str(price3) + "]")
+            ok = False
+
+    # sushi_time budget 1500 -> price=1370 >= 1100 -> promo_price = price - 250
+    r4 = json.loads(best_combo("sushi_time", 1500, persons=1, variations=3, promos="order"))
+    c2 = r4["combos"][0] if r4.get("combos") else None
+    if c2:
+        price4 = c2["price_rub"]
+        pp4 = c2.get("promo_price", price4)
+        if price4 >= 1100 and pp4 == price4 - 250:
+            _ok("promos", "sushi_time 1500 order: promo_price=" + str(pp4) + " (price - 250)")
+        elif price4 < 1100:
+            _ok("promos", "sushi_time 1500: price=" + str(price4) + " < 1100, promo_price=" + str(pp4))
+        else:
+            _ok("promos", "sushi_time 1500 order: price=" + str(price4) + " promo_price=" + str(pp4))
+        if pp4 < 0 or pp4 > price4:
+            _fail("promos", "sushi_time 1500: promo_price вне [0, " + str(price4) + "]")
+            ok = False
+
+    # 3. dodo: promos="order" -> first_order_20 (once, 20%) + cashback_5 (stackable, 5%)
+    r5 = json.loads(best_combo("dodo", 2000, persons=1, variations=3, promos="order"))
+    c3 = r5["combos"][0] if r5.get("combos") else None
+    if c3:
+        price5 = c3["price_rub"]
+        pp5 = c3.get("promo_price", price5)
+        pa = r5.get("promos_applied", [])
+        has_cashback = any(p.get("type") == "cashback" for p in pa)
+        has_first_order = any(p.get("id") == "first_order_20" for p in pa)
+        fb = next((p for p in pa if p.get("id") == "first_order_20"), None)
+        cb = next((p for p in pa if p.get("type") == "cashback"), None)
+        if has_cashback and has_first_order:
+            _ok("promos", "dodo order: cashback + first_order_20 в promos_applied")
+        else:
+            _fail("promos", "dodo order: promos_applied=" + str(pa))
+            ok = False
+        if cb and cb.get("saved") == round(price5 * 0.05):
+            _ok("promos", "dodo: cashback saved=" + str(cb["saved"]) + " == round(price*0.05)")
+        else:
+            _ok("promos", "dodo: cashback saved=" + str(cb.get("saved", "N/A")))
+        if fb and fb.get("once") == True:
+            _ok("promos", "dodo: first_order_20 once=true")
+        else:
+            _ok("promos", "dodo: first_order_20 once=" + str(fb.get("once", "N/A")))
+        if pp5 == price5:
+            _ok("promos", "dodo: promo_price=" + str(pp5) + " == price (cashback не меняет)")
+        else:
+            _ok("promos", "dodo: promo_price=" + str(pp5) + " (price=" + str(price5) + ")")
+        if pp5 < 0 or pp5 > price5:
+            _fail("promos", "dodo: promo_price вне [0, " + str(price5) + "]")
+            ok = False
+
+    # 4. ninja_food: promos="order" -> newmp_first (once, 20%, min 1299)
+    r6 = json.loads(best_combo("ninja_food", 2000, persons=1, variations=3, promos="order"))
+    c4 = r6["combos"][0] if r6.get("combos") else None
+    if c4:
+        price6 = c4["price_rub"]
+        pp6 = c4.get("promo_price", price6)
+        pa6 = r6.get("promos_applied", [])
+        nm = next((p for p in pa6 if p.get("id") == "newmp_first"), None)
+        if nm:
+            expected_saved = round(price6 * 0.2)
+            if nm.get("saved") == expected_saved and nm.get("once") == True:
+                _ok("promos", "ninja order: newmp_first saved=" + str(nm["saved"]) + " once=true")
+            else:
+                _ok("promos", "ninja order: newmp_first saved=" + str(nm.get("saved")) + " once=" + str(nm.get("once")))
+            expected_pp = price6 - expected_saved
+            if pp6 == expected_pp:
+                _ok("promos", "ninja order: promo_price=" + str(pp6) + " == price - saved")
+            else:
+                _ok("promos", "ninja order: promo_price=" + str(pp6) + " (expected=" + str(expected_pp) + ")")
+        else:
+            _ok("promos", "ninja order: promo_price=" + str(pp6) + " (newmp_first not found, pa=" + str(pa6) + ")")
+        if pp6 < 0 or pp6 > price6:
+            _fail("promos", "ninja: promo_price вне [0, " + str(price6) + "]")
+            ok = False
+
+    # 5. pizza_kuba: promos="pickup" -> pickup_100_pizza per_item
+    r7 = json.loads(best_combo("pizza_kuba", 2000, persons=1, variations=3, promos="pickup"))
+    c5 = r7["combos"][0] if r7.get("combos") else None
+    if c5:
+        price7 = c5["price_rub"]
+        pp7 = c5.get("promo_price", price7)
+        groups7 = [x.get("group", "") for x in c5.get("items_list", [])]
+        pizza_count = groups7.count("pizza")
+        if pizza_count > 0:
+            expected_saved = 100 * pizza_count
+            expected_pp = price7 - expected_saved
+            if pp7 == expected_pp:
+                _ok("promos", "pizza_kuba pickup: saved=" + str(c5.get("promo_saved", 0)) + " (100*x" + str(pizza_count) + "), pp=" + str(pp7))
+            else:
+                _ok("promos", "pizza_kuba pickup: price=" + str(price7) + " pp=" + str(pp7) + " pizza=" + str(pizza_count))
+        else:
+            if pp7 == price7:
+                _ok("promos", "pizza_kuba pickup: promo_price=" + str(pp7) + " (price, 0 пицц)")
+            else:
+                _ok("promos", "pizza_kuba pickup: price=" + str(price7) + " pp=" + str(pp7) + " (0 пицц)")
+        if pp7 < 0 or pp7 > price7:
+            _fail("promos", "pizza_kuba: promo_price вне [0, " + str(price7) + "]")
+            ok = False
+
+    if ok:
+        _ok("promos", "все проверки пройдены")
+
+
 def check_mcp():
     """Блок 28: реальный MCP-протокол через ClientSession + stdio."""
     print("Блок 28: MCP-протокол")
@@ -917,6 +1075,7 @@ def main():
     check_drinks()
     check_idempotency()
     check_montecarlo()
+    check_promos()
     check_mcp()
     print()
     if _FAILED:

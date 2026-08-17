@@ -60,6 +60,11 @@
       золотые списки детекции напитков (16 поз + 15 нег), идемпотентность best_combo,
       Monte Carlo бюджетов (seed 42, 15 итераций на la_pizza+dodo), реальный MCP-протокол
       (13 инструментов + 5 быстрых вызовов); итого 16 блоков, все зелёные
+- [x] Промо в комбо: config/promos.json (рукописные правила из акций chain_info —
+      fixed/percent/cashback, scope order/pickup, min_order, per_item, once, stackable),
+      combo_mcp/promos.py (apply_promos: фильтры, несуммируемость, promo_price),
+      параметр promos=order|pickup|all в best_combo (promo_price/promo_saved в вариациях,
+      promos_applied в ответе; кешбэк не меняет цену); блок 19 автотеста; итого 17 блоков
 
 ## В плане
 

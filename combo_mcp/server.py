@@ -51,7 +51,7 @@ mcp.add_tool(
 mcp.add_tool(
     _best_combo,
     name="best_combo",
-    description="Лучшие 3 варианта комбо для сети при заданном бюджете.",
+    description="Лучшие варианты комбо для сети при заданном бюджете. Параметр promos: order/pickup/all для применения промо-скидок.",
 )
 
 mcp.add_tool(

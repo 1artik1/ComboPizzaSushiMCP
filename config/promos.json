@@ -1,0 +1,115 @@
+{
+  "la_pizza": [
+    {
+      "id": "pickup_100",
+      "title": "Скидка 100 ₽ при самовывозе",
+      "type": "fixed",
+      "value": 100,
+      "scope": "pickup",
+      "items": ["pizza"],
+      "stackable": false,
+      "source": "https://la-pizza.pro/actions (проверено 2026-08-17)"
+    }
+  ],
+  "pizza_kuba": [
+    {
+      "id": "pickup_100_pizza",
+      "title": "Скидка 100 ₽ при самовывозе с каждой пиццы",
+      "type": "fixed",
+      "value": 100,
+      "scope": "pickup",
+      "per_item": true,
+      "items": ["pizza"],
+      "stackable": false,
+      "source": "https://pizzeriacuba.ru/actions (проверено 2026-08-17)"
+    },
+    {
+      "id": "delivery_7pct_5000",
+      "title": "Скидка 7% на доставку от 5000 ₽",
+      "type": "percent",
+      "value": 7,
+      "scope": "delivery",
+      "min_order": 5000,
+      "stackable": false,
+      "source": "https://pizzeriacuba.ru/actions (проверено 2026-08-17)"
+    }
+  ],
+  "ninja_food": [
+    {
+      "id": "sale_pickup",
+      "title": "Счастливые часы: −15% на самовывоз",
+      "type": "percent",
+      "value": 15,
+      "scope": "pickup",
+      "stackable": false,
+      "source": "https://ninjafood.su/akcii/ (проверено 2026-08-17)"
+    },
+    {
+      "id": "sam67_pickup",
+      "title": "Самовывоз −20% (промокод SAM67)",
+      "type": "percent",
+      "value": 20,
+      "scope": "pickup",
+      "stackable": false,
+      "source": "https://ninjafood.su/akcii/ (проверено 2026-08-17)"
+    },
+    {
+      "id": "newmp_first",
+      "title": "Первый заказ от 1299 ₽ — скидка 20% (промокод NEWMP)",
+      "type": "percent",
+      "value": 20,
+      "scope": "order",
+      "min_order": 1299,
+      "once": true,
+      "stackable": false,
+      "source": "https://ninjafood.su/akcii/ (проверено 2026-08-17)"
+    }
+  ],
+  "sushi_time": [
+    {
+      "id": "photo_review",
+      "title": "250 ₽ за фотоотзыв (заказ от 1100 ₽)",
+      "type": "fixed",
+      "value": 250,
+      "scope": "order",
+      "min_order": 1100,
+      "once": true,
+      "stackable": true,
+      "source": "https://xn----8sbwgpzjf9b.xn--p1ai/Voronezh/sale (проверено 2026-08-17)"
+    }
+  ],
+  "dodo": [
+    {
+      "id": "first_order_20",
+      "title": "20% на первый заказ",
+      "type": "percent",
+      "value": 20,
+      "scope": "order",
+      "once": true,
+      "stackable": false,
+      "source": "https://dodopizza.ru/voronezh/bonusactions (проверено 2026-08-17)"
+    },
+    {
+      "id": "cashback_5",
+      "title": "Вкусный кешбэк: 5% додокоинами",
+      "type": "cashback",
+      "value": 5,
+      "scope": "order",
+      "stackable": true,
+      "source": "https://dodopizza.ru/voronezh/bonusactions (проверено 2026-08-17)"
+    }
+  ],
+  "anti_sushi": [
+    {
+      "id": "roll25",
+      "title": "Скидка −25% с понедельника по четверг (промокод РОЛЛ25)",
+      "type": "percent",
+      "value": 25,
+      "scope": "order",
+      "days": [0, 1, 2, 3],
+      "stackable": false,
+      "source": "https://anti-sushi.ru/sales/ (проверено 2026-08-17)"
+    }
+  ],
+  "sushi_darom": []
+}

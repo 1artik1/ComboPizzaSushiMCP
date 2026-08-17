@@ -15,10 +15,11 @@ from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.weights import apply_estimated_weights
 from combo_mcp.names import localize, item_size_label
 from combo_mcp.categories import category_to_group, resolve_categories
+from combo_mcp.promos import apply_promos
 
 
 def best_combo(chain_id, budget, persons=1, variations=3, refresh=False,
-               categories=""):
+               categories="", promos=""):
     """Лучшие варианты комбо для сети при заданном бюджете."""
     try:
         budget = int(budget)
@@ -40,6 +41,15 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False,
         return json.dumps({"error": "variations должен быть целым числом >= 1"}, ensure_ascii=False)
     if variations < 1:
         return json.dumps({"error": "variations должен быть >= 1"}, ensure_ascii=False)
+
+    # Валидация promos
+    if promos:
+        promos = promos.strip().lower()
+        if promos not in ("order", "pickup", "all"):
+            return json.dumps(
+                {"error": "promos должен быть одним из: order, pickup, all"},
+                ensure_ascii=False,
+            )
 
     ids = [c["id"] for c in get_chain_meta()]
     if chain_id not in ids:
@@ -90,12 +100,13 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False,
             ),
         }, ensure_ascii=False, indent=2)
 
-    # Add taste
+    # Add taste + group
     for p in valid_items:
         p["_taste"] = count_ingredients(p.get("description", ""))
         p["_orig_name"] = p.get("name", "")
         p["_local_name"] = localize(chain_id, p.get("name", ""))
         p["_size_label"] = item_size_label(p)
+        p["_group"] = category_to_group(p, chain_id)
 
     # Calculate combos
     try:
@@ -104,6 +115,24 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False,
         return json.dumps({"error": f"Ошибка расчёта: {e}"}, ensure_ascii=False)
 
     variants = [_build_combo_line(line, valid_items) for line in lines]
+
+    # Применяем промо к вариациям
+    if promos:
+        promos_applied = []
+        first_promos = None
+        for combo in variants:
+            items_list = combo.get("items_list")
+            if not items_list:
+                continue
+            groups = [x.get("group", "") for x in items_list]
+            pr = apply_promos(chain_id, combo["price_rub"], promos, groups)
+            combo["promo_price"] = pr["promo_price"]
+            combo["promo_saved"] = pr["saved"]
+            if first_promos is None:
+                first_promos = pr["promos"]
+        result_promos_applied = first_promos if variants else []
+    else:
+        result_promos_applied = []
 
     result = {
         "chain_id": chain_id,
@@ -119,6 +148,8 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False,
         "categories": selected_groups,
         "weight_sources": dict(Counter(it.get("weight_source", "none") for it in items)),
         "combos": variants,
+        "promos_mode": promos,
+        "promos_applied": result_promos_applied,
     }
     return json.dumps(result, ensure_ascii=False, indent=2)
 
@@ -188,6 +219,8 @@ def _items_list(items_str, valid_items):
             "price_rub": it["price_rub"] if it else None,
             "weight_g": it["weight_g"] if it else None,
             "weight_source": it.get("weight_source") if it else None,
+            "category": it.get("category", "") if it else "",
+            "group": it.get("_group", "") if it else "",
         })
     return out
 

@@ -23,8 +23,8 @@ COMMANDS = [
     },
     {
         "name": "best_combo",
-        "args": "(chain_id, budget, persons=1, variations=3, refresh=, categories=)",
-        "description": "Лучшие варианты комбо для сети при заданном бюджете",
+        "args": "(chain_id, budget, persons=1, variations=3, refresh=, categories=, promos=)",
+        "description": "Лучшие варианты комбо для сети при заданном бюджете. promos: order/pickup/all для применения скидок",
         "example": 'best_combo "anti_sushi" 2000 persons=2 categories="пицца"',
     },
     {
