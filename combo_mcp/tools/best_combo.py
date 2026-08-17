@@ -14,9 +14,11 @@ from combo_mcp.cache import load_cache, load_items_with_ttl, save_cache
 from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.weights import apply_estimated_weights
 from combo_mcp.names import localize, item_size_label
+from combo_mcp.categories import category_to_group, resolve_categories
 
 
-def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
+def best_combo(chain_id, budget, persons=1, variations=3, refresh=False,
+               categories=""):
     """Лучшие варианты комбо для сети при заданном бюджете."""
     try:
         budget = int(budget)
@@ -51,6 +53,14 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
     # Apply reference book for items without weight
     items, estimated_count = apply_estimated_weights(items, chain_id)
 
+    # Все группы сети (до фильтра категорий — для сообщения об ошибке)
+    all_groups = sorted(set(category_to_group(it, chain_id) for it in items))
+
+    # Apply category filter if specified
+    selected_groups = resolve_categories(categories)
+    if selected_groups:
+        items = _filter_by_categories(items, chain_id, selected_groups)
+
     # Filter: must have valid weight_g > 0
     no_weight_count = 0
     valid_items = []
@@ -62,6 +72,8 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
             no_weight_count += 1
 
     if not valid_items:
+        # Собираем доступные группы сети
+        avail_groups = all_groups
         return json.dumps({
             "chain_id": chain_id,
             "budget": budget,
@@ -70,7 +82,12 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
             "items_with_weight": 0,
             "items_estimated_from_reference": estimated_count,
             "items_without_weight_excluded": no_weight_count,
-            "error": f"Нет позиций с весом для {chain_id} ({len(items)} всего, {no_weight_count} без веса).",
+            "categories": selected_groups,
+            "error": (
+                f"В меню сети нет позиций категорий: "
+                f"{', '.join(selected_groups)}. "
+                f"Доступные группы: {', '.join(avail_groups)}"
+            ),
         }, ensure_ascii=False, indent=2)
 
     # Add taste
@@ -99,6 +116,7 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
         "items_with_weight": len(valid_items),
         "items_estimated_from_reference": estimated_count,
         "items_without_weight_excluded": no_weight_count,
+        "categories": selected_groups,
         "weight_sources": dict(Counter(it.get("weight_source", "none") for it in items)),
         "combos": variants,
     }
@@ -172,6 +190,16 @@ def _items_list(items_str, valid_items):
             "weight_source": it.get("weight_source") if it else None,
         })
     return out
+
+
+def _filter_by_categories(items, chain_id, selected_groups):
+    """Вернуть только позиции, попавшие в выбранные группы категорий."""
+    result = []
+    for it in items:
+        grp = category_to_group(it, chain_id)
+        if grp in selected_groups:
+            result.append(it)
+    return result
 
 
 def _load_items(chain_id, refresh=False):

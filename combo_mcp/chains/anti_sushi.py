@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """anti_sushi.py — парсер Anti Sushi.
 
-Перенесён из chains_other.py: ~52 позиции.
+Перенесён из chains_other.py: ~52 позиции + подкаталоги (пицца, фьюжен, соусы,
+комбо, спецпредложения) ≈ 110 позиций.
+Напитки: /catalog/drinks/ → 404, категория удалена с сайта.
 """
 
 import re
@@ -14,7 +16,11 @@ from combo_mcp.chains.extra_utils import fetch_text, find_promos, source
 
 @chain("anti_sushi")
 class AntiSushiParser(ChainParser):
-    """Парсер Anti Sushi — products с schema.org markup."""
+    """Парсер Anti Sushi — products с schema.org markup.
+
+    Парсит главную страницу (роллы, суши, сеты, горячее, закуски) +
+    подкаталоги из навигации: пицца, фьюжен, соусы, комбо, спецпредложения.
+    """
 
     id = "anti_sushi"
     name = "Антисуши"
@@ -26,28 +32,34 @@ class AntiSushiParser(ChainParser):
     DELIVERY_URL = "https://anti-sushi.ru/delivery/"
     SALES_URL = "https://anti-sushi.ru/sales/"
 
+    # Подкаталоги с навигации главной страницы
+    SUB_CATALOGS = [
+        ("/catalog/pitstsa/", "Пицца"),
+        ("/catalog/fusion/", "Фьюжен"),
+        ("/catalog/sauces/", "Соусы"),
+        ("/catalog/kombo/", "Комбо"),
+        ("/catalog/special-offers/", "Спецпредложения"),
+    ]
+
     def _clean(self, text):
         if text is None:
             return ""
         return re.sub(r'\s+', ' ', text).strip()
 
-    def parse(self):
-        """Распарсить меню Anti Sushi."""
-        chain_cfg = mcp_config.get_chain(self.id)
-        url = chain_cfg.get("url", self.url)
+    # ------------------------------------------------------------------
+    # Парсинг одной страницы (главная или подкаталог)
+    # ------------------------------------------------------------------
 
-        try:
-            html = http_client.fetch_html(url, chain_cfg)
-        except Exception as e:
-            raise ChainUnavailable(f"Не удалось загрузить {url}: {e}")
-        if html is None:
-            raise ChainUnavailable(f"Не удалось загрузить {url}")
+    def _parse_products_from_html(self, html, default_category="Роллы/Суши"):
+        """Распарсить div.product с schema.org markup из HTML.
 
+        Возвращает список dict-позиций.
+        """
         products = []
         soup = BeautifulSoup(html, 'html.parser')
 
         product_divs = soup.find_all('div', class_='product')
-        for pd in product_divs[:100]:
+        for pd in product_divs:
             price_meta = pd.find('meta', itemprop='price')
             if not price_meta:
                 continue
@@ -77,7 +89,7 @@ class AntiSushiParser(ChainParser):
             description = self._clean(desc_div.get_text()) if desc_div else name
 
             href = pd.find('a', class_='product-title')
-            category = "Роллы/Суши"
+            category = default_category
             href_url = ""
             if href and href.get('href'):
                 href_url = href['href']
@@ -102,10 +114,50 @@ class AntiSushiParser(ChainParser):
                 "is_from_price": False,
                 "description": description,
                 "category": category,
-                "product_url": f"{url}/{href_url}" if href_url else url,
+                "product_url": f"{self.url}/{href_url}" if href_url else self.url,
             })
 
         return products
+
+    # ------------------------------------------------------------------
+    # Основной метод parse
+    # ------------------------------------------------------------------
+
+    def parse(self):
+        """Распарсить меню Anti Sushi (главная + подкаталоги)."""
+        chain_cfg = mcp_config.get_chain(self.id)
+        url = chain_cfg.get("url", self.url)
+
+        # 1. Главная страница (роллы, суши, сеты, горячее, закуски)
+        products = []
+        try:
+            html = http_client.fetch_html(url, chain_cfg)
+            if html:
+                products = self._parse_products_from_html(html, default_category="Роллы/Суши")
+        except Exception:
+            pass
+
+        # 2. Подкаталоги из навигации
+        for cat_path, cat_name in self.SUB_CATALOGS:
+            try:
+                cat_url = f"{url}{cat_path}"
+                cat_html = http_client.fetch_html(cat_url, chain_cfg)
+                if cat_html:
+                    sub = self._parse_products_from_html(cat_html, default_category=cat_name)
+                    products.extend(sub)
+            except Exception:
+                pass
+
+        # 3. Дедупликация по имени
+        seen = set()
+        deduped = []
+        for p in products:
+            key = p["name"]
+            if key not in seen:
+                seen.add(key)
+                deduped.append(p)
+
+        return deduped
 
     # ------------------------------------------------------------------
     # Доп. информация: доставка, бонусы, акции с промокодами

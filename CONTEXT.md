@@ -52,6 +52,16 @@ refresh_cache, chain_info.
   .get на None в autotest.py, BS4 AttributeValue, pytesseract/playwright import) — не чинить.
 - Кэш ninja хранит имена с литеральными `\"` — нормализация `_norm_name` в autotest.py.
 
+- Категории комбо (12-я фича): combo_mcp/categories.py — группы pizza/rolls/sushi/sets/
+  noodles/snacks/desserts/drinks/sauces/other; маппинг сырых категорий каждой сети →
+  группа (dodo — десерты/напитки по имени); categories в best_combo/compare (русские
+  слова + группы: «пицца», «pizza», «напитки», «соки»...); напитки добавляются ТОЛЬКО
+  если группа drinks в списке (иначе persons не влияет); ошибка с перечнем доступных
+  групп, если выбранной нет в меню. anti_sushi: +подкаталоги (пицца/фьюжен/соусы/
+  комбо/спецпредложения), дедупликация по имени, 87 позиций (было 52); напитков на
+  сайте нет (/catalog/drinks/ → 404). sushi_darom/la_pizza напитков нет на сайтах.
+  dodo: напитки 40, десерты 12, пицца 108. Автотест блок 8.
+
 ## Состояние на 2026-08-17
 
 - git: ветка main, remote github.com/1artik1/ComboPizzaSushiMCP.
@@ -69,9 +79,14 @@ refresh_cache, chain_info.
   8 промокодов; sushi_time — 5 зон, «Таймы» 3%, 4 акции; sushi_darom — 10:00–22:00,
   ~90 мин, платная зона 99₽ (600–999₽), 16 акций с датами; anti_sushi — 10:00–24:00,
   бонусные рубли 3/5/10%, 15 акций; dodo — 36 мин/4.88, 7 акций + кешбэк 5%.
+- Сделано (после chain_info): категорийный фильтр (categories.py, best_combo/compare
+  + параметр categories, блок 8 автотеста), TTL меню в конфиге (http_timeout/
+  menu_ttl_minutes + load_items_with_ttl), find_promos (читаемые заголовки акций),
+  drinks.py (тоник/газировка/байкал/фраппе), pizza_kuba веса из описаний (site).
+  anti_sushi: 87 позиций (+пицца и подкаталоги). Автотест: 8/8 блоков зелёные.
 - Открыто: OCR (Tesseract) установлен, но используется мало; проверка качества
-  акций anti_sushi (заголовки с мусором из меню); drinks.py под новые сети;
-  фактические веса pizza_kuba для закусок «N шт».
+  акций anti_sushi (заголовки с мусором из меню); sushi_darom/la_pizza/anti_sushi —
+  напитков на сайтах нет (фильтр drinks вернёт ошибку с доступными группами).
 
 ## Порядок старта сессии
 

@@ -13,9 +13,10 @@ from combo_mcp.cache import load_cache, save_cache
 from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.weights import apply_estimated_weights
 from combo_mcp.names import localize, item_size_label
+from combo_mcp.categories import category_to_group, resolve_categories
 
 
-def compare(budget, persons=1):
+def compare(budget, persons=1, categories=""):
     """Сравнить все доступные сети по лучшему комбо (persons — сколько персон)."""
     try:
         budget = int(budget)
@@ -50,6 +51,14 @@ def compare(budget, persons=1):
             # Apply reference book for items without weight
             items, estimated_count = apply_estimated_weights(items, cid)
 
+            # Apply category filter if specified
+            selected_groups = resolve_categories(categories)
+            if selected_groups:
+                items = [
+                    it for it in items
+                    if category_to_group(it, cid) in selected_groups
+                ]
+
             no_weight = 0
             valid_items = []
             for it in items:
@@ -65,7 +74,10 @@ def compare(budget, persons=1):
                     no_weight += 1
             no_excluded = no_weight
 
+            # Если ни одной позиции не осталось — пропускаем сеть
             if not valid_items:
+                if selected_groups:
+                    continue
                 comparisons.append({
                     "chain_id": cid,
                     "name": c["name"],
@@ -100,6 +112,7 @@ def compare(budget, persons=1):
                 "items": item_list,
                 "items_estimated_from_reference": estimated_count,
                 "items_without_weight_excluded": no_excluded,
+                "categories": selected_groups,
                 "weight_sources": dict(Counter(it.get("weight_source", "none") for it in items)),
             })
         except ChainUnavailable as e:
@@ -119,6 +132,12 @@ def compare(budget, persons=1):
 
     # Sort by price_per_100g (lower is better)
     comparisons.sort(key=lambda x: x.get("price_per_100g", float('inf')))
+
+    # Если все сети отсеяны фильтрами — ошибка
+    if not comparisons:
+        return json.dumps({
+            "error": "Ни одна сеть не имеет позиций выбранных категорий"
+        }, ensure_ascii=False, indent=2)
 
     return json.dumps(comparisons, ensure_ascii=False, indent=2)
 

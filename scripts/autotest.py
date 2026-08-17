@@ -397,6 +397,82 @@ def check_extra():
                 break
 
 
+def check_categories():
+    """Блок 8: фильтр комбо по категориям (categories в best_combo/compare)."""
+    from combo_mcp.categories import category_to_group
+
+    print("Блок 8: фильтр по категориям")
+    # pizza_kuba: пицца + напитки, persons=2 -> ровно 2 напитка, остальное пицца
+    r = json.loads(best_combo("pizza_kuba", "1500", persons=2, categories="пицца,напитки"))
+    if "error" in r:
+        _fail("categories", f"pizza_kuba пицца+напитки: {r['error']}")
+    else:
+        if r.get("categories") != ["drinks", "pizza"]:
+            _fail("categories", f"pizza_kuba: categories={r.get('categories')}")
+        else:
+            ok = True
+            for combo in r.get("combos", []):
+                items_str = combo.get("items") if isinstance(combo, dict) else combo
+                parts = _split_items_str(items_str)
+                n_drinks = 0
+                for chunk in parts:
+                    m = re.match(r"^(.*?)\s*x(\d+)$", chunk)
+                    name = m.group(1).strip() if m else chunk
+                    cnt = int(m.group(2)) if m else 1
+                    if re.search(r"напиток|сок", name, re.IGNORECASE):
+                        n_drinks += cnt
+                if n_drinks != 2:
+                    ok = False
+                    _fail("categories", f"pizza_kuba: в комбо {n_drinks} напитков, ожидалось 2: {combo}")
+            if ok:
+                _ok("categories", "pizza_kuba пицца+напитки: ровно 2 напитка, фильтр по группам")
+
+    # anti_sushi: только пицца (без напитков) — напитки не добавляются
+    r = json.loads(best_combo("anti_sushi", "2000", persons=2, categories="пицца"))
+    if "error" in r:
+        _fail("categories", f"anti_sushi пицца: {r['error']}")
+    else:
+        ok = True
+        for combo in r.get("combos", []):
+            items_str = combo.get("items") if isinstance(combo, dict) else combo
+            if "напиток" in items_str.lower() or "сок" in items_str.lower():
+                ok = False
+                _fail("categories", f"anti_sushi: напиток в комбо без фильтра drinks: {items_str}")
+        if ok:
+            _ok("categories", "anti_sushi пицца: напитки не добавлены (drinks не в списке)")
+
+    # sushi_darom: нет пиццы -> ошибка с перечнем доступных групп
+    r = json.loads(best_combo("sushi_darom", "2000", categories="пицца"))
+    if "error" not in r:
+        _fail("categories", "sushi_darom пицца: ожидалась ошибка")
+    elif "Доступные группы" not in r["error"]:
+        _fail("categories", f"sushi_darom: error без перечня групп: {r['error']}")
+    else:
+        _ok("categories", "sushi_darom пицца: ошибка с перечнем доступных групп")
+
+    # Пустая categories = текущее поведение (без поля-фильтра)
+    r = json.loads(best_combo("la_pizza", "1500"))
+    if "error" in r:
+        _fail("categories", f"la_pizza без categories: {r['error']}")
+    elif r.get("categories") != []:
+        _fail("categories", f"la_pizza без categories: categories={r.get('categories')}")
+    else:
+        _ok("categories", "la_pizza без categories: фильтр не применяется")
+
+    # compare с категорией пицца: все сети имеют группу pizza, категории в ответе
+    r = json.loads(_compare("2000", persons=1, categories="пицца"))
+    if isinstance(r, dict) and "error" in r:
+        _fail("categories", f"compare пицца: {r['error']}")
+    else:
+        ok = True
+        for c in r:
+            if c.get("categories") != ["pizza"]:
+                ok = False
+                _fail("categories", f"compare {c['chain_id']}: categories={c.get('categories')}")
+        if ok:
+            _ok("categories", f"compare пицца: {len(r)} сетей, все с pizza")
+
+
 def main():
     check_combos()
     check_boundary()
@@ -405,6 +481,7 @@ def main():
     check_compare()
     check_diverse()
     check_extra()
+    check_categories()
     print()
     if _FAILED:
         print(f"ИТОГ: FAIL ({len(_FAILED)} проверок провалено)")
