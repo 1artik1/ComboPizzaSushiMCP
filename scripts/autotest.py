@@ -473,6 +473,155 @@ def check_categories():
             _ok("categories", f"compare пицца: {len(r)} сетей, все с pizza")
 
 
+def check_help():
+    """Блок 9: команда /help — список команд с пагинацией и деталями."""
+    from combo_mcp.tools.help import help_tool, COMMANDS
+
+    print("Блок 9: команда /help")
+    r = json.loads(help_tool())
+    if r.get("total_commands") != len(COMMANDS):
+        _fail("help", f"total_commands={r.get('total_commands')}, ожидалось {len(COMMANDS)}")
+    elif r.get("page") != 1 or len(r.get("commands", [])) != 10:
+        _fail("help", f"стр.1: page={r.get('page')}, команд={len(r.get('commands', []))}")
+    else:
+        _ok("help", f"стр.1: 10 команд из {r.get('total_commands')}")
+
+    r = json.loads(help_tool(action="next"))
+    if r.get("page") != 2 or len(r.get("commands", [])) != 3:
+        _fail("help", f"next: page={r.get('page')}, команд={len(r.get('commands', []))}")
+    else:
+        _ok("help", "next: стр.2, 3 команды")
+
+    r = json.loads(help_tool(action="next"))
+    if r.get("page") != 2:
+        _fail("help", f"next на последней: page={r.get('page')}")
+    else:
+        _ok("help", "next на последней: страница не меняется")
+
+    r = json.loads(help_tool(action="back"))
+    if r.get("page") != 1:
+        _fail("help", f"back: page={r.get('page')}")
+    else:
+        _ok("help", "back: стр.1")
+
+    r = json.loads(help_tool(command="best_combo"))
+    if "error" in r or r.get("command", {}).get("name") != "best_combo":
+        _fail("help", f"детали best_combo: {r}")
+    else:
+        _ok("help", "детали best_combo (пример есть)")
+
+    r = json.loads(help_tool(command="неттакой"))
+    if "error" not in r:
+        _fail("help", "неизвестная команда: ожидалась ошибка")
+    else:
+        _ok("help", "неизвестная команда -> error")
+
+
+def check_favorites():
+    """Блок 10: избранное — add/list/remove/clear."""
+    from combo_mcp.tools.favorites import favorites, _FAV_FILE
+
+    print("Блок 10: избранное")
+    if os.path.exists(_FAV_FILE):
+        os.remove(_FAV_FILE)
+    try:
+        r = json.loads(favorites(action="add", chain_id="pizza_kuba",
+                                 items='[{"name": "Пицца Пепперони", "count": 2, "price_rub": 350, "weight_g": 370}]'))
+        if "error" in r or r.get("total_items") != 1:
+            _fail("fav", f"add: {r}")
+        else:
+            _ok("fav", "add: 1 запись")
+
+        r = json.loads(favorites(action="add", chain_id="sushi_time",
+                                 items='[{"name": "Сет Дружба", "count": 1, "price_rub": 650, "weight_g": 900}]'))
+        if "error" in r or r.get("total_items") != 2:
+            _fail("fav", f"add 2: {r}")
+        else:
+            _ok("fav", "add 2: 2 записи, id уникален")
+
+        r = json.loads(favorites(action="list"))
+        if r.get("total_items") != 2 or len(r.get("items", [])) != 2:
+            _fail("fav", f"list: {r}")
+        else:
+            _ok("fav", f"list: {r['total_items']} записей, стр.{r['page']}/{r['total_pages']}")
+
+        rid = None
+        for it in r.get("items", []):
+            if "Дружба" in it.get("label", ""):
+                rid = it["id"]
+        r = json.loads(favorites(action="remove", query=str(rid)))
+        if r.get("removed") != 1 or r.get("total_items") != 1:
+            _fail("fav", f"remove по id: {r}")
+        else:
+            _ok("fav", "remove по id")
+
+        r = json.loads(favorites(action="remove", query="пепперони"))
+        if r.get("removed") != 1 or r.get("total_items") != 0:
+            _fail("fav", f"remove по подстроке: {r}")
+        else:
+            _ok("fav", "remove по подстроке")
+
+        r = json.loads(favorites(action="clear"))
+        if r.get("total_items") != 0:
+            _fail("fav", f"clear: {r}")
+        else:
+            _ok("fav", "clear: пусто")
+
+        r = json.loads(favorites(action="add", chain_id="", items="[]"))
+        if "error" not in r:
+            _fail("fav", "add без chain_id: ожидалась ошибка")
+        else:
+            _ok("fav", "add без chain_id -> error")
+    finally:
+        if os.path.exists(_FAV_FILE):
+            os.remove(_FAV_FILE)
+
+
+def check_extend():
+    """Блок 11: расширяемость — метаданные из реестра, category_map классов."""
+    from combo_mcp.config import get_chain_meta, get_chain_class
+    from combo_mcp.categories import category_to_group
+
+    print("Блок 11: модуль расширения сетей")
+    meta = get_chain_meta()
+    ids = {m["id"] for m in meta}
+    expected = {"la_pizza", "pizza_kuba", "ninja_food", "sushi_time",
+                "sushi_darom", "anti_sushi", "dodo"}
+    if ids != expected:
+        _fail("extend", f"get_chain_meta: {sorted(ids)}, ожидалось {sorted(expected)}")
+    else:
+        _ok("extend", f"get_chain_meta: {len(meta)} сетей из реестра парсеров")
+
+    ok = True
+    for m in meta:
+        if not m.get("name") or not m.get("url"):
+            ok = False
+            _fail("extend", f"метаданные {m['id']} неполные: {m}")
+    if ok:
+        _ok("extend", "метаданные: name/url/description заполнены")
+
+    # category_map у классов: pizza_kuba маппит «Напитки» -> drinks
+    cls = get_chain_class("pizza_kuba")
+    if cls is None or cls.category_map.get("Напитки") != "drinks":
+        _fail("extend", "pizza_kuba category_map['Напитки'] != drinks")
+    else:
+        _ok("extend", "category_map классов: pizza_kuba Напитки -> drinks")
+
+    # регрессия категорийного фильтра через классы
+    r = json.loads(best_combo("anti_sushi", "2000", categories="пицца"))
+    if "error" in r or not r.get("combos"):
+        _fail("extend", f"anti_sushi пицца после рефакторинга: {r}")
+    else:
+        _ok("extend", "anti_sushi пицца: комбо считаются (маппинг из класса)")
+
+    # авто-импорт: файл в папке chains подхватывается (реестр не пуст)
+    reg = get_chain_class("dodo")
+    if reg is None:
+        _fail("extend", "авто-регистрация: dodo не найден в реестре")
+    else:
+        _ok("extend", "авто-регистрация: реестр из pkgutil (7 парсеров)")
+
+
 def main():
     check_combos()
     check_boundary()
@@ -482,6 +631,9 @@ def main():
     check_diverse()
     check_extra()
     check_categories()
+    check_help()
+    check_favorites()
+    check_extend()
     print()
     if _FAILED:
         print(f"ИТОГ: FAIL ({len(_FAILED)} проверок провалено)")

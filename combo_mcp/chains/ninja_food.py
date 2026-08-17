@@ -58,6 +58,19 @@ class NinjaFoodParser(ChainParser):
     url = "https://ninjafood.su/"
     description = "Bitrix-сайт. Пицца, роллы, сеты, вок, ланчи."
     needs_playwright = False
+    category_map = {
+        "pitstsa": "pizza",
+        "rolly": "rolls",
+        "sety": "sets",
+        "nabory": "sets",
+        "lanchi": "other",
+        "vok_i_salaty": "noodles",
+        "supy": "other",
+        "zakuski": "snacks",
+        "sousy": "sauces",
+        "deserty": "desserts",
+        "napitki": "drinks",
+    }
 
     _WORKERS = 2
     _PAGE_ATTEMPTS = 3

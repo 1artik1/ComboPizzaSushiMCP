@@ -42,19 +42,31 @@
 .\.venv\Scripts\python.exe scripts\clear_cache.py
 ```
 
-## Инструменты MCP (10)
-- `list_chains()` — сети и их доступность
+## Инструменты MCP (13)
+- `list_chains(refresh=)` — сети и их доступность
 - `parse_menu(chain_id, category=, min_weight=, sort_by=, limit=, refresh=)` — меню
-- `best_combo(chain_id, budget, persons=1, variations=3, refresh=)` — варианты комбо:
-  во всех вариациях ровно `persons` напитков (1 на персону), порядок:
-  Оптимум → Без повторов → Макс. вес → доп. стратегии (при variations > 3)
-- `compare(budget)` — все сети по выгодности (₽/100г)
+- `best_combo(chain_id, budget, persons=1, variations=3, refresh=, categories=)` — варианты комбо:
+
+  - ровно `persons` напитков в каждой вариации (по 1 на персону)
+  - `categories=` — фильтр по категориям: «пицца», «pizza», «напитки», «роллы»...
+    (группы: pizza/rolls/sushi/sets/noodles/snacks/desserts/drinks/sauces/other;
+    напитки добавляются, только если группа drinks в списке)
+- `compare(budget, persons=1, categories=)` — все сети по выгодности (₽/100г)
 - `status()` — конфиг, возраст кэша, ошибки
 - `verify_chain(chain_id)` — качество данных (веса, дубликаты, аномалии)
 - `check_price(chain_id, item_name, expected_price=)` — сверка цены позиции
 - `diff_menu(chain_id)` — изменения меню с прошлой загрузки
 - `check_config()` — валидация конфига и доступность ссылок
 - `health_check(refresh=False)` — HTTP + парсинг + кол-во позиций по всем сетям
+- `chain_info(chain_id, refresh=)` — доставка, акции, лояльность сети
+- `help(action=, command=)` — команда /help: список всех команд с описаниями,
+  пагинация 10 на страницу (`/help next`, `/help back`), детали одной команды
+  (`/help best_combo`)
+- `favorites(action=, chain_id=, label=, items=, query=)` — избранное: сохранить
+  понравившееся комбо (`action="add"`, items — JSON-массив позиций), показать
+  список (`action="list"`, пагинация через `query="next"/"back"`), удалить
+  (`action="remove"`, `query` — id или подстрока), очистить (`action="clear"`).
+  Хранение: `cache/favorites.json`.
   (refresh=true — реальный прогон, иначе быстрый ответ по кэшу)
 
 ## Автотесты
@@ -68,9 +80,17 @@
 
 ## Добавление новой сети
 1. Скопировать `combo_mcp\chains\_template.py` → `combo_mcp\chains\my_chain.py`
-2. Реализовать класс с методом `parse()` (возвращает список позиций:
+   (или проще: `python scripts\new_chain.py my_chain "Моя Сеть" https://example.com`)
+2. Реализовать метод `parse()` (возвращает список позиций:
    `{name, weight_g, price_rub, is_from_price, description, category, product_url, in_stock, extra}`)
-3. Указать `url` в `chains_config.json` — сервер подхватит автоматически при старте.
+3. Заполнить `category_map` — маппинг категорий меню → группы комбо
+   (pizza/rolls/sushi/sets/noodles/snacks/desserts/drinks/sauces/other)
+4. Указать `url` в `chains_config.json` (генератор делает это сам)
+
+Больше ничего: парсеры регистрируются автоматически (pkgutil), метаданные сети
+(id/name/city/url/description) берутся из класса парсера, категории — из его
+`category_map`. По желанию: `parse_extra()` (доставка/акции), веса в
+`config\estimated_weights.json`, переводы в `config\translations.json`.
 
 ## Добавление нового инструмента
 Положить файл с функцией-хендлером в `combo_mcp\tools\` и зарегистрировать декоратором

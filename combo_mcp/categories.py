@@ -3,6 +3,9 @@
 
 Группы: pizza, rolls, sushi, sets, noodles, snacks, desserts, drinks,
 sauces, other.
+
+Маппинг берётся из атрибута category_map класса парсера (chain.py),
+fallback — эвристики для sushi_darom / anti_sushi / ninja_food.
 """
 
 import re
@@ -28,82 +31,24 @@ _SYNONYMS = {
     "соус": "sauces", "sauces": "sauces", "сousy": "sauces",
 }
 
-# Маппинг сырых категорий по сетям -> группа
-# Ключи — нижний регистр сырой категории, значения — группа
-_CHAIN_CATEGORIES = {
-    # la_pizza
-    "la_pizza": {
-        "обычная": "pizza",
-        "гигант": "pizza",
-        "римская": "pizza",
-        "комбо": "sets",
-    },
-    # pizza_kuba
-    "pizza_kuba": {
-        "Пиццы": "pizza",
-        "Закуски": "snacks",
-        "Соусы": "sauces",
-        "Напитки": "drinks",
-        "Десерты": "desserts",
-    },
-    # ninja_food (транслит, нижний регистр)
-    "ninja_food": {
-        "pitstsa": "pizza",
-        "rolly": "rolls",
-        "sety": "sets",
-        "nabory": "sets",
-        "lanchi": "other",
-        "vok_i_salaty": "noodles",
-        "supy": "other",
-        "zakuski": "snacks",
-        "sousy": "sauces",
-        "deserty": "desserts",
-        "napitki": "drinks",
-    },
-    # sushi_time
-    "sushi_time": {
-        "Пицца": "pizza",
-        "Роллы": "rolls",
-        "Суши": "sushi",
-        "Сеты": "sets",
-        "Онигири": "sushi",
-        "Лапша": "noodles",
-        "Скидки": "other",
-        "Супы": "other",
-        "Салаты": "other",
-        "Закуски": "snacks",
-        "Сендвичи": "other",
-        "Десерты": "desserts",
-        "Соусы": "sauces",
-    },
-    # sushi_darom
-    "sushi_darom": {
-        "Горячие закуски": "snacks",
-        "Салаты": "other",
-        "Специи": "sauces",
-        "Гарниры": "other",
-        "Десерты": "desserts",
-        "Онигири": "sushi",
-    },
-    # anti_sushi
-    "anti_sushi": {
-        "Роллы/Суши": "rolls",
-        "Роллы": "rolls",
-        "Суши": "sushi",
-        "Сеты": "sets",
-        "Горячее": "noodles",
-        "Пицца": "pizza",
-        "Закуски": "snacks",
-        "Соусы": "sauces",
-        "Комбо": "sets",
-    },
-}
+
+def _chain_category_map(chain_id):
+    """category_map класса парсера сети ({} если парсера нет)."""
+    try:
+        from combo_mcp.chains.base import get_chain_class
+        cls = get_chain_class(chain_id)
+        if cls is None:
+            return {}
+        return getattr(cls, "category_map", {})
+    except Exception:
+        return {}
 
 
 def category_to_group(item, chain_id):
     """Определить группу для позиции по категории или имени.
 
-    Для dodo: если категория «Пицца» — детект по имени.
+    Для dodo: если категория «Пицца» — детект по имени (напитки, десерты).
+    Для остальных: берём category_map класса парсера, затем fallback-эвристики.
     """
     name = (item.get("name") or "").lower()
     category = (item.get("category") or "").strip()
@@ -122,12 +67,12 @@ def category_to_group(item, chain_id):
             return "desserts"
         return "pizza"
 
-    # Прямой маппинг по категории
-    cat_map = _CHAIN_CATEGORIES.get(chain_id, {})
+    # Прямой маппинг по category_map класса парсера
+    cat_map = _chain_category_map(chain_id)
     if category in cat_map:
         return cat_map[category]
 
-    # sushi_darom: частичное совпадение для роллов
+    # sushi_darom: частичное совпадение для роллов/сетов/суши/онигири
     if chain_id == "sushi_darom":
         cat_lower = category.lower()
         if "ролл" in cat_lower:
@@ -147,7 +92,7 @@ def category_to_group(item, chain_id):
         if "суши" in cat_lower:
             return "sushi"
 
-    # ninja_food: частичное совпадение
+    # ninja_food: частичное совпадение ключа в категории
     if chain_id == "ninja_food":
         cat_lower = category.lower()
         for key, group in cat_map.items():

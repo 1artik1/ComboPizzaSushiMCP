@@ -19,6 +19,7 @@ class ChainParser(ABC):
         url:          базовый URL
         description:  описание сети
         needs_playwright: True, если нужен browser для парсинга
+        category_map: {сырая_категория: группа} — маппинг категорий меню
 
     Метод:
         parse() -> list[dict] — распарсить меню, вернуть список позиций.
@@ -30,6 +31,9 @@ class ChainParser(ABC):
     url = ""
     description = ""
     needs_playwright = False
+    # category_map: сырая категория меню -> группа комбо
+    # (pizza/rolls/sushi/sets/noodles/snacks/desserts/drinks/sauces/other)
+    category_map = {}
 
     @abstractmethod
     def parse(self):

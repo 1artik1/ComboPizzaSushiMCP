@@ -28,6 +28,17 @@ class AntiSushiParser(ChainParser):
     url = "https://anti-sushi.ru/"
     description = "Бренд-сестра Суши Даром. Пицца, роллы, суши, сеты."
     needs_playwright = False
+    category_map = {
+        "Роллы/Суши": "rolls",
+        "Роллы": "rolls",
+        "Суши": "sushi",
+        "Сеты": "sets",
+        "Горячее": "noodles",
+        "Пицца": "pizza",
+        "Закуски": "snacks",
+        "Соусы": "sauces",
+        "Комбо": "sets",
+    }
 
     DELIVERY_URL = "https://anti-sushi.ru/delivery/"
     SALES_URL = "https://anti-sushi.ru/sales/"

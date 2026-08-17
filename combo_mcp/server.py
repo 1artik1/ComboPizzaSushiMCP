@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""server.py — MCP Server (MCPServer) + 9 инструментов."""
+"""server.py — MCP Server (MCPServer) + 13 инструментов."""
 
 import sys
 import os
@@ -24,6 +24,8 @@ from combo_mcp.tools.diff_menu import diff_menu as _diff_menu
 from combo_mcp.tools.check_config import check_config as _check_config
 from combo_mcp.tools.health_check import health_check as _health_check
 from combo_mcp.tools.chain_info import chain_info as _chain_info
+from combo_mcp.tools.help import help_tool as _help_tool
+from combo_mcp.tools.favorites import favorites as _favorites
 
 # Create server
 mcp = MCPServer(
@@ -33,7 +35,7 @@ mcp = MCPServer(
     description="Расчёт выгодных комбо по сетям доставки в Воронеже",
 )
 
-# Register all 9 tools
+# Register all 13 tools
 mcp.add_tool(
     _list_chains,
     name="list_chains",
@@ -98,6 +100,18 @@ mcp.add_tool(
     _chain_info,
     name="chain_info",
     description="chain_info: доставка, акции, лояльность сети (обновление раз в день в extra_refresh_at).",
+)
+
+mcp.add_tool(
+    _help_tool,
+    name="help",
+    description="help: список команд combo-engine (13), пагинация /help next|back, детали /help <команда>.",
+)
+
+mcp.add_tool(
+    _favorites,
+    name="favorites",
+    description="favorites: избранное — сохранить понравившееся комбо (add), список (list), удалить (remove), очистить (clear).",
 )
 
 

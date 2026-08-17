@@ -22,6 +22,15 @@ class SushiDaromParser(ChainParser):
     url = "https://voronezh.sushi-darom.com/"
     description = "Сеть роллов и суши. Next.js-приложение."
     needs_playwright = False
+    # sushi_darom: роллы/сеты/суши ловятся fallback-эвристикой в categories.py
+    category_map = {
+        "Горячие закуски": "snacks",
+        "Салаты": "other",
+        "Специи": "sauces",
+        "Гарниры": "other",
+        "Десерты": "desserts",
+        "Онигири": "sushi",
+    }
 
     def parse(self):
         """Распарсить меню Sushi Darom."""

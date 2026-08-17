@@ -14,3 +14,5 @@ from combo_mcp.tools import verify_chain  # noqa: F401
 from combo_mcp.tools import check_price  # noqa: F401
 from combo_mcp.tools import diff_menu  # noqa: F401
 from combo_mcp.tools import check_config  # noqa: F401
+from combo_mcp.tools import help  # noqa: F401
+from combo_mcp.tools import favorites  # noqa: F401

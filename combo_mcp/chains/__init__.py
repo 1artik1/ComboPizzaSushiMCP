@@ -1,14 +1,31 @@
 # -*- coding: utf-8 -*-
-"""chains package — авто-регистрация: импортирует все модули, собирает реестр."""
+"""chains package — авто-регистрация парсеров через pkgutil.
 
-# Import base to register chains
+Импортирует все модули из combo_mcp.chains, пропускает "_*" и extra_utils,
+ловит ошибки импорта и печатает предупреждение.
+"""
+
+import pkgutil
+import sys
+
+# Import base to register the registry and get_chain_class
 from combo_mcp.chains.base import get_chain_class, _CHAIN_REGISTRY  # noqa: F401
 
-# Import sub-modules to register their chains
-from combo_mcp.chains import la_pizza  # noqa: F401
-from combo_mcp.chains import sushi_darom  # noqa: F401
-from combo_mcp.chains import anti_sushi  # noqa: F401
-from combo_mcp.chains import sushi_time  # noqa: F401
-from combo_mcp.chains import ninja_food  # noqa: F401
-from combo_mcp.chains import pizza_kuba  # noqa: F401
-from combo_mcp.chains import dodo  # noqa: F401
+# Auto-discover and import all chain modules
+_loader = __loader__
+if _loader is not None:
+    _package_path = __path__
+else:
+    import os
+    _package_path = [os.path.dirname(__file__)]
+
+for importer, name, is_pkg in pkgutil.iter_modules(_package_path):
+    # Пропуска private модули (_*) и extra_utils
+    if name.startswith("_"):
+        continue
+    if name == "extra_utils":
+        continue
+    try:
+        __import__(f"combo_mcp.chains.{name}")
+    except Exception as e:
+        print(f"[chains] пропущен модуль {name}: {e}")

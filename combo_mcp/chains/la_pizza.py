@@ -21,6 +21,12 @@ class LaPizzaParser(ChainParser):
     url = "https://la-pizza.pro"
     description = "Сеть доставки пиццы. Каталог: обычные, гигант, римские + комбо."
     needs_playwright = False
+    category_map = {
+        "обычная": "pizza",
+        "гигант": "pizza",
+        "римская": "pizza",
+        "комбо": "sets",
+    }
 
     DELIVERY_URL = "https://la-pizza.pro/info/9707"
     ACTIONS_URL = "https://la-pizza.pro/actions"

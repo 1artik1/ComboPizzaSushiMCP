@@ -66,58 +66,25 @@ def get_extra_refresh_at():
 
 
 def get_chain_meta():
-    """Get chain metadata (id, name, city, url, description)."""
-    return [
-        {
-            "id": "la_pizza",
-            "name": "Ла Пицца",
-            "city": "Воронеж",
-            "url": "https://la-pizza.pro",
-            "description": "Сеть доставки пиццы. Каталог: обычные, гигант, римские + комбо.",
-        },
-        {
-            "id": "pizza_kuba",
-            "name": "Пицца Куба",
-            "city": "Воронеж",
-            "url": "https://pizzeriacuba.ru",
-            "description": "Пиццерия с доставкой.",
-        },
-        {
-            "id": "ninja_food",
-            "name": "Ниндзя Фуд",
-            "city": "Воронеж",
-            "url": "https://ninjafood.su",
-            "description": "Bitrix-сайт. Пицца, роллы, сеты, вок, ланчи.",
-        },
-        {
-            "id": "sushi_time",
-            "name": "Сушитайм",
-            "city": "Воронеж",
-            "url": "https://суши-тайм.рф/Voronezh/",
-            "description": "Доставка роллов и суши.",
-        },
-        {
-            "id": "sushi_darom",
-            "name": "Суши Даром",
-            "city": "Воронеж",
-            "url": "https://voronezh.sushi-darom.com",
-            "description": "Сеть роллов и суши. Next.js-приложение.",
-        },
-        {
-            "id": "anti_sushi",
-            "name": "Антисуши",
-            "city": "Воронеж",
-            "url": "https://anti-sushi.ru",
-            "description": "Бренд-сестра Суши Даром. Пицца, роллы, суши, сеты.",
-        },
-        {
-            "id": "dodo",
-            "name": "Додо Пицца",
-            "city": "Воронеж",
-            "url": "https://dodopizza.ru",
-            "description": "Крупная сеть. API может быть заблокирован капчей.",
-        },
-    ]
+    """Собрать метаданные сетей из реестра парсеров.
+
+    Возвращает список dict с полями id/name/city/url/description.
+    """
+    try:
+        from combo_mcp.chains.base import _CHAIN_REGISTRY
+    except ImportError:
+        return []
+
+    result = []
+    for cid, cls in _CHAIN_REGISTRY.items():
+        result.append({
+            "id": cid,
+            "name": getattr(cls, "name", cid),
+            "city": getattr(cls, "city", "Воронеж"),
+            "url": getattr(cls, "url", ""),
+            "description": getattr(cls, "description", ""),
+        })
+    return result
 
 
 def get_chain_class(chain_id):

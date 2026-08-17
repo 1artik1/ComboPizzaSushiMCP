@@ -29,6 +29,21 @@ class SushiTimeParser(ChainParser):
     url = "https://xn----8sbwgpzjf9b.xn--p1ai/Voronezh/"
     description = "Доставка роллов и суши. IDN-домен."
     needs_playwright = False
+    category_map = {
+        "Пицца": "pizza",
+        "Роллы": "rolls",
+        "Суши": "sushi",
+        "Сеты": "sets",
+        "Онигири": "sushi",
+        "Лапша": "noodles",
+        "Скидки": "other",
+        "Супы": "other",
+        "Салаты": "other",
+        "Закуски": "snacks",
+        "Сендвичи": "other",
+        "Десерты": "desserts",
+        "Соусы": "sauces",
+    }
 
     def parse(self):
         """Распарсить меню Sushi Time из HTML."""

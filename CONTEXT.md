@@ -6,9 +6,9 @@
 
 MCP-сервер (Python, stdio, mcp) «ComboPizzaSushiMCP»: комбо-подборщик по 7 сетям
 доставки Воронежа (la_pizza, pizza_kuba, ninja_food, sushi_time, sushi_darom,
-anti_sushi, dodo). 11 MCP-инструментов: status, verify_chain, best_combo,
-check_price, health_check, compare, get_chain_info, get_chains, clear_cache,
-refresh_cache, chain_info.
+anti_sushi, dodo). 13 MCP-инструментов: list_chains, parse_menu, best_combo,
+compare, status, verify_chain, check_price, diff_menu, check_config, health_check,
+chain_info, help, favorites.
 
 ## Как запускать
 
@@ -61,6 +61,23 @@ refresh_cache, chain_info.
   комбо/спецпредложения), дедупликация по имени, 87 позиций (было 52); напитков на
   сайте нет (/catalog/drinks/ → 404). sushi_darom/la_pizza напитков нет на сайтах.
   dodo: напитки 40, десерты 12, пицца 108. Автотест блок 8.
+- Команда /help (12-й инструмент): help.py — справочник 13 команд (name/args/description/
+  example), пагинация 10 на страницу через action="next"/"back" (память _help_page),
+  детали команды через command="best_combo"; ответ {page, total_pages, commands, hint}.
+  Блок 9.
+- Избранное (13-й инструмент): favorites.py — action="add" (chain_id + items JSON-массив
+  [{name,count,price_rub,weight_g}], снимок с итогами, label автогенерация, id
+  int(time*1000)+счётчик) / "list" (пагинация 10/стр, query="next"/"back"/номер страницы,
+  память _fav_page) / "remove" (query: id или подстрока label/имени) / "clear".
+  Хранение: cache/favorites.json (атомарно: tempfile + os.replace). Блок 10.
+- Модуль расширения сетей: метаданные сети (id/name/city/url/description) и маппинг
+  категорий category_map — в классе парсера (ChainParser.category_map = {}); категории
+  из класса (categories.py через get_chain_class, fallback-эвристики ролл/суши для
+  sushi_darom/anti_sushi, dodo — по имени); авто-регистрация парсеров в chains/__init__.py
+  (pkgutil.iter_modules, пропуск _* и extra_utils, ошибки логируются); get_chain_meta()
+  собирается из реестра (жёсткий список в config.py удалён); scripts/new_chain.py
+  генерирует парсер + запись в chains_config.json + чек-лист; _template.py обновлён.
+  Блок 11.
 
 ## Состояние на 2026-08-17
 
@@ -84,6 +101,10 @@ refresh_cache, chain_info.
   menu_ttl_minutes + load_items_with_ttl), find_promos (читаемые заголовки акций),
   drinks.py (тоник/газировка/байкал/фраппе), pizza_kuba веса из описаний (site).
   anti_sushi: 87 позиций (+пицца и подкаталоги). Автотест: 8/8 блоков зелёные.
+- Сделано (третий раунд): /help (12-й инструмент, пагинация next/back, детали команды),
+  избранное favorites (13-й инструмент, cache/favorites.json), модуль расширения сетей
+  (category_map в классах, авто-регистрация pkgutil, get_chain_meta из реестра,
+  scripts/new_chain.py генератор). Автотест: 11/11 блоков зелёные.
 - Открыто: OCR (Tesseract) установлен, но используется мало; проверка качества
   акций anti_sushi (заголовки с мусором из меню); sushi_darom/la_pizza/anti_sushi —
   напитков на сайтах нет (фильтр drinks вернёт ошибку с доступными группами).

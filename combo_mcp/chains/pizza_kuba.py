@@ -28,6 +28,13 @@ class PizzaKubaParser(ChainParser):
     url = "https://pizzeriacuba.ru/"
     description = "Пиццерия с доставкой. API vsem-edu-oblako."
     needs_playwright = False
+    category_map = {
+        "Пиццы": "pizza",
+        "Закуски": "snacks",
+        "Соусы": "sauces",
+        "Напитки": "drinks",
+        "Десерты": "desserts",
+    }
 
     DELIVERY_URL = "https://pizzeriacuba.ru/info/4220"
     ACTIONS_URL = "https://pizzeriacuba.ru/actions"
