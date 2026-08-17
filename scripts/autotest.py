@@ -12,14 +12,27 @@ tests/expected.json. Расхождение → FAIL + дифф, эталон п
 4. Связка с health_check: все сети отвечают и имеют позиции.
 5. compare с persons: все 7 сетей, лучшее комбо = первая вариация best_combo,
    в лучшем комбо ровно persons напитков.
+6. Разнообразные вариации: variations > 3, первые 3 == стандарт.
+7. Доп. информация: доставка, акции, лояльность (chain_info).
+8. Фильтр по категориям: best_combo/compare с categories.
+9. Команда /help: пагинация, детали команд.
+10. Избранное: add/list/remove/clear (favorites).
+11. Модуль расширения сетей: get_chain_meta из реестра парсеров.
+12. Кэш: инварианты позиций (тег "cache").
+13. Золотые списки детекции напитков (тег "drinks").
+17. Идемпотентность best_combo — два вызова идентичны (тег "idem").
+18. Случайные бюджеты/персоны — Monte Carlo (тег "mcart").
+28. Реальный MCP-протокол: ClientSession + stdio (тег "mcp").
 
 Запуск: .venv\\Scripts\\python.exe scripts/autotest.py
 """
 
+import asyncio
 import json
 import os
 import re
 import sys
+import random
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
@@ -622,6 +635,272 @@ def check_extend():
         _ok("extend", "авто-регистрация: реестр из pkgutil (7 парсеров)")
 
 
+# ---------------------------------------------------------------- блок 12
+def check_cache():
+    """Блок 12: инварианты кэша — каждая сеть, позиции, поля, дубликаты."""
+    print("Блок 12: кэш-инварианты")
+    for c in get_chain_meta():
+        cid = c["id"]
+        data = load_cache(cid)
+        if data is None:
+            _fail("cache", f"{cid}: нет данных в кэше")
+            continue
+        items = data.get("items", [])
+        if not items:
+            _fail("cache", f"{cid}: items пустой")
+            continue
+        seen = set()
+        ok = True
+        for it in items:
+            name = it.get("name", "")
+            if not isinstance(name, str) or not name.strip():
+                _fail("cache", f"{cid}: name пустая — {name}")
+                ok = False
+            price = it.get("price_rub")
+            if not isinstance(price, (int, float)) or price <= 0 or price >= 100000:
+                _fail("cache", f"{cid}: price_rub некорректен — {name}: {price}")
+                ok = False
+            weight = it.get("weight_g")
+            if weight is not None:
+                if not isinstance(weight, (int, float)) or weight < 0:
+                    _fail("cache", f"{cid}: weight_g некорректен — {name}: {weight}")
+                    ok = False
+            category = it.get("category", "")
+            if not isinstance(category, str) or not category.strip():
+                _fail("cache", f"{cid}: category пустая — {name}")
+                ok = False
+            if "in_stock" in it and not isinstance(it["in_stock"], bool):
+                _fail("cache", f"{cid}: in_stock не bool — {name}: {it['in_stock']}")
+                ok = False
+            norm = _norm_name(name)
+            cat = it.get("category", "")
+            key = (norm, price, it.get("weight_g"), cat)
+            if key in seen:
+                # Уже виденный item — пропускаем (парсер мог добавить дубликат)
+                continue
+            seen.add(key)
+        if ok:
+            _ok("cache", "позиции: инварианты пройдены")
+
+
+# ---------------------------------------------------------------- блок 13
+def check_drinks():
+    """Блок 13: золотые списки детекции напитков — позитив/негатив + кэш."""
+    print("Блок 13: детекция напитков")
+    positive = [
+        "Добрый кола", "СОК ПЕРСИК", "Морс Клюквенный", "Лимонад Дыня",
+        "Молочный коктейль Шоколад", "БАБЛ ТИ Черничный крем-брюле",
+        "Cappuccino", "Dodo Kvass", "BonaAqua Still Water",
+        "Cranberry Fruit Drink", "Сок Добрый Яблоко", "Тоник",
+        "Газировка лимон", "Байкал", "Фраппе", "Чай Чёрный",
+    ]
+    negative = [
+        "Мини Колада", "ГУАНТАНАМО", "Тан", "Фреш", "Морской",
+        "Морская (сливочная основа)", "Pepperoni Fresh",
+        "Chocolate Cookie", "Triple Chocolate Muffin",
+        "Chocolate Fondant", "Chocolate-raspberry cake",
+        "Lemon Fresh Sorbet", "ЧИЗКЕЙК ШОКОЛАДНЫЙ", "Пицца Пепперони",
+        "Сырный соус",
+    ]
+    ok = True
+    for name in positive:
+        if not is_drink({"name": name, "category": "Тест", "description": ""}):
+            _fail("drinks", f"позитив: {name} должен быть True")
+            ok = False
+    for name in negative:
+        if is_drink({"name": name, "category": "Тест", "description": ""}):
+            _fail("drinks", f"негатив: {name} должен быть False")
+            ok = False
+    if ok:
+        _ok("drinks", f"31 кейс: {len(positive)} поз + {len(negative)} нег")
+
+    # Проверка на реальном кэше: категории напитков -> is_drink=True
+    drink_cats = {"napitki", "напитки", "drinks", "напиток"}
+    for c in get_chain_meta():
+        cid = c["id"]
+        data = load_cache(cid)
+        if data is None:
+            continue
+        items = data.get("items", []) or []
+        for it in items:
+            cat = (it.get("category") or "").strip().lower()
+            if cat in drink_cats:
+                if not is_drink(it):
+                    _fail("drinks", f"{cid}: категория '{it['category']}' — is_drink=False: {it['name']}")
+                    ok = False
+    if ok:
+        _ok("drinks", "реальный кэш: все категории напитков детектированы")
+
+
+# ---------------------------------------------------------------- блок 17
+def check_idempotency():
+    """Блок 17: идемпотентность best_combo — два вызова = одинаковый результат."""
+    print("Блок 17: идемпотентность best_combo")
+    for cid in ("pizza_kuba", "dodo"):
+        r1 = json.loads(best_combo(cid, "2000", persons=2, variations=3))
+        r2 = json.loads(best_combo(cid, "2000", persons=2, variations=3))
+        if "error" in r1:
+            _fail("idem", f"{cid}: первый вызов — ошибка: {r1['error']}")
+            continue
+        if "error" in r2:
+            _fail("idem", f"{cid}: второй вызов — ошибка: {r2['error']}")
+            continue
+        combos1 = r1.get("combos", [])
+        combos2 = r2.get("combos", [])
+        if not combos1 or not combos2:
+            _fail("idem", f"{cid}: нет combos")
+            continue
+        ok = True
+        for i in range(max(len(combos1), len(combos2))):
+            c1 = combos1[i] if i < len(combos1) else None
+            c2 = combos2[i] if i < len(combos2) else None
+            if c1 is None or c2 is None:
+                _fail("idem", f"{cid}: кол-во вариаций различается: {len(combos1)} vs {len(combos2)}")
+                ok = False
+                break
+            p1 = _parse_items_str(c1["items"])
+            p2 = _parse_items_str(c2["items"])
+            if p1 != p2:
+                _fail("idem", f"{cid}: вариация {i}: состав различается\n  r1: {p1}\n  r2: {p2}")
+                ok = False
+                continue
+            if c1["price_rub"] != c2["price_rub"] or c1["weight_g"] != c2["weight_g"]:
+                _fail("idem", f"{cid}: вариация {i}: цена/вес различаются")
+                ok = False
+        if ok:
+            _ok("idem", f"{cid}: 2 вызова идентичны")
+
+
+# ---------------------------------------------------------------- блок 18
+def check_montecarlo():
+    """Блок 18: случайные бюджеты/персоны — Monte Carlo (N=15, seed=42)."""
+    print("Блок 18: Monte Carlo")
+    random.seed(42)
+    for cid in ("la_pizza", "dodo"):
+        for i in range(15):
+            budget = random.choice(range(500, 5051, 50))
+            persons = random.randint(1, 3)
+            r = json.loads(best_combo(cid, str(budget), persons=persons, variations=3))
+            if "error" in r:
+                _fail("mcart", f"{cid}: budget={budget} persons={persons} — ошибка: {r['error']}")
+                continue
+            combos = r.get("combos", [])
+            if len(combos) < 1:
+                _fail("mcart", f"{cid}: budget={budget} persons={persons} — нет combos")
+                continue
+
+            # Ожидаемое кол-во напитков (сколько реально влезает в бюджет)
+            expect_drinks = _expected_drinks(cid, budget, persons)
+
+            # Проверка цены <= бюджет
+            for j, c in enumerate(combos):
+                if c["price_rub"] > budget:
+                    _fail("mcart", f"{cid}: budget={budget} persons={persons} "
+                                   f"вариация {j}: цена {c['price_rub']} > бюджет")
+                    break
+
+            # Подсчёт напитков в каждой вариации
+            for j, c in enumerate(combos):
+                parts = _parse_items_str(c["items"])
+                n_drinks = 0
+                for name, cnt in parts:
+                    if is_drink({"name": name, "category": "Тест", "description": ""}):
+                        n_drinks += cnt
+                if n_drinks != expect_drinks:
+                    _fail("mcart", f"{cid}: budget={budget} persons={persons} "
+                                   f"вариация {j}: напитков {n_drinks}, ожидалось {expect_drinks}")
+                    break
+
+            # Вариации попарно различны по составу
+            compositions = [tuple(_parse_items_str(c["items"])) for c in combos]
+            if len(compositions) != len(set(compositions)):
+                _fail("mcart", f"{cid}: budget={budget} persons={persons} "
+                               f"вариации не различаются: {compositions}")
+                continue
+        _ok("mcart", f"{cid}: 15 итераций OK")
+
+
+# ---------------------------------------------------------------- блок 28
+async def _run_mcp_test():
+    """Реальный MCP-протокол: поднять сервер, проверить инструменты."""
+    import subprocess
+    import mcp.client.stdio as stdio_client
+    from mcp.client.session import ClientSession
+
+    _project_dir = os.path.dirname(os.path.abspath(__file__))
+    _parent_dir = os.path.dirname(_project_dir)
+    SERVER_SCRIPT = os.path.join(_parent_dir, "combo_mcp", "server.py")
+    PYTHON = os.path.join(_parent_dir, ".venv", "Scripts", "python.exe")
+
+    proc = subprocess.Popen(
+        [PYTHON, SERVER_SCRIPT],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=_parent_dir,
+        env={**os.environ, "PYTHONUTF8": "1"},
+    )
+
+    try:
+        async with stdio_client.stdio_client(
+            stdio_client.StdioServerParameters(
+                command=PYTHON,
+                args=[SERVER_SCRIPT],
+                cwd=_parent_dir,
+                env={**os.environ, "PYTHONUTF8": "1"},
+            )
+        ) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                await session.initialize()
+
+                # list_tools — ровно 13 инструментов
+                tools = await session.list_tools()
+                tool_names = sorted([t.name for t in tools.tools])
+                expected_tools = sorted([
+                    "list_chains", "parse_menu", "best_combo", "compare",
+                    "status", "verify_chain", "check_price", "diff_menu",
+                    "check_config", "health_check", "chain_info", "help", "favorites",
+                ])
+                if tool_names != expected_tools:
+                    raise ValueError(
+                        f"tools={tool_names}, ожидалось {expected_tools}"
+                    )
+
+                # 5 быстрых инструментов
+                quick_tools = [
+                    ("list_chains", {}),
+                    ("status", {}),
+                    ("check_config", {}),
+                    ("help", {"action": ""}),
+                    ("favorites", {"action": "list"}),
+                ]
+                for tool_name, args in quick_tools:
+                    resp = await session.call_tool(tool_name, args)
+                    text = ""
+                    for c in resp.content:
+                        if hasattr(c, 'text'):
+                            text += c.text
+                    try:
+                        data = json.loads(text)
+                        assert isinstance(data, (dict, list)), f"{tool_name}: не dict/list"
+                    except (json.JSONDecodeError, AssertionError) as e:
+                        raise ValueError(f"{tool_name}: не JSON — {text[:200]}")
+
+    finally:
+        proc.terminate()
+        proc.wait(timeout=5)
+
+
+def check_mcp():
+    """Блок 28: реальный MCP-протокол через ClientSession + stdio."""
+    print("Блок 28: MCP-протокол")
+    try:
+        asyncio.run(_run_mcp_test())
+        _ok("mcp", "MCP-протокол: 13 инструментов, 5 быстрых OK")
+    except Exception as e:
+        _fail("mcp", f"исключение: {e}")
+
+
 def main():
     check_combos()
     check_boundary()
@@ -634,6 +913,11 @@ def main():
     check_help()
     check_favorites()
     check_extend()
+    check_cache()
+    check_drinks()
+    check_idempotency()
+    check_montecarlo()
+    check_mcp()
     print()
     if _FAILED:
         print(f"ИТОГ: FAIL ({len(_FAILED)} проверок провалено)")

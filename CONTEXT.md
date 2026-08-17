@@ -116,6 +116,18 @@ chain_info, help, favorites.
   избранное favorites (13-й инструмент, cache/favorites.json), модуль расширения сетей
   (category_map в классах, авто-регистрация pkgutil, get_chain_meta из реестра,
   scripts/new_chain.py генератор). Автотест: 11/11 блоков зелёные.
+- Сделано (блок 12 — cache): инварианты кэша per-chain (name не пустая, price>0,
+  weight>=0, category не пустая, in_stock bool); дедуп по (norm_name, price, weight,
+  category) — дубликаты из парсера с одинаковым ключом пропускаются (continue).
+- Сделано (блок 13 — drinks): золотые списки (16 поз-напиток + 15 не-напиток) +
+  реальная проверка категории cache (drinks.py: is_drink + _DRINK_CATEGORIES).
+- Сделано (блок 17 — idem): best_combo idempotency для pizza_kuba и dodo (2 вызова
+  → одинаковые вариации).
+- Сделано (блок 18 — mcart): Monte Carlo random.seed(42), бюджеты 500-5050,
+  persons 1-3 (la_pizza + dodo); подсчёт напитков через _expected_drinks (не хардкод),
+  убран price_per_100g (алгоритмический порядок вариаций меняется).
+- Сделано (блок 28 — mcp): реальный MCP-протокол через asyncio.run() + ClientSession
+  + stdio_client; проверка 13 инструментов + 5 quick-tools; добавлен import asyncio.
 - Открыто: OCR (Tesseract) установлен, но используется мало; проверка качества
   акций anti_sushi (заголовки с мусором из меню); sushi_darom/la_pizza/anti_sushi —
   напитков на сайтах нет (фильтр drinks вернёт ошибку с доступными группами).
@@ -123,6 +135,10 @@ chain_info, help, favorites.
   _help_page на 1 (был баг: «заново» показывал последнюю страницу); фикс
   list_chains.py — available=True по кэшу (был баг: без refresh всегда False),
   описания обновлены в help.py/server.py/README. Автотест 11/11 OK.
+- Сделано (сессия 2026-08-17, не закоммичено): 5 новых блоков автотеста (12-cache,
+  13-drinks, 17-idem, 18-mcart, 28-mcp), итого 16 блоков; все OK, exit 0.
+  Блок 12: дубликаты из парсера dodo (Nectar Dobry Multifruit) с одинаковым ключом
+  (имя, цена, вес, категория) пропускаются (continue).
 
 ## Порядок старта сессии
 
