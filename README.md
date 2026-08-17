@@ -43,7 +43,7 @@
 ```
 
 ## Инструменты MCP (13)
-- `list_chains(refresh=)` — сети и их доступность
+- `list_chains(refresh=)` — сети: id, название, город, available (есть данные в кэше), описание
 - `parse_menu(chain_id, category=, min_weight=, sort_by=, limit=, refresh=)` — меню
 - `best_combo(chain_id, budget, persons=1, variations=3, refresh=, categories=)` — варианты комбо:
 

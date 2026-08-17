@@ -62,9 +62,12 @@ chain_info, help, favorites.
   сайте нет (/catalog/drinks/ → 404). sushi_darom/la_pizza напитков нет на сайтах.
   dodo: напитки 40, десерты 12, пицца 108. Автотест блок 8.
 - Команда /help (12-й инструмент): help.py — справочник 13 команд (name/args/description/
-  example), пагинация 10 на страницу через action="next"/"back" (память _help_page),
+  example), пагинация 10 на страницу через action="next"/"back" (память _help_page,
+  пустой action сбрасывает на стр. 1),
   детали команды через command="best_combo"; ответ {page, total_pages, commands, hint}.
   Блок 9.
+- list_chains: available=True, если в кэше сети есть позиции; при refresh=true — по
+  результату live-парсинга (был баг: без refresh всегда False).
 - Избранное (13-й инструмент): favorites.py — action="add" (chain_id + items JSON-массив
   [{name,count,price_rub,weight_g}], снимок с итогами, label автогенерация, id
   int(time*1000)+счётчик) / "list" (пагинация 10/стр, query="next"/"back"/номер страницы,
@@ -82,6 +85,14 @@ chain_info, help, favorites.
 ## Состояние на 2026-08-17
 
 - git: ветка main, remote github.com/1artik1/ComboPizzaSushiMCP.
+- Опубликовано: fd87d5f «разнообразные вариации», 063fa5a chain_info (11-й),
+  1f7f326 todo/акции/weights, 9588787 категорийный фильтр, bd1c6fd help+favorites+
+  модуль расширения сетей (13 инструментов, автотест 11/11 OK).
+- ВАЖНО: проект ПЕРЕЕХАЛ на E:\GlobalProjects\TestOpen (2026-08-17, вместе с
+  .venv и .git). Рабочий стол освобождён (TestOpen/PythonVGTY/Projects → E:\GlobalProjects).
+  Запускать и opencode, и все скрипты теперь из нового пути. PLAYWRIGHT_BROWSERS_PATH
+  в opencode.json обновлён. Если видите старые пути C:\Users\1artik1\Desktop\TestOpen —
+  они из temp-скриптов прошлых сессий, не использовать.
 - Опубликовано fd87d5f «разнообразные вариации (variations>3)» (seed в ответе,
   dp.py: int(time.time()*1000)); notify.js: звук на question.v2.asked (нужен рестарт opencode).
 - Сделано: блок «доп. информация» — extra_utils.py, parse_extra() в 7 парсерах
@@ -108,6 +119,10 @@ chain_info, help, favorites.
 - Открыто: OCR (Tesseract) установлен, но используется мало; проверка качества
   акций anti_sushi (заголовки с мусором из меню); sushi_darom/la_pizza/anti_sushi —
   напитков на сайтах нет (фильтр drinks вернёт ошибку с доступными группами).
+- Сессия 2026-08-17 (не закоммичено): фикс help.py — пустой action сбрасывает
+  _help_page на 1 (был баг: «заново» показывал последнюю страницу); фикс
+  list_chains.py — available=True по кэшу (был баг: без refresh всегда False),
+  описания обновлены в help.py/server.py/README. Автотест 11/11 OK.
 
 ## Порядок старта сессии
 

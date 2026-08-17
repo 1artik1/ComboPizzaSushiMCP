@@ -12,7 +12,7 @@ COMMANDS = [
     {
         "name": "list_chains",
         "args": "(refresh=)",
-        "description": "Список доступных сетей доставки: id, название, город, available, описание",
+        "description": "Список сетей доставки: id, название, город, available (есть данные в кэше), описание",
         "example": "list_chains",
     },
     {
@@ -118,6 +118,8 @@ def help_tool(action="", command=""):
         _help_page = min(_help_page + 1, _TOTAL_PAGES)
     elif action == "back":
         _help_page = max(_help_page - 1, 1)
+    else:
+        _help_page = 1
 
     start = (_help_page - 1) * PAGE_SIZE
     end = start + PAGE_SIZE

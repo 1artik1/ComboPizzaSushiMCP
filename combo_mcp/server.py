@@ -39,7 +39,7 @@ mcp = MCPServer(
 mcp.add_tool(
     _list_chains,
     name="list_chains",
-    description="Список доступных сетей доставки: id, название, город, available, описание.",
+    description="Список сетей доставки: id, название, город, available (есть данные в кэше), описание.",
 )
 
 mcp.add_tool(

@@ -27,6 +27,7 @@ def list_chains(refresh=False):
             fetched_at = cache_data.get("fetched_at")
             items = cache_data.get("items", [])
             items_count = len(items)
+            available = bool(items)
 
         if refresh and cid in chain_ids:
             # Try to parse
