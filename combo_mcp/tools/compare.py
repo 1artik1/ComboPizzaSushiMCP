@@ -75,7 +75,7 @@ def compare(budget, persons=1):
                 continue
 
             # Best combo (optimum, persons drinks inside)
-            lines = calculate_combos(valid_items, budget, persons=persons, variations=1)
+            lines, _ = calculate_combos(valid_items, budget, persons=persons, variations=1)
             if not lines:
                 comparisons.append({
                     "chain_id": cid,

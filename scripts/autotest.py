@@ -326,12 +326,57 @@ def check_compare():
         _ok("compare", f"{cid}: {entry['total_weight_g']}г/{entry['total_price_rub']}₽, {n_drinks} напитков")
 
 
+# ---------------------------------------------------------------- блок 6
+def check_diverse():
+    print("Блок 6: разнообразные вариации (variations > 3)")
+    budget = 1500
+    for c in get_chain_meta():
+        cid = c["id"]
+        base = json.loads(best_combo(cid, budget, persons=1, variations=3, refresh=False))
+        many = json.loads(best_combo(cid, budget, persons=1, variations=10, refresh=False))
+        if "error" in base or "error" in many:
+            continue
+
+        combos_base = base.get("combos", [])
+        combos_many = many.get("combos", [])
+
+        # первые 3 == стандарт (variations=3)
+        base_items = [(v["weight_g"], v["price_rub"], v["items"]) for v in combos_base]
+        many_top = [(v["weight_g"], v["price_rub"], v["items"]) for v in combos_many[:3]]
+        if base_items == many_top:
+            _ok("diverse", f"{cid}: первые 3 == стандарт")
+        else:
+            _fail("diverse", f"{cid}: первые 3 != стандарт")
+
+        # все варианты уникальны
+        uniq = {v["items"] for v in combos_many}
+        if len(uniq) == len(combos_many):
+            _ok("diverse", f"{cid}: {len(combos_many)} уникальных вариаций")
+        else:
+            _fail("diverse", f"{cid}: {len(combos_many)} вариаций, уникальных {len(uniq)}")
+
+        # variations=1/2 — стандартное начало
+        one = json.loads(best_combo(cid, budget, persons=1, variations=1, refresh=False))
+        two = json.loads(best_combo(cid, budget, persons=1, variations=2, refresh=False))
+        if "error" in one or "error" in two:
+            continue
+        one_items = [(v["weight_g"], v["price_rub"], v["items"]) for v in one.get("combos", [])]
+        two_items = [(v["weight_g"], v["price_rub"], v["items"]) for v in two.get("combos", [])]
+        if len(one_items) == 1 and len(two_items) == 2 \
+                and one_items[0] == base_items[0] and two_items[0] == base_items[0] \
+                and two_items[1] == base_items[1]:
+            _ok("diverse", f"{cid}: variations=1/2 — стандартные варианты")
+        else:
+            _fail("diverse", f"{cid}: variations=1/2 ведут себя нестандартно")
+
+
 def main():
     check_combos()
     check_boundary()
     check_dishes()
     check_health()
     check_compare()
+    check_diverse()
     print()
     if _FAILED:
         print(f"ИТОГ: FAIL ({len(_FAILED)} проверок провалено)")

@@ -5,6 +5,8 @@ _pareto_filter, format_combo, solve_optimum, _solve_optimum_pareto, calculate_co
 Перенос 1:1 из combo_engine.py.
 """
 
+import random
+import time
 from collections import Counter
 from combo_mcp.engines.taste import count_ingredients
 from combo_mcp.engines.drinks import is_drink
@@ -333,27 +335,134 @@ def _extra_variant(items, budget, strategy, persons=1):
 def calculate_combos(products, budget, persons=1, variations=3):
     """Calculate up to `variations` combo variants (persons drinks included).
 
-    Порядок: Оптимум → Без повторов → Макс. вес → дополнительные стратегии.
+    Порядок: Оптимум → Без повторов → Макс. вес → дополнительные стратегии →
+    детерминированные исключения → псевдослучайные (seeded).
+    Возвращает (lines, seed): seed != None, если использовалась случайная часть.
     """
     for p in products:
         p["_taste"] = count_ingredients(p["description"])
     variants = _combo_variants(products, budget, persons)
     if not variants:
-        return []
+        return [], None
     if variations <= 3:
-        return variants[:variations]
-    # Больше 3: дополнительные стратегии без persons-гарантий + варианты персон
+        return variants[:variations], None
+
+    # > 3: базовые 3 стандартные всегда в начале
+    result = list(variants[:3])
+    if len(result) >= variations:
+        return result[:variations], None
+
+    # дополнительные стратегии без persons-гарантий + варианты персон
     extra = []
     for strategy in ("no_drinks_max", "drinks_only"):
         line = _extra_variant(products, budget, strategy, persons)
-        if line and line not in variants and line not in extra:
+        if line and line not in result and line not in extra:
             extra.append(line)
     for persons_v in (0, persons + 1, max(persons * 2, 2)):
-        if len(extra) >= variations - 3:
+        if len(result) + len(extra) >= variations:
             break
         for v in _combo_variants(products, budget, persons_v):
-            if v not in variants and v not in extra:
+            if v not in result and v not in extra:
                 extra.append(v)
-        if len(extra) >= variations - 3:
+    result += extra
+    if len(result) >= variations:
+        return result[:variations], None
+
+    # детерминированные исключающие итерации
+    for v in _exclude_variants(products, budget, persons, variations - len(result)):
+        if v not in result:
+            result.append(v)
+    if len(result) >= variations:
+        return result[:variations], None
+
+    # псевдослучайные (seeded) — для сетей с большим каталогом добираем до variations
+    seed = int(time.time() * 1000)
+    for v in _random_variants(products, budget, persons, variations - len(result), seed):
+        if v not in result:
+            result.append(v)
+    return result[:variations], seed
+
+
+def _exclude_variants(items, budget, persons, limit):
+    """Детерминированные вариации: исключаем позиции уже найденных комбо и решаем заново.
+
+    Чередуем optimum → max_weight; persons напитков выбираются из того же пула.
+    """
+    all_valid = [(i, it) for i, it in enumerate(items) if _valid(it)]
+    variants = []
+    excluded = set()
+    strategies = ("optimum", "max_weight")
+    k = 0
+    while len(variants) < limit:
+        cand = [(i, it) for i, it in all_valid if i not in excluded]
+        if not cand:
             break
-    return (variants + extra)[:variations]
+        food = [(i, it) for i, it in cand if not is_drink(it)]
+        if not food:
+            break
+        cand_items = [it for _, it in cand]
+        drink_pairs, drink_spent = select_drinks(cand_items, persons, budget)
+        drink_pairs = [(cand[i][0], 1) for i, _ in drink_pairs]
+        food_budget = budget - drink_spent
+        if food_budget <= 0:
+            break
+
+        strategy = strategies[k % len(strategies)]
+        food_items = [it for _, it in food]
+        if strategy == "optimum":
+            indices, _, _ = solve_optimum(food_items, food_budget)
+        else:
+            indices, _, _ = solve_max_weight_double(food_items, food_budget)
+        pairs = drink_pairs + [(food[i][0], cnt) for i, cnt in indices]
+        if not pairs:
+            break
+
+        line = format_combo(items, pairs, budget)
+        if line not in variants:
+            variants.append(line)
+        for idx, _ in pairs:
+            excluded.add(idx)
+        k += 1
+    return variants
+
+
+def _random_variants(items, budget, persons, limit, seed):
+    """Псевдослучайные вариации: жадный набор по перемешанному порядку.
+
+    Сначала до persons напитков, затем еда; до max_attempts перестановок.
+    """
+    rng = random.Random(seed)
+    valid = [(i, it) for i, it in enumerate(items) if _valid(it)]
+    variants = []
+    seen = set()
+    max_attempts = 50
+    attempts = 0
+    while len(variants) < limit and attempts < max_attempts:
+        attempts += 1
+        order = list(valid)
+        rng.shuffle(order)
+        drinks = [(i, it) for i, it in order if is_drink(it)]
+        food = [(i, it) for i, it in order if not is_drink(it)]
+
+        picked = []
+        spent = 0
+        n_drinks = 0
+        for i, it in drinks:
+            if n_drinks >= persons:
+                break
+            if spent + it["price_rub"] <= budget:
+                picked.append((i, 1))
+                spent += it["price_rub"]
+                n_drinks += 1
+        for i, it in food:
+            if spent + it["price_rub"] <= budget:
+                picked.append((i, 1))
+                spent += it["price_rub"]
+
+        if not picked:
+            continue
+        line = format_combo(items, picked, budget)
+        if line not in seen:
+            seen.add(line)
+            variants.append(line)
+    return variants

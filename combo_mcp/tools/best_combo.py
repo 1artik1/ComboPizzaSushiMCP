@@ -82,7 +82,7 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
 
     # Calculate combos
     try:
-        lines = calculate_combos(valid_items, budget, persons=persons, variations=variations)
+        lines, seed = calculate_combos(valid_items, budget, persons=persons, variations=variations)
     except Exception as e:
         return json.dumps({"error": f"Ошибка расчёта: {e}"}, ensure_ascii=False)
 
@@ -94,6 +94,7 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False):
         "persons": persons,
         "variations_requested": variations,
         "variations_returned": len(variants),
+        "seed": seed,
         "total_items_parsed": len(items),
         "items_with_weight": len(valid_items),
         "items_estimated_from_reference": estimated_count,
