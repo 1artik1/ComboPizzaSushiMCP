@@ -7,7 +7,8 @@ import os
 _DEFAULTS = {
     "url": "",
     "enabled": True,
-    "ttl_minutes": 120,
+    "http_timeout": 10,
+    "menu_ttl_minutes": 0,
     "headers": {},
     "cookies": {},
 }

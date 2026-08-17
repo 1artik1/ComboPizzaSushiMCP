@@ -199,8 +199,8 @@ class LaPizzaParser(ChainParser):
         from combo_mcp import config as mcp_config
         chain_cfg = mcp_config.get_chain(self.id)
         url = chain_cfg.get("url", self.url)
-        timeout = chain_cfg.get("ttl_minutes", 10)
-        if isinstance(timeout, (int, float)) and timeout <= 60:
+        timeout = chain_cfg.get("http_timeout", 10)
+        if isinstance(timeout, (int, float)) and timeout > 0:
             timeout = float(timeout)
         else:
             timeout = 10

@@ -3,7 +3,7 @@
 
 import json
 from combo_mcp.config import get_chain_meta, get_chain_class
-from combo_mcp.cache import load_cache, save_cache
+from combo_mcp.cache import load_items_with_ttl, save_cache
 from combo_mcp.chains.base import ChainUnavailable
 
 
@@ -13,11 +13,10 @@ def parse_menu(chain_id, category=None, min_weight=None, sort_by=None, limit=Non
     if chain_id not in ids:
         return json.dumps({"error": f"Неизвестная сеть '{chain_id}'. Доступные: {', '.join(ids)}"}, ensure_ascii=False)
 
-    # Try cache
+    # Try cache (TTL из menu_ttl_minutes сети)
     if not refresh:
-        cache_data = load_cache(chain_id)
-        if cache_data:
-            items = cache_data.get("items", [])
+        items = load_items_with_ttl(chain_id)
+        if items is not None:
             return _filter_sort(items, category, min_weight, sort_by, limit)
 
     # Parse fresh

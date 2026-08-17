@@ -205,6 +205,13 @@ class PizzaKubaParser(ChainParser):
                 if not description:
                     description = name
 
+                # Вес из описания: «Кольца кальмара в темпуре. 150 гр.»
+                if weight is None:
+                    m = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:гр|гр\.|г|грамм)", description)
+                    if m:
+                        weight = int(float(m.group(1).replace(",", ".")))
+                        weight_source = "site"
+
                 products.append({
                     "name": name,
                     "weight_g": weight,

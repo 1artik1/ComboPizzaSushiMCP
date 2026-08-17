@@ -10,7 +10,7 @@ from collections import Counter
 from combo_mcp.engines.dp import calculate_combos
 from combo_mcp.engines.taste import count_ingredients
 from combo_mcp.config import get_chain_meta, get_chain_class
-from combo_mcp.cache import load_cache, save_cache
+from combo_mcp.cache import load_cache, load_items_with_ttl, save_cache
 from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.weights import apply_estimated_weights
 from combo_mcp.names import localize, item_size_label
@@ -177,9 +177,9 @@ def _items_list(items_str, valid_items):
 def _load_items(chain_id, refresh=False):
     """Load items from cache or fresh parse."""
     if not refresh:
-        cache_data = load_cache(chain_id)
-        if cache_data:
-            return cache_data.get("items", [])
+        items = load_items_with_ttl(chain_id)
+        if items is not None:
+            return items
 
     try:
         chain_cls = get_chain_class(chain_id)

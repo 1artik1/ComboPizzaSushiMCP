@@ -55,8 +55,9 @@ def clean_promo_desc(text):
 def find_promos(text, max_items=12):
     """Извлечь акции с промокодами из текста.
 
-    Ищем «Промокод: XXX» / «промокод XXX»; для каждого берём до 300
-    символов перед ним как заголовок+условия. Возвращает список dict
+    Ищем «Промокод: XXX» / «промокод XXX»; заголовок — последняя строка
+    окна перед промокодом, содержащая «!» (иначе последняя непустая строка
+    длиной >= 15), с зачисткой оборванных предлогов. Возвращает список dict
     {"title", "conditions", "promo_code"}.
     """
     out = []
@@ -68,12 +69,7 @@ def find_promos(text, max_items=12):
             continue
         seen.add(code)
         head = text[max(0, m.start() - 320):m.start()]
-        head = head.replace("\n", " ")
-        lines = [re.sub(r"\s+", " ", l).strip() for l in head.split(".") if l.strip()]
-        title = lines[-1] if lines else ""
-        title = re.sub(r"^[—-]\s*", "", title)
-        if len(title) > 120:
-            title = title[:120]
+        title = _pick_title(head)
         out.append({
             "title": title or f"Промокод {code}",
             "conditions": f"Промокод: {code}",
@@ -82,6 +78,31 @@ def find_promos(text, max_items=12):
         if len(out) >= max_items:
             break
     return out
+
+
+def _pick_title(head):
+    """Выбрать заголовок акции из окна текста перед промокодом."""
+    lines = [l.strip() for l in head.split("\n") if l.strip()]
+    if not lines:
+        return ""
+    # последняя строка с «!» (длина >= 10) — обычно заголовок акции
+    cand = ""
+    for l in reversed(lines):
+        if "!" in l and len(l) >= 10:
+            cand = l
+            break
+    if not cand:
+        for l in reversed(lines):
+            if len(l) >= 15:
+                cand = l
+                break
+    if not cand:
+        cand = lines[-1]
+    cand = re.sub(r"^[\s\-—•·]+", "", cand).strip()
+    cand = re.sub(r"\s+(по|в|на|с|от|до|за)$", "", cand).strip()
+    if len(cand) > 120:
+        cand = cand[:120].rsplit(" ", 1)[0]
+    return cand.strip()
 
 
 def ocr_image(image_bytes):

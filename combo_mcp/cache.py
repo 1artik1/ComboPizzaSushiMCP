@@ -56,6 +56,20 @@ def is_cache_stale(chain_id, ttl_minutes):
     return age > ttl_minutes * 60
 
 
+def load_items_with_ttl(chain_id):
+    """Items из кэша, если он не устарел по menu_ttl_minutes сети.
+
+    menu_ttl_minutes=0 (по умолчанию) — кэш считается бессрочным (текущее
+    поведение); >0 — при возрасте больше TTL возвращает None (нужен свежий парсинг).
+    """
+    from combo_mcp.config import get_chain
+    ttl = get_chain(chain_id).get("menu_ttl_minutes", 0) or 0
+    if ttl > 0 and is_cache_stale(chain_id, ttl):
+        return None
+    data = load_cache(chain_id)
+    return data.get("items", []) if data else None
+
+
 def clear_cache():
     """Remove all cache files."""
     if os.path.exists(_CACHE_DIR):

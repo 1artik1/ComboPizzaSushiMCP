@@ -37,8 +37,8 @@ def get_session(chain_config=None):
     if chain_config is None:
         chain_config = {}
 
-    timeout = chain_config.get("ttl_minutes", DEFAULT_TIMEOUT)
-    if isinstance(timeout, (int, float)) and timeout <= 60:
+    timeout = chain_config.get("http_timeout", DEFAULT_TIMEOUT)
+    if isinstance(timeout, (int, float)) and timeout > 0:
         timeout = float(timeout)
     else:
         timeout = DEFAULT_TIMEOUT
