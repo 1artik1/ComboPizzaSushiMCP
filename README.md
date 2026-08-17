@@ -42,6 +42,14 @@
 .\.venv\Scripts\python.exe scripts\clear_cache.py
 ```
 
+## CI (GitHub Actions)
+- `.github\workflows\ci.yml` — на каждый push: компиляция + быстрый smoke без сети
+  (сервер стартует, 13 инструментов зарегистрированы, JSON-ответы).
+  Запуск вручную: `scripts\ci_smoke.py`.
+- `.github\workflows\nightly.yml` — ежедневно в 06:00 UTC: живой парсинг всех сетей
+  (`health_check refresh=true`) + полный автотест (16 блоков). Это мониторинг парсеров:
+  упавшая сеть или регрессия → красный статус + артефакт с отчётом (cache/).
+
 ## Инструменты MCP (13)
 - `list_chains(refresh=)` — сети: id, название, город, available (есть данные в кэше), описание
 - `parse_menu(chain_id, category=, min_weight=, sort_by=, limit=, refresh=)` — меню

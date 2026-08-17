@@ -139,6 +139,12 @@ chain_info, help, favorites.
   13-drinks, 17-idem, 18-mcart, 28-mcp), итого 16 блоков; все OK, exit 0.
   Блок 12: дубликаты из парсера dodo (Nectar Dobry Multifruit) с одинаковым ключом
   (имя, цена, вес, категория) пропускаются (continue).
+- Сделано (сессия 2026-08-17, этап 1 «фундамент», не закоммичено): CI —
+  .github/workflows/ci.yml (push: compileall + ci_smoke без сети) и nightly.yml
+  (06:00 UTC: health_check refresh=true + autotest + артефакт cache/) — это и
+  мониторинг парсеров; scripts/ вычищен от 62 temp-файлов (остались 6 рабочих);
+  ROADMAP: +пункт «тест Оптимум = макс. вес» и секция «На будущее» (Telegram-бот,
+  история цен/тренды — признаны переизбытком, diff_menu закрывает диффы).
 
 ## Порядок старта сессии
 

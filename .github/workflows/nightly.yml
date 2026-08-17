@@ -1,0 +1,40 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  full:
+    name: Полный прогон (рефреш + 16 блоков)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Зависимости
+        run: pip install -r requirements.txt
+
+      - name: Браузер Playwright (фолбэк dodo)
+        run: python -m playwright install chromium --with-deps
+
+      - name: Живой парсинг всех сетей (заполнение кэша)
+        run: python -c "from combo_mcp.tools.health_check import health_check; import json; json.loads(health_check(refresh=True))"
+
+      - name: Автотест (16 блоков)
+        run: python scripts/autotest.py
+
+      - name: Загрузка отчёта
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: autotest-report
+          path: |
+            cache/
+          retention-days: 7
