@@ -15,6 +15,7 @@ import datetime
 from combo_mcp import config as mcp_config
 from combo_mcp.cache import _CACHE_DIR
 from combo_mcp.chains.base import ChainUnavailable
+from combo_mcp.logs import log_error
 
 _EXTRA_DIR = _CACHE_DIR
 
@@ -108,8 +109,10 @@ def get_extra(chain_id, refresh=False):
         extra = instance.parse_extra()
     except ChainUnavailable as e:
         error = str(e)
+        log_error(f"extra {chain_id}", error)
     except Exception as e:
         error = str(e)
+        log_error(f"extra {chain_id}", error)
 
     if extra is None:
         old = load_extra_cache(chain_id)

@@ -3,9 +3,8 @@
 
 import json
 import os
+import tempfile
 import time
-import copy
-import warnings
 
 _CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cache")
 
@@ -29,7 +28,10 @@ def load_cache(chain_id):
 
 
 def save_cache(chain_id, items):
-    """Save items to cache file. Moves current items to prev_items."""
+    """Save items to cache file. Moves current items to prev_items.
+
+    Атомарная запись: tempfile + os.replace (без битых файлов при сбое).
+    """
     os.makedirs(_CACHE_DIR, exist_ok=True)
     path = _cache_path(chain_id)
     prev = None
@@ -42,8 +44,17 @@ def save_cache(chain_id, items):
         "items": items,
         "prev_items": prev,
     }
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    fd, tmp_path = tempfile.mkstemp(suffix=".tmp", dir=_CACHE_DIR)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, path)
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
     return data
 
 
@@ -71,8 +82,12 @@ def load_items_with_ttl(chain_id):
 
 
 def clear_cache():
-    """Remove all cache files."""
+    """Remove menu cache files.
+
+    НЕ трогает favorites.json и extra_*.json (избранное и доп. данные).
+    """
     if os.path.exists(_CACHE_DIR):
         for fn in os.listdir(_CACHE_DIR):
-            if fn.endswith(".json"):
+            if fn.endswith(".json") and not fn.startswith("extra_") \
+                    and fn != "favorites.json":
                 os.remove(os.path.join(_CACHE_DIR, fn))

@@ -27,7 +27,7 @@ def _load_favorites():
     try:
         with open(_FAV_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    except (json.JSONDecodeError, Exception):
+    except (OSError, json.JSONDecodeError):
         return {"items": []}
 
 

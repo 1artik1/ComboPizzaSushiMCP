@@ -3,64 +3,76 @@
 
 Для каждой сети: HTTP-доступность, размер/время ответа, кол-во позиций,
 успешность парсинга (refresh=true — реальный прогон), вердикт:
-healthy / degraded / unavailable.
+healthy / degraded / unavailable. Сети проверяются параллельно (refresh).
 """
 
 import json
 import time
-import socket
+from concurrent.futures import ThreadPoolExecutor
 from combo_mcp.config import get_chain_meta, get_chain_class
 from combo_mcp.cache import load_cache, save_cache
 from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.http_client import get_session, DEFAULT_TIMEOUT
+from combo_mcp.params import to_bool
 
 
 def health_check(refresh=False):
     """Проверка стабильности получения данных с сайтов."""
+    try:
+        refresh = to_bool(refresh)
+    except ValueError as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
     meta = get_chain_meta()
-    results = []
 
-    for c in meta:
-        cid = c["id"]
-        url = c.get("url", "")
-        entry = {
-            "id": cid,
-            "name": c["name"],
-            "url": url,
-            "http_ok": False,
-            "http_status": None,
-            "response_size": 0,
-            "response_time_ms": None,
-            "parse_ok": False,
-            "parse_error": None,
-            "items_count": 0,
-            "verdict": "unknown",
-        }
-
-        # --- HTTP check ---
-        http_check = _http_check(url, c)
-        entry.update(http_check)
-
-        # --- Parse check ---
-        if refresh:
-            parse_ok, error, items = _try_parse(cid)
-        else:
-            parse_ok, error, items = _cache_info(cid)
-
-        entry["parse_ok"] = parse_ok
-        entry["parse_error"] = error
-        entry["items_count"] = len(items) if items else 0
-
-        if not entry["http_ok"]:
-            entry["verdict"] = "unavailable"
-        elif entry["items_count"] == 0:
-            entry["verdict"] = "degraded"
-        else:
-            entry["verdict"] = "healthy"
-
-        results.append(entry)
+    if refresh:
+        # Параллельно: сети независимы (свои сессии/кэш-файлы)
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            futures = {ex.submit(_check_chain, c, True): c["id"] for c in meta}
+            by_id = {}
+            for fut in futures:
+                entry = fut.result()
+                by_id[entry["id"]] = entry
+        results = [by_id[c["id"]] for c in meta]
+    else:
+        results = [_check_chain(c, False) for c in meta]
 
     return json.dumps(results, ensure_ascii=False, indent=2)
+
+
+def _check_chain(c, refresh):
+    """Полная проверка одной сети (HTTP + парсинг/кэш)."""
+    cid = c["id"]
+    url = c.get("url", "")
+    entry = {
+        "id": cid,
+        "name": c["name"],
+        "url": url,
+        "http_ok": False,
+        "http_status": None,
+        "response_size": 0,
+        "response_time_ms": None,
+        "parse_ok": False,
+        "parse_error": None,
+        "items_count": 0,
+        "verdict": "unknown",
+    }
+
+    entry.update(_http_check(url, c))
+    if refresh:
+        parse_ok, error, items = _try_parse(cid)
+    else:
+        parse_ok, error, items = _cache_info(cid)
+    entry["parse_ok"] = parse_ok
+    entry["parse_error"] = error
+    entry["items_count"] = len(items) if items else 0
+
+    if not entry["http_ok"]:
+        entry["verdict"] = "unavailable"
+    elif entry["items_count"] == 0:
+        entry["verdict"] = "degraded"
+    else:
+        entry["verdict"] = "healthy"
+    return entry
 
 
 def _http_check(url, chain_config):
@@ -70,7 +82,6 @@ def _http_check(url, chain_config):
     if not url:
         return result
     try:
-        socket.setdefaulttimeout(DEFAULT_TIMEOUT)
         session, timeout = get_session(chain_config)
         t0 = time.time()
         r = session.get(url, timeout=timeout, verify=False, allow_redirects=True)
@@ -82,8 +93,6 @@ def _http_check(url, chain_config):
             result["response_size"] = len(r.content)
     except Exception:
         pass
-    finally:
-        socket.setdefaulttimeout(None)
     return result
 
 

@@ -11,8 +11,9 @@ import time
 import datetime
 
 from combo_mcp.config import get_chain_meta, get_chain_class
-from combo_mcp.extra_cache import get_extra, load_extra_cache
+from combo_mcp.extra_cache import get_extra
 from combo_mcp import config as mcp_config
+from combo_mcp.params import to_bool
 
 
 def chain_info(chain_id, refresh=False):
@@ -22,6 +23,11 @@ def chain_info(chain_id, refresh=False):
     """
     if not chain_id:
         return json.dumps({"error": "Не указан chain_id"}, ensure_ascii=False)
+
+    try:
+        refresh = to_bool(refresh)
+    except ValueError as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
     meta = {c["id"]: c for c in get_chain_meta()}
     if chain_id not in meta:
@@ -34,7 +40,7 @@ def chain_info(chain_id, refresh=False):
         return json.dumps({"error": f"Парсер для '{chain_id}' не найден"},
                           ensure_ascii=False)
 
-    res = get_extra(chain_id, refresh=bool(refresh))
+    res = get_extra(chain_id, refresh=refresh)
     extra = res.get("extra") or {}
 
     info = {

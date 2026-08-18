@@ -2,10 +2,10 @@
 """verify_chain.py — валидация сети: кол-во позиций, с весом/без, «от»-цены, дубликаты, аномалии."""
 
 import json
+import re
 from collections import Counter
-from combo_mcp.config import get_chain_meta, get_chain_class
-from combo_mcp.cache import load_cache, save_cache
-from combo_mcp.chains.base import ChainUnavailable
+from combo_mcp.config import get_chain_meta
+from combo_mcp.shared import fetch_items
 from combo_mcp.weights import apply_estimated_weights
 
 
@@ -16,9 +16,9 @@ def verify_chain(chain_id):
         return json.dumps({"error": f"Неизвестная сеть '{chain_id}'. Доступные: {', '.join(ids)}"}, ensure_ascii=False)
 
     # Load items
-    items = _load_items(chain_id)
+    items, stale, load_error = fetch_items(chain_id)
     if items is None:
-        return json.dumps({"error": "Не удалось загрузить позиции"}, ensure_ascii=False)
+        return json.dumps({"error": f"Не удалось загрузить позиции: {load_error}"}, ensure_ascii=False)
 
     issues = []
     items, estimated_count = apply_estimated_weights(items, chain_id)
@@ -29,9 +29,22 @@ def verify_chain(chain_id):
     # "from" prices
     from_prices = [it for it in items if it.get("is_from_price", False)]
 
-    # Duplicate names
-    name_counts = Counter(it["name"] for it in items)
-    duplicates = {name: cnt for name, cnt in name_counts.items() if cnt > 1}
+    # Duplicate names: дубликат = то же имя, цена, вес и категория
+    # (разные размеры одной пиццы с разными ценами — легальные позиции)
+    norm = re.compile(r"\s+")
+    dup_key = {}
+    duplicates = {}
+    for it in items:
+        key = (
+            norm.sub(" ", it.get("name", "")).strip().lower(),
+            it.get("price_rub"),
+            it.get("weight_g"),
+            it.get("category", ""),
+        )
+        dup_key.setdefault(key, []).append(it["name"])
+    for key, names in dup_key.items():
+        if len(names) > 1:
+            duplicates[key[0]] = len(names)
 
     # Weight anomalies
     weight_anomalies = [
@@ -65,25 +78,8 @@ def verify_chain(chain_id):
 
     result["issues"] = issues
     result["status"] = "OK" if not issues else "PROBLEMS"
+    result["stale"] = stale
+    if stale and load_error:
+        result["stale_error"] = load_error
 
     return json.dumps(result, ensure_ascii=False, indent=2)
-
-
-def _load_items(chain_id):
-    """Load items from cache or fresh parse."""
-    cache_data = load_cache(chain_id)
-    if cache_data:
-        return cache_data.get("items", [])
-
-    try:
-        chain_cls = get_chain_class(chain_id)
-        if chain_cls is None:
-            return None
-        instance = chain_cls()
-        items = instance.parse()
-        save_cache(chain_id, items)
-        return items
-    except ChainUnavailable:
-        return None
-    except Exception:
-        return None

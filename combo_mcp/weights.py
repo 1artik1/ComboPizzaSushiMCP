@@ -21,15 +21,32 @@ _ESTIMATED_PATH = os.path.join(
     "config", "estimated_weights.json",
 )
 
+_weights_cache = None
+_weights_mtime = None
+
 
 def load_estimated_weights():
-    """Загрузить справочник: {"chains": {"<id>": {"items": {name: {weight_g, source}}}}}."""
+    """Загрузить справочник: {"chains": {"<id>": {"items": {name: {weight_g, source}}}}}.
+
+    Кэшируется в памяти; перечитывается при изменении файла.
+    """
+    global _weights_cache, _weights_mtime
+    try:
+        mtime = os.path.getmtime(_ESTIMATED_PATH)
+    except OSError:
+        _weights_cache = {}
+        _weights_mtime = None
+        return _weights_cache
+    if _weights_cache is not None and _weights_mtime == mtime:
+        return _weights_cache
     try:
         with open(_ESTIMATED_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
     except (OSError, ValueError):
-        return {}
-    return data.get("chains", {}) or {}
+        data = {}
+    _weights_cache = data.get("chains", {}) or {}
+    _weights_mtime = mtime
+    return _weights_cache
 
 
 def get_estimated_weight(chain_id, name):

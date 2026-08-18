@@ -101,14 +101,20 @@ def _parse_items_str(items_str):
 
 
 def _split_items_str(items_str):
-    """Разбить по запятым вне скобок ('НАГГЕТСЫ (9 шт, 20 г/шт)' — одна часть)."""
+    """Разбить по запятым-разделителям вне скобок.
+
+    'НАГГЕТСЫ (9 шт, 20 г/шт)' — одна часть (запятая внутри скобок).
+    'Кола 0,33л г/л' — одна часть (запятая между цифрами — десятичная).
+    Разделитель — запятая, за которой идёт пробел.
+    """
     chunks, depth, cur = [], 0, ""
-    for ch in items_str:
+    for i, ch in enumerate(items_str):
         if ch == "(":
             depth += 1
         elif ch == ")":
             depth -= 1
-        if ch == "," and depth == 0:
+        nxt = items_str[i + 1] if i + 1 < len(items_str) else ""
+        if ch == "," and depth == 0 and (nxt == " " or nxt == ""):
             if cur.strip():
                 chunks.append(cur.strip())
             cur = ""
@@ -886,6 +892,66 @@ async def _run_mcp_test():
                         assert isinstance(data, (dict, list)), f"{tool_name}: не dict/list"
                     except (json.JSONDecodeError, AssertionError) as e:
                         raise ValueError(f"{tool_name}: не JSON — {text[:200]}")
+
+                # --- Строковые параметры через MCP (все параметры приходят строками) ---
+                async def _call(name, args):
+                    resp = await session.call_tool(name, args)
+                    text = ""
+                    for c in resp.content:
+                        if hasattr(c, 'text'):
+                            text += c.text
+                    return json.loads(text)
+
+                # refresh="false" НЕ должен ронять и должен работать по кэшу
+                r_refresh = await _call("best_combo", {"chain_id": "la_pizza", "budget": "2000",
+                                                       "persons": "2", "variations": "3",
+                                                       "refresh": "false"})
+                if "error" in r_refresh:
+                    raise ValueError(f"best_combo refresh='false': {r_refresh['error']}")
+                if not isinstance(r_refresh.get("combos"), list) or len(r_refresh["combos"]) != 3:
+                    raise ValueError(f"best_combo refresh='false': combos={len(r_refresh.get('combos', []))}, ожидалось 3")
+
+                # refresh="abc" — невалидный буль -> JSON-ошибка, а не падение
+                r_bad_refresh = await _call("best_combo", {"chain_id": "la_pizza", "budget": "2000",
+                                                           "refresh": "abc"})
+                if "error" not in r_bad_refresh:
+                    raise ValueError(f"best_combo refresh='abc': ожидалась ошибка, получено {str(r_bad_refresh)[:100]}")
+
+                # budget="abc" -> JSON-ошибка
+                r_bad_budget = await _call("best_combo", {"chain_id": "la_pizza", "budget": "abc"})
+                if "error" not in r_bad_budget:
+                    raise ValueError(f"best_combo budget='abc': ожидалась ошибка")
+
+                # parse_menu: min_weight/limit строками -> список, без исключений
+                r_pm = await _call("parse_menu", {"chain_id": "la_pizza", "limit": "5",
+                                                  "min_weight": "200", "refresh": "false"})
+                if not isinstance(r_pm, list) or len(r_pm) > 5:
+                    raise ValueError(f"parse_menu limit='5': получено {len(r_pm) if isinstance(r_pm, list) else r_pm} позиций")
+                for it in r_pm:
+                    if it.get("weight_g") is not None and it["weight_g"] < 200:
+                        raise ValueError(f"parse_menu min_weight='200': найден вес {it['weight_g']}")
+
+                # parse_menu: min_weight="abc" -> JSON-ошибка
+                r_pm_bad = await _call("parse_menu", {"chain_id": "la_pizza", "min_weight": "abc"})
+                if "error" not in r_pm_bad:
+                    raise ValueError(f"parse_menu min_weight='abc': ожидалась ошибка")
+
+                # compare: persons строками
+                r_cmp = await _call("compare", {"budget": "1500", "persons": "1"})
+                if not isinstance(r_cmp, list):
+                    raise ValueError(f"compare: не список — {str(r_cmp)[:100]}")
+
+                # health_check: refresh="false" по кэшу
+                r_hc = await _call("health_check", {"refresh": "false"})
+                if not isinstance(r_hc, list):
+                    raise ValueError(f"health_check refresh='false': не список — {str(r_hc)[:100]}")
+
+                # chain_info: refresh="false" (срез из extra-кэша)
+                r_ci = await _call("chain_info", {"chain_id": "la_pizza", "refresh": "false"})
+                if not isinstance(r_ci, dict) or "error" in r_ci:
+                    raise ValueError(f"chain_info refresh='false': {str(r_ci)[:100]}")
+
+                _ok("mcp28", "строковые параметры: refresh/budget/persons/min_weight/limit через MCP")
 
     finally:
         proc.terminate()

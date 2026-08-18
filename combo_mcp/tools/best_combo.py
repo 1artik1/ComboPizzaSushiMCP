@@ -9,38 +9,37 @@ import json
 from collections import Counter
 from combo_mcp.engines.dp import calculate_combos
 from combo_mcp.engines.taste import count_ingredients
-from combo_mcp.config import get_chain_meta, get_chain_class
-from combo_mcp.cache import load_cache, load_items_with_ttl, save_cache
-from combo_mcp.chains.base import ChainUnavailable
+from combo_mcp.config import get_chain_meta
+from combo_mcp.shared import fetch_items, build_items_list
 from combo_mcp.weights import apply_estimated_weights
 from combo_mcp.names import localize, item_size_label
 from combo_mcp.categories import category_to_group, resolve_categories
-from combo_mcp.promos import apply_promos
+from combo_mcp.promos import apply_promos, per_item_discounts
+from combo_mcp.params import to_bool, to_int
 
 
 def best_combo(chain_id, budget, persons=1, variations=3, refresh=False,
                categories="", promos=""):
     """Лучшие варианты комбо для сети при заданном бюджете."""
     try:
-        budget = int(budget)
-    except (TypeError, ValueError):
-        return json.dumps({"error": "budget должен быть целым числом > 0"}, ensure_ascii=False)
-    if budget <= 0:
-        return json.dumps({"error": "budget должен быть > 0"}, ensure_ascii=False)
+        budget = to_int(budget, "budget", minimum=1)
+    except ValueError as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
     try:
-        persons = int(persons)
-    except (TypeError, ValueError):
-        return json.dumps({"error": "persons должен быть целым числом >= 1"}, ensure_ascii=False)
-    if persons < 1:
-        return json.dumps({"error": "persons должен быть >= 1"}, ensure_ascii=False)
+        persons = to_int(persons, "persons", minimum=1)
+    except ValueError as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
     try:
-        variations = int(variations)
-    except (TypeError, ValueError):
-        return json.dumps({"error": "variations должен быть целым числом >= 1"}, ensure_ascii=False)
-    if variations < 1:
-        return json.dumps({"error": "variations должен быть >= 1"}, ensure_ascii=False)
+        variations = to_int(variations, "variations", minimum=1)
+    except ValueError as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+    try:
+        refresh = to_bool(refresh)
+    except ValueError as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
     # Валидация promos
     if promos:
@@ -56,9 +55,9 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False,
         return json.dumps({"error": f"Неизвестная сеть '{chain_id}'. Доступные: {', '.join(ids)}"}, ensure_ascii=False)
 
     # Load items
-    items = _load_items(chain_id, refresh)
+    items, stale, load_error = fetch_items(chain_id, refresh)
     if items is None:
-        return json.dumps({"error": "Нет позиций в кэше и парсинг не удался"}, ensure_ascii=False)
+        return json.dumps({"error": f"Нет позиций в кэше и парсинг не удался: {load_error}"}, ensure_ascii=False)
 
     # Apply reference book for items without weight
     items, estimated_count = apply_estimated_weights(items, chain_id)
@@ -116,21 +115,41 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False,
 
     variants = [_build_combo_line(line, valid_items) for line in lines]
 
-    # Применяем промо к вариациям
+    # Применяем промо: per-item скидки встраиваем в цены ДО расчёта (честный
+    # оптимум по фактическим ценам), order/pickup-правила — постобработкой.
     if promos:
+        by_idx, per_item_rules = per_item_discounts(chain_id, valid_items, promos)
+        if by_idx:
+            for idx, disc in by_idx.items():
+                it = valid_items[idx]
+                it["_base_price"] = it["price_rub"]
+                it["_promo_discount"] = disc
+                it["price_rub"] = max(it["price_rub"] - disc, 1)
+            try:
+                lines, seed = calculate_combos(valid_items, budget, persons=persons,
+                                               variations=variations)
+            except Exception as e:
+                return json.dumps({"error": f"Ошибка расчёта: {e}"}, ensure_ascii=False)
+            variants = [_build_combo_line(line, valid_items) for line in lines]
+
         promos_applied = []
         first_promos = None
         for combo in variants:
             items_list = combo.get("items_list")
             if not items_list:
                 continue
+            base_total = int(sum(
+                (x.get("base_price_rub") if x.get("base_price_rub") is not None
+                 else x.get("price_rub") or 0) * x.get("count", 1)
+                for x in items_list))
             groups = [x.get("group", "") for x in items_list]
             pr = apply_promos(chain_id, combo["price_rub"], promos, groups)
+            combo["price_rub"] = base_total
             combo["promo_price"] = pr["promo_price"]
-            combo["promo_saved"] = pr["saved"]
+            combo["promo_saved"] = base_total - pr["promo_price"]
             if first_promos is None:
                 first_promos = pr["promos"]
-        result_promos_applied = first_promos if variants else []
+        result_promos_applied = (per_item_rules + (first_promos or [])) if variants else []
     else:
         result_promos_applied = []
 
@@ -141,6 +160,8 @@ def best_combo(chain_id, budget, persons=1, variations=3, refresh=False,
         "variations_requested": variations,
         "variations_returned": len(variants),
         "seed": seed,
+        "stale": stale,
+        "stale_error": load_error if stale else None,
         "total_items_parsed": len(items),
         "items_with_weight": len(valid_items),
         "items_estimated_from_reference": estimated_count,
@@ -170,59 +191,10 @@ def _build_combo_line(line, valid_items):
             "price_rub": int(price_str),
             "price_per_100g": float(per100),
             "items": items_str,
-            "items_list": _items_list(items_str, valid_items),
+            "items_list": build_items_list(items_str, valid_items),
         }
     except (ValueError, IndexError):
         return {"line": line, "weight_g": 0, "price_rub": 0, "price_per_100g": 0.0, "items": "", "items_list": []}
-
-
-def _split_items_str(items_str):
-    """Разбить по запятым вне скобок ('НАГГЕТСЫ (9 шт, 20 г/шт)' — одна часть)."""
-    parts, depth, cur = [], 0, ""
-    for ch in items_str:
-        if ch == "(":
-            depth += 1
-        elif ch == ")":
-            depth -= 1
-        if ch == "," and depth == 0:
-            if cur.strip():
-                parts.append(cur.strip())
-            cur = ""
-        else:
-            cur += ch
-    if cur.strip():
-        parts.append(cur.strip())
-    return parts
-
-
-def _items_list(items_str, valid_items):
-    """'Имя (500 г) x2, Имя x1' -> [{name, count, price_rub, weight_g, weight_source}, ...].
-
-    Повторяющиеся имена (одинаковые товары по разным ценам) маппятся по очереди.
-    """
-    import re
-
-    by_name = {}
-    for it in valid_items:
-        by_name.setdefault(it["_local_name"], []).append(it)
-
-    out = []
-    for chunk in _split_items_str(items_str):
-        m = re.match(r"^(.*?)\s*x(\d+)$", chunk)
-        name = re.sub(r"\s*\([^()]*\)\s*$", "", m.group(1).strip()) if m else chunk
-        cnt = int(m.group(2)) if m else 1
-        pool = by_name.get(name)
-        it = pool.pop(0) if pool else None
-        out.append({
-            "name": name,
-            "count": cnt,
-            "price_rub": it["price_rub"] if it else None,
-            "weight_g": it["weight_g"] if it else None,
-            "weight_source": it.get("weight_source") if it else None,
-            "category": it.get("category", "") if it else "",
-            "group": it.get("_group", "") if it else "",
-        })
-    return out
 
 
 def _filter_by_categories(items, chain_id, selected_groups):
@@ -233,24 +205,3 @@ def _filter_by_categories(items, chain_id, selected_groups):
         if grp in selected_groups:
             result.append(it)
     return result
-
-
-def _load_items(chain_id, refresh=False):
-    """Load items from cache or fresh parse."""
-    if not refresh:
-        items = load_items_with_ttl(chain_id)
-        if items is not None:
-            return items
-
-    try:
-        chain_cls = get_chain_class(chain_id)
-        if chain_cls is None:
-            return None
-        instance = chain_cls()
-        items = instance.parse()
-        save_cache(chain_id, items)
-        return items
-    except ChainUnavailable:
-        return None
-    except Exception:
-        return None

@@ -159,6 +159,33 @@ chain_info, help, favorites.
   меню — «Курочка темпура хот» получила вес 315 г вместо справочного «8 шт,
   45 г/шт», «Мисо суп с курицей» заменил «Краб темпура» (1475 вместо 1495);
   остальные 6 сетей идентичны эталонам.
+- Сделано (сессия 2026-08-17, этапы 1–3 «баги→надёжность→алгоритмы» + AGENTS.md,
+  НЕ закоммичено). AGENTS.md создан (операционка: запуск, структура, конвенции,
+  ложные LSP, git, делегирование). Этап 1 «баги/фундамент»: params.py
+  (to_bool/to_int/to_float — все параметры MCP строками), shared.py
+  (fetch_items: TTL + stale-if-error + причина ошибки; split_items_str/
+  build_items_list), save_cache атомарный (tempfile+os.replace), clear_cache
+  НЕ трогает favorites.json/extra_*, verify_chain дедуп, weights.py кэш по mtime,
+  удалён мёртвый engines/scoring.py, убран глобальный socket.setdefaulttimeout,
+  autotest блок 28 расширен строковыми параметрами через MCP. Этап 2
+  «реестр/логирование»: tools/meta.py (единый TOOLS_META — help генерирует из
+  него, server.py регистрирует из него, version 1.1.0), logs.py (logs/server.log,
+  log_error в shared.fetch_items и extra_cache). Этап 3 «алгоритмы»:
+  promos.py per_item_discounts — fixed-скидки встраиваются в цены ДО расчёта
+  (best_combo: _base_price/_promo_discount, price_rub=max(price-disc,1)),
+  order/pickup — постобработкой; dp.solve_optimum_with_drinks — совместная
+  оптимизация напитков в DP (измерение числа напитков, вес еды — целевое,
+  вес напитков НЕ в счёте — иначе DP набирает тяжёлые латте; пул топ-40 еды
+  по вкусу + топ-15 по г/₽ + ВСЕ напитки; кап 40 состояний на значение числа
+  напитков; батч-парето вместо per-state pfilt — был квадрат; быстрый путь для
+  меню без вкуса (dodo): дешёвые напитки + жадный максимум веса — 78с → 0.35с);
+  _limit_pool в solve_optimum (топ-40 по вкусу + топ-15 по г/₽); split_items_str
+  НЕ режет запятую-десятичную («Кола 0,33л г/л» — был баг: позиции с price=None
+  в items_list); refresh list_chains/health_check — параллельно (ThreadPoolExecutor,
+  4 воркера, 7 сетей за 67.6с). Эталоны пересозданы (gen_expected.py): изменились
+  только ninja_food и pizza_kuba (совместная оптимизация напитков — больше
+  утилизация бюджета, ровно persons напитков), dodo/la_pizza/anti_sushi/
+  sushi_time/sushi_darom идентичны. Автотест 17 блоков + smoke: exit 0, зелёные.
 
 ## Порядок старта сессии
 

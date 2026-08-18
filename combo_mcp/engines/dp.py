@@ -125,11 +125,25 @@ def format_combo(items, indices, budget):
     return line
 
 
+def _limit_pool(filtered):
+    """Ограничить пул позиций для DP: топ-40 по вкусу + топ-15 по г/₽ (без пересечения).
+
+    Дешёвые «тяжёлые» позиции (большой вес за малые деньги) не должны выпадать
+    из оптимума из-за среза по вкусу.
+    """
+    filtered.sort(key=lambda x: x[1].get("_taste", 0), reverse=True)
+    top = filtered[:40]
+    top_idx = {idx for idx, _ in top}
+    rest = [e for e in filtered[40:] if e[1].get("price_rub") and e[1]["price_rub"] > 0]
+    rest.sort(key=lambda x: x[1]["weight_g"] / x[1]["price_rub"], reverse=True)
+    return top + [e for e in rest if e[0] not in top_idx][:15]
+
+
 def solve_optimum(items, budget):
     """Exclude items with taste=0. Maximize weight * avg_taste.
 
     Uses Pareto-optimal DP. Items without valid weight_g are excluded.
-    For large item sets, only top-N items by taste are used to avoid
+    For large item sets, the pool is limited by _limit_pool to avoid
     O(n * budget * states) explosion.
     """
     # Filter: must have valid weight_g > 0 AND taste > 0
@@ -156,9 +170,7 @@ def solve_optimum(items, budget):
             final = []
         return final, weight, cost
 
-    # Limit to top 40 items by taste to keep DP tractable
-    filtered.sort(key=lambda x: x[1].get("_taste", 0), reverse=True)
-    filtered = filtered[:40]
+    filtered = _limit_pool(filtered)
 
     return _solve_optimum_pareto(items, budget, filtered)
 
@@ -196,12 +208,19 @@ def _solve_optimum_pareto(items, budget, filtered):
                     new_ts = old_ts + item_t
                     new_cnt = old_cnt + item_cnt
                     new_states.append((new_w, new_ts, new_cnt, new_hist, c + item_cost))
-            # Merge new states into dp
+            # Merge new states into dp (batched: один pareto-прогон на ячейку за итерацию)
+            new_by_c = {}
             for new_w, new_ts, new_cnt, new_hist, target_c in new_states:
+                new_by_c.setdefault(target_c, []).append((new_w, new_ts, new_cnt, new_hist))
+            for target_c, bucket in new_by_c.items():
                 if target_c not in dp:
                     dp[target_c] = []
-                dp[target_c].append((new_w, new_ts, new_cnt, new_hist))
-                # Pareto-filter at this cost
+                existing = {(s[0], s[1], s[2]) for s in dp[target_c]}
+                for s in bucket:
+                    key = (s[0], s[1], s[2])
+                    if key not in existing:
+                        existing.add(key)
+                        dp[target_c].append(s)
                 dp[target_c] = _pareto_filter(dp[target_c])
 
     # Find best score across all costs <= budget
@@ -240,6 +259,165 @@ def _valid(item):
     return (item.get("weight_g") or 0) > 0 and (item.get("price_rub") or 0) > 0
 
 
+def solve_optimum_with_drinks(items, budget, target_drinks):
+    """Совместная оптимизация еды и напитков: ровно target_drinks напитков.
+
+    Как solve_optimum, но напитки (в т.ч. с вкусом 0 — вода) участвуют в DP,
+    а число напитков — отдельное измерение состояния. Возвращает
+    (final, total_weight, total_cost) по индексам исходного items.
+    Пул: топ-40 еды по вкусу (только вкус>0) + топ-15 еды по г/₽ + ВСЕ напитки.
+    """
+    filtered_food = []
+    zero_taste_food = []
+    drinks_list = []
+    for idx, item in enumerate(items):
+        w = item.get("weight_g")
+        if w is None or w <= 0:
+            continue
+        if is_drink(item):
+            drinks_list.append((idx, item))
+        elif item.get("_taste", 0) > 0:
+            filtered_food.append((idx, item))
+        else:
+            zero_taste_food.append((idx, item))
+
+    filtered_food.sort(key=lambda x: x[1].get("_taste", 0), reverse=True)
+
+    # Быстрый путь: еда без вкуса (описаний нет) — задача чисто на максимум
+    # веса еды: берём самые дешёвые напитки (минимум трат → максимум еды) и
+    # жадный максимум веса на остаток. Эквивалентно DP по целевой функции.
+    if not filtered_food:
+        drink_pairs, drink_spent = select_drinks(items, target_drinks, budget)
+        food = [(i, it) for i, it in enumerate(items)
+                if not is_drink(it) and _valid(it)]
+        food_items = [it for _, it in food]
+        indices, weight, cost = solve_max_weight_double(food_items, budget - drink_spent)
+        pairs = list(drink_pairs) + [(food[i][0], cnt) for i, cnt in indices]
+        if not pairs:
+            return [], 0, 0
+        total_weight = sum(items[i]["weight_g"] * c for i, c in pairs)
+        total_cost = sum(items[i]["price_rub"] * c for i, c in pairs)
+        return pairs, total_weight, total_cost
+
+    top = filtered_food[:40]
+    top_idx = {idx for idx, _ in top}
+    rest = [e for e in zero_taste_food + filtered_food[40:]
+            if e[1].get("price_rub") and e[1]["price_rub"] > 0 and e[0] not in top_idx]
+    rest.sort(key=lambda x: x[1]["weight_g"] / x[1]["price_rub"], reverse=True)
+    filtered = top + rest[:15] + drinks_list
+
+    if not filtered:
+        return [], 0, 0
+    return _solve_dp_drinks(items, budget, filtered, target_drinks)
+
+
+def _solve_dp_drinks(items, budget, filtered, target_drinks):
+    """Pareto-DP с измерением числа напитков (0..target_drinks).
+
+    Состояние: (food_weight, taste_sum, count, drinks, history), где
+    food_weight — вес ТОЛЬКО еды (напитки — обязательная добавка к комбо,
+    их вес не влияет на оптимизацию, иначе DP «набирает» тяжёлые напитки).
+    Доминирование: больше вес еды, больше вкус, меньше позиций, больше напитков.
+    Напитки сверх target_drinks не добавляются (цель — ровно target).
+    """
+    dp = {0: [(0, 0, 0, 0, [])]}
+
+    def dominates(a, b):
+        return (a[0] >= b[0] and a[1] >= b[1] and a[2] <= b[2] and a[3] >= b[3]
+                and (a[0] > b[0] or a[1] > b[1] or a[2] < b[2] or a[3] > b[3]))
+
+    def pfilt(states):
+        if not states:
+            return []
+        states = sorted(states, key=lambda x: (-x[0], -x[1], x[2], -x[3]))
+        result = []
+        for s in states:
+            if not any(dominates(r, s) for r in result):
+                result.append(s)
+        return result
+
+    for orig_idx, item in filtered:
+        cost = item["price_rub"]
+        w = item["weight_g"]
+        t = item["_taste"]
+        dr = 1 if is_drink(item) else 0
+        fw = 0 if dr else w
+        if cost <= 0 or cost > budget:
+            continue
+        for copies in range(1, 3):
+            item_cost = cost * copies
+            item_fw = fw * copies
+            item_t = t * copies
+            item_dr = dr * copies
+            item_cnt = copies
+            new_states = []
+            for c in range(budget + 1 - item_cost):
+                if c not in dp:
+                    continue
+                for state in dp[c]:
+                    old_fw, old_ts, old_cnt, old_dr, hist = state
+                    if old_dr + item_dr > target_drinks:
+                        continue
+                    new_states.append((old_fw + item_fw, old_ts + item_t,
+                                       old_cnt + item_cnt, old_dr + item_dr,
+                                       hist + [(orig_idx, copies)], c + item_cost))
+            new_by_c = {}
+            for nfw, nts, ncnt, ndr, nhist, target_c in new_states:
+                new_by_c.setdefault(target_c, []).append((nfw, nts, ncnt, ndr, nhist))
+            for target_c, bucket in new_by_c.items():
+                if target_c not in dp:
+                    dp[target_c] = []
+                existing = {(s[0], s[1], s[2], s[3]) for s in dp[target_c]}
+                for s in bucket:
+                    key = (s[0], s[1], s[2], s[3])
+                    if key not in existing:
+                        existing.add(key)
+                        dp[target_c].append(s)
+                dp[target_c] = pfilt(dp[target_c])
+                if len(dp[target_c]) > 40:
+                    # Кап: не более 40 состояний на одно значение числа напитков,
+                    # чтобы не взрываться на больших бюджетах/меню без вкуса.
+                    groups = {}
+                    for s in dp[target_c]:
+                        groups.setdefault(s[3], []).append(s)
+                    capped = []
+                    for g in groups.values():
+                        g.sort(key=lambda s: (-s[0], -s[1]))
+                        capped.extend(g[:40])
+                    dp[target_c] = capped
+
+    # Лучший результат: сначала состояния с максимальным числом напитков
+    # (в идеале ровно target_drinks), внутри — по score = food_weight * taste/count.
+    best_state = None
+    best_score = 0.0
+    best_w = 0
+    best_dr = -1
+    for c in range(budget + 1):
+        for state in dp.get(c, []):
+            fw, ts, cnt, dr, hist = state
+            if cnt == 0:
+                continue
+            score = fw * (ts / cnt)
+            if dr > best_dr or (dr == best_dr and (
+                    score > best_score or (score == best_score and fw > best_w))):
+                best_dr = dr
+                best_score = score
+                best_w = fw
+                best_state = state
+
+    if best_state is None:
+        return [], 0, 0
+
+    fw, _, _, _, hist = best_state
+    counts = Counter()
+    for idx, cnt in hist:
+        counts[idx] += cnt
+    total_weight = sum(items[idx]["weight_g"] * cnt for idx, cnt in counts.items())
+    total_cost = sum(items[idx]["price_rub"] * cnt for idx, cnt in counts.items())
+    final = [(idx, cnt) for idx, cnt in counts.items()]
+    return final, total_weight, total_cost
+
+
 def select_drinks(items, persons, budget):
     """Выбрать ровно persons напитков: самые выгодные по г/₽, сумма ≤ budget.
 
@@ -276,8 +454,10 @@ def _combo_variants(items, budget, persons=1):
     def _build(strategy):
         pairs = list(drink_pairs)
         if strategy == "optimum":
-            indices, w, cost = solve_optimum(food_items, food_budget)
-            pairs += [(food[i][0], cnt) for i, cnt in indices]
+            # Совместная оптимизация: напитки внутри DP (ровно target напитков)
+            target = min(persons, len(drinks))
+            indices, w, cost = solve_optimum_with_drinks(items, budget, target)
+            pairs = indices if indices else list(drink_pairs)
         elif strategy == "no_duplicates":
             indices, w = solve_max_weight_single(food_items, food_budget)
             pairs += [(food[i][0], 1) for i in indices]
@@ -340,7 +520,7 @@ def calculate_combos(products, budget, persons=1, variations=3):
     Возвращает (lines, seed): seed != None, если использовалась случайная часть.
     """
     for p in products:
-        p["_taste"] = count_ingredients(p["description"])
+        p["_taste"] = count_ingredients(p.get("description", ""))
     variants = _combo_variants(products, budget, persons)
     if not variants:
         return [], None

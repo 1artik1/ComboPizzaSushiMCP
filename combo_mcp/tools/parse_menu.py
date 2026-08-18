@@ -2,9 +2,11 @@
 """parse_menu.py — parse_menu(chain_id, category, min_weight, sort_by, limit, refresh)."""
 
 import json
-from combo_mcp.config import get_chain_meta, get_chain_class
-from combo_mcp.cache import load_items_with_ttl, save_cache
-from combo_mcp.chains.base import ChainUnavailable
+from combo_mcp.config import get_chain_meta
+from combo_mcp.shared import fetch_items
+from combo_mcp.params import to_bool, to_int
+
+_VALID_SORTS = ("price", "weight", "price_per_100g")
 
 
 def parse_menu(chain_id, category=None, min_weight=None, sort_by=None, limit=None, refresh=False):
@@ -13,24 +15,35 @@ def parse_menu(chain_id, category=None, min_weight=None, sort_by=None, limit=Non
     if chain_id not in ids:
         return json.dumps({"error": f"Неизвестная сеть '{chain_id}'. Доступные: {', '.join(ids)}"}, ensure_ascii=False)
 
-    # Try cache (TTL из menu_ttl_minutes сети)
-    if not refresh:
-        items = load_items_with_ttl(chain_id)
-        if items is not None:
-            return _filter_sort(items, category, min_weight, sort_by, limit)
-
-    # Parse fresh
     try:
-        chain_cls = get_chain_class(chain_id)
-        if chain_cls is None:
-            raise ChainUnavailable(f"Не найден парсер для {chain_id}")
-        instance = chain_cls()
-        items = instance.parse()
-        save_cache(chain_id, items)
-    except ChainUnavailable as e:
+        refresh = to_bool(refresh)
+    except ValueError as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
-    except Exception as e:
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+    if min_weight not in (None, ""):
+        try:
+            min_weight = to_int(min_weight, "min_weight", minimum=1)
+        except ValueError as e:
+            return json.dumps({"error": str(e)}, ensure_ascii=False)
+    else:
+        min_weight = None
+
+    if limit not in (None, ""):
+        try:
+            limit = to_int(limit, "limit", minimum=1)
+        except ValueError as e:
+            return json.dumps({"error": str(e)}, ensure_ascii=False)
+    else:
+        limit = None
+
+    if sort_by and sort_by not in _VALID_SORTS:
+        return json.dumps({
+            "error": f"sort_by должен быть одним из: {', '.join(_VALID_SORTS)}"
+        }, ensure_ascii=False)
+
+    items, stale, load_error = fetch_items(chain_id, refresh)
+    if items is None:
+        return json.dumps({"error": f"Не удалось загрузить меню: {load_error}"}, ensure_ascii=False)
 
     return _filter_sort(items, category, min_weight, sort_by, limit)
 
@@ -43,7 +56,8 @@ def _filter_sort(items, category, min_weight, sort_by, limit):
             continue
         if min_weight and it.get("weight_g") is not None and it["weight_g"] < min_weight:
             continue
-        result.append(dict(it))
+        entry = dict(it)
+        result.append(entry)
 
     if sort_by == "price_per_100g":
         result.sort(key=lambda x: x["price_rub"] / x["weight_g"] if x.get("weight_g") and x["weight_g"] > 0 else float('inf'))

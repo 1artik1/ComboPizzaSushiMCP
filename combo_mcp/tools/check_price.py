@@ -6,6 +6,7 @@ from combo_mcp.config import get_chain_meta, get_chain_class
 from combo_mcp.cache import save_cache
 from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.weights import apply_estimated_weights
+from combo_mcp.params import to_int
 
 
 def check_price(chain_id, item_name, expected_price=None):
@@ -13,6 +14,17 @@ def check_price(chain_id, item_name, expected_price=None):
     ids = [c["id"] for c in get_chain_meta()]
     if chain_id not in ids:
         return json.dumps({"error": f"Неизвестная сеть '{chain_id}'"}, ensure_ascii=False)
+
+    if expected_price not in (None, ""):
+        try:
+            expected_price = to_int(expected_price, "expected_price", minimum=0)
+        except ValueError as e:
+            return json.dumps({"error": str(e)}, ensure_ascii=False)
+    else:
+        expected_price = None
+
+    if not item_name or not str(item_name).strip():
+        return json.dumps({"error": "item_name обязателен"}, ensure_ascii=False)
 
     # Fresh parse
     try:

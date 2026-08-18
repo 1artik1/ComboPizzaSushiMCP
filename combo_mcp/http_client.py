@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """http_client.py — requests-based HTTP client with retry and config-driven cookies/headers."""
 
-import socket
 import requests
 import urllib3
 from requests.adapters import HTTPAdapter
@@ -72,13 +71,10 @@ def get_session(chain_config=None):
 def fetch_html(url, chain_config=None):
     """Fetch HTML content from URL. Returns text or None on failure."""
     try:
-        socket.setdefaulttimeout(DEFAULT_TIMEOUT)
         session, timeout = get_session(chain_config)
         r = session.get(url, timeout=timeout, verify=False, allow_redirects=True)
         if r.status_code == 200:
             return r.text
     except Exception:
         pass
-    finally:
-        socket.setdefaulttimeout(None)
     return None

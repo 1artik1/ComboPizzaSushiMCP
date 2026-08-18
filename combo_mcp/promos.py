@@ -150,3 +150,83 @@ def _promo_dict(c):
     if r.get("source"):
         p["source"] = r["source"]
     return p
+
+
+def per_item_discounts(chain_id, items, mode):
+    """Фиксированные скидки с отдельных позиций (per_item + fixed).
+
+    Встраиваются в цены ДО расчёта комбо, чтобы оптимум считался по
+    фактическим ценам со скидкой. Возвращает (by_idx, rules_applied):
+      by_idx — {индекс в items: скидка_руб};
+      rules_applied — применённые правила {id, title, type, scope, value, saved}.
+
+    Учитываются только правила: type=fixed, per_item=True, scope подходит mode,
+    группа позиции в items-фильтре правила. По каждой позиции берётся
+    максимальная скидка (правила несуммируемы).
+    """
+    rules = load_promo_rules(chain_id)
+    by_idx = {}
+    rule_of_idx = {}
+    for idx, it in enumerate(items):
+        group = it.get("_group", "")
+        if not group:
+            continue
+        best = 0
+        best_rule = None
+        for r in rules:
+            if r.get("type") != "fixed" or not r.get("per_item"):
+                continue
+            if not _scope_matches(r.get("scope", ""), mode):
+                continue
+            if r.get("min_order") is not None and it.get("price_rub", 0) < r["min_order"]:
+                continue
+            rule_items = r.get("items")
+            if rule_items and group not in rule_items:
+                continue
+            days = r.get("days")
+            if days is not None and datetime.datetime.today().weekday() not in days:
+                continue
+            if r["value"] > best:
+                best = int(r["value"])
+                best_rule = r
+        if best > 0 and best_rule is not None:
+            by_idx[idx] = best
+            rule_of_idx[idx] = best_rule
+
+    saved_by_rule = {}
+    for idx, disc in by_idx.items():
+        rid = rule_of_idx[idx]["id"]
+        saved_by_rule[rid] = saved_by_rule.get(rid, 0) + disc
+
+    rules_applied = []
+    for idx, disc in by_idx.items():
+        r = rule_of_idx[idx]
+        if r["id"] not in saved_by_rule:
+            continue
+        entry = {
+            "id": r["id"],
+            "title": r["title"],
+            "type": "fixed",
+            "scope": r["scope"],
+            "value": r["value"],
+            "per_item": True,
+            "saved": saved_by_rule[r["id"]],
+        }
+        if r.get("source"):
+            entry["source"] = r["source"]
+        if entry not in rules_applied:
+            rules_applied.append(entry)
+        del saved_by_rule[r["id"]]
+
+    return by_idx, rules_applied
+
+
+def _scope_matches(scope, mode):
+    """Подходит ли scope правила режиму запроса (order/pickup/all/'')."""
+    if scope == "delivery":
+        return False
+    if mode == "all":
+        return True
+    if mode == "":
+        return scope == ""
+    return scope == mode

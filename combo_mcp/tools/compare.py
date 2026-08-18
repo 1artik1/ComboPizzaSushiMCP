@@ -8,29 +8,25 @@ import json
 from collections import Counter
 from combo_mcp.engines.dp import calculate_combos
 from combo_mcp.engines.taste import count_ingredients
-from combo_mcp.config import get_chain_meta, get_chain_class
-from combo_mcp.cache import load_cache, save_cache
-from combo_mcp.chains.base import ChainUnavailable
+from combo_mcp.config import get_chain_meta
+from combo_mcp.shared import fetch_items, build_items_list
 from combo_mcp.weights import apply_estimated_weights
 from combo_mcp.names import localize, item_size_label
 from combo_mcp.categories import category_to_group, resolve_categories
+from combo_mcp.params import to_int
 
 
 def compare(budget, persons=1, categories=""):
     """Сравнить все доступные сети по лучшему комбо (persons — сколько персон)."""
     try:
-        budget = int(budget)
-    except (TypeError, ValueError):
-        return json.dumps({"error": "budget должен быть целым числом > 0"}, ensure_ascii=False)
-    if budget <= 0:
-        return json.dumps({"error": "budget должен быть > 0"}, ensure_ascii=False)
+        budget = to_int(budget, "budget", minimum=1)
+    except ValueError as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
     try:
-        persons = int(persons)
-    except (TypeError, ValueError):
-        return json.dumps({"error": "persons должен быть целым числом >= 1"}, ensure_ascii=False)
-    if persons < 1:
-        return json.dumps({"error": "persons должен быть >= 1"}, ensure_ascii=False)
+        persons = to_int(persons, "persons", minimum=1)
+    except ValueError as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
     meta = get_chain_meta()
     comparisons = []
@@ -38,13 +34,13 @@ def compare(budget, persons=1, categories=""):
     for c in meta:
         cid = c["id"]
         try:
-            items = _load_items(cid)
+            items, stale, load_error = fetch_items(cid)
             if items is None:
                 comparisons.append({
                     "chain_id": cid,
                     "name": c["name"],
                     "available": False,
-                    "error": "Не удалось загрузить",
+                    "error": f"Не удалось загрузить: {load_error}",
                 })
                 continue
 
@@ -98,13 +94,14 @@ def compare(budget, persons=1, categories=""):
                 continue
             weight, price, items_str = _parse_line(lines[0])
 
-            item_list = _build_item_list(items_str, valid_items)
+            item_list = build_items_list(items_str, valid_items)
             price_per_100 = price / weight * 100 if weight > 0 else 0
             comparisons.append({
                 "chain_id": cid,
                 "name": c["name"],
                 "available": True,
                 "persons": persons,
+                "stale": stale,
                 "total_weight_g": weight,
                 "total_price_rub": price,
                 "price_per_100g": round(price_per_100, 2),
@@ -114,13 +111,6 @@ def compare(budget, persons=1, categories=""):
                 "items_without_weight_excluded": no_excluded,
                 "categories": selected_groups,
                 "weight_sources": dict(Counter(it.get("weight_source", "none") for it in items)),
-            })
-        except ChainUnavailable as e:
-            comparisons.append({
-                "chain_id": cid,
-                "name": c["name"],
-                "available": False,
-                "error": str(e),
             })
         except Exception as e:
             comparisons.append({
@@ -148,72 +138,3 @@ def _parse_line(line):
     weight = int(parts[0].split()[0])
     price = int(parts[1].split()[0])
     return weight, price, parts[3]
-
-
-def _strip_size_suffix(name):
-    """'Имя (500 г)' -> 'Имя' (отрезаем подпись размера)."""
-    import re
-    return re.sub(r"\s*\([^()]*\)\s*$", "", name)
-
-
-def _build_item_list(items_str, valid_items):
-    """'Имя (500 г) x2, Имя x1' -> [{name, count, price, weight}, ...]."""
-    import re
-
-    by_name = {}
-    for it in valid_items:
-        by_name.setdefault(it["_local_name"], []).append(it)
-
-    item_list = []
-    for chunk in _split_items_str(items_str):
-        m = re.match(r"^(.*?)\s*x(\d+)$", chunk)
-        name = _strip_size_suffix(m.group(1).strip()) if m else _strip_size_suffix(chunk)
-        cnt = int(m.group(2)) if m else 1
-        pool = by_name.get(name)
-        it = pool.pop(0) if pool else None
-        item_list.append({
-            "name": name,
-            "count": cnt,
-            "price": it["price_rub"] if it else None,
-            "weight": it["weight_g"] if it else None,
-        })
-    return item_list
-
-
-def _split_items_str(items_str):
-    """Разбить по запятым вне скобок ('НАГГЕТСЫ (9 шт, 20 г/шт)' — одна часть)."""
-    parts, depth, cur = [], 0, ""
-    for ch in items_str:
-        if ch == "(":
-            depth += 1
-        elif ch == ")":
-            depth -= 1
-        if ch == "," and depth == 0:
-            if cur.strip():
-                parts.append(cur.strip())
-            cur = ""
-        else:
-            cur += ch
-    if cur.strip():
-        parts.append(cur.strip())
-    return parts
-
-
-def _load_items(chain_id):
-    """Load items from cache or fresh parse."""
-    cache_data = load_cache(chain_id)
-    if cache_data:
-        return cache_data.get("items", [])
-
-    try:
-        chain_cls = get_chain_class(chain_id)
-        if chain_cls is None:
-            return None
-        instance = chain_cls()
-        items = instance.parse()
-        save_cache(chain_id, items)
-        return items
-    except ChainUnavailable:
-        return None
-    except Exception:
-        return None

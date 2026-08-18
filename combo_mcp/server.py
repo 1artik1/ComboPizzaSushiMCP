@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""server.py — MCP Server (MCPServer) + 13 инструментов."""
+"""server.py — MCP Server (MCPServer) + 13 инструментов.
+
+Описания инструментов — единый реестр combo_mcp/tools/meta.py.
+"""
 
 import sys
 import os
@@ -27,92 +30,42 @@ from combo_mcp.tools.chain_info import chain_info as _chain_info
 from combo_mcp.tools.help import help_tool as _help_tool
 from combo_mcp.tools.favorites import favorites as _favorites
 
+from combo_mcp.tools.meta import TOOLS_META
+
 # Create server
 mcp = MCPServer(
     "combo-engine",
-    version="1.0.0",
+    version="1.1.0",
     title="Combo Engine",
     description="Расчёт выгодных комбо по сетям доставки в Воронеже",
 )
 
-# Register all 13 tools
-mcp.add_tool(
-    _list_chains,
-    name="list_chains",
-    description="Список сетей доставки: id, название, город, available (есть данные в кэше), описание.",
-)
+# Реестр хендлеров: имя -> функция (из tools/*.py)
+_HANDLERS = {
+    "list_chains": _list_chains,
+    "parse_menu": _parse_menu,
+    "best_combo": _best_combo,
+    "compare": _compare,
+    "status": _status,
+    "verify_chain": _verify_chain,
+    "check_price": _check_price,
+    "diff_menu": _diff_menu,
+    "check_config": _check_config,
+    "health_check": _health_check,
+    "chain_info": _chain_info,
+    "help": _help_tool,
+    "favorites": _favorites,
+}
 
-mcp.add_tool(
-    _parse_menu,
-    name="parse_menu",
-    description="Распарсить меню конкретной сети.",
-)
-
-mcp.add_tool(
-    _best_combo,
-    name="best_combo",
-    description="Лучшие варианты комбо для сети при заданном бюджете. Параметр promos: order/pickup/all для применения промо-скидок.",
-)
-
-mcp.add_tool(
-    _compare,
-    name="compare",
-    description="Сравнить все доступные сети по лучшему комбо при заданном бюджете.",
-)
-
-mcp.add_tool(
-    _status,
-    name="status",
-    description="Конфиг: сети enabled/disabled; по каждой: fetched_at, возраст, last_error, кол-во позиций.",
-)
-
-mcp.add_tool(
-    _verify_chain,
-    name="verify_chain",
-    description="verify_chain: кол-во позиций, с весом/без, от-цены, дубликаты, аномалии.",
-)
-
-mcp.add_tool(
-    _check_price,
-    name="check_price",
-    description="check_price: свежий парсинг, поиск по подстроке, проверка цены.",
-)
-
-mcp.add_tool(
-    _diff_menu,
-    name="diff_menu",
-    description="diff_menu: сравнение items vs prev_items — добавлено/удалено/изменение цены.",
-)
-
-mcp.add_tool(
-    _check_config,
-    name="check_config",
-    description="check_config: валидация chains_config.json.",
-)
-
-mcp.add_tool(
-    _health_check,
-    name="health_check",
-    description="health_check: стабильность получения данных с сайтов — HTTP, парсинг, кол-во позиций.",
-)
-
-mcp.add_tool(
-    _chain_info,
-    name="chain_info",
-    description="chain_info: доставка, акции, лояльность сети (обновление раз в день в extra_refresh_at).",
-)
-
-mcp.add_tool(
-    _help_tool,
-    name="help",
-    description="help: список команд combo-engine (13), пагинация /help next|back, детали /help <команда>.",
-)
-
-mcp.add_tool(
-    _favorites,
-    name="favorites",
-    description="favorites: избранное — сохранить понравившееся комбо (add), список (list), удалить (remove), очистить (clear).",
-)
+# Register all tools from the single meta registry
+for _t in TOOLS_META:
+    _handler = _HANDLERS.get(_t["name"])
+    if _handler is not None:
+        mcp.add_tool(
+            _handler,
+            name=_t["name"],
+            description=_t["description"],
+        )
 
 
 # ---------------------------------------------------------------------------
