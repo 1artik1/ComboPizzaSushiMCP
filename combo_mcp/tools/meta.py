@@ -84,6 +84,18 @@ TOOLS_META = [
         "description": "Избранное: сохранить/показать/удалить понравившееся комбо",
         "example": 'favorites action="list"',
     },
+    {
+        "name": "search_products",
+        "args": "(chain_id, query, limit=, refresh=)",
+        "description": "Поиск товаров по названию в любой сети (для продуктовых — серверный поиск)",
+        "example": 'search_products "magnit" "молоко" limit=10',
+    },
+    {
+        "name": "list_categories",
+        "args": "(chain_id, refresh=)",
+        "description": "Все категории товаров сети: серверное дерево или агрегат по меню",
+        "example": 'list_categories "la_pizza"',
+    },
 ]
 
 # name -> описание (для регистрации тулов в server.py)

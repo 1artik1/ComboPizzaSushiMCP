@@ -83,6 +83,20 @@
       запятую-десятичную («Кола 0,33л г/л»); refresh list_chains/health_check —
       параллельно (4 воркера); эталоны пересозданы (изменились только ninja_food и
       pizza_kuba — совместная оптимизация напитков)
+- [x] Сессия 2026-08-24 (ветка ShopExtended): продуктовые магазины + shop-тулы.
+  combo_mcp/chains/magnit.py — прямой webgate-API magnit.ru (requests, без браузера;
+  цены в копейках → рубли, вес из weighted/имени, категории/поиск/пагинация).
+  combo_mcp/chains/pyaterochka.py — Playwright-парсер 5ka.ru (запросы к
+  5d.5ka.ru из контекста страницы); API закрыт анти-ботом → enabled=false.
+  Новые MCP-тулы (14-й и 15-й, итого 15): search_products (серверный поиск
+  magnit/pyaterochka + локальный fallback по меню для любых сетей) и
+  list_categories (серверное дерево категорий / агрегат по меню).
+  combo_mcp/chains/base.py — search()/get_categories() + has_server_search.
+  compare.py + health_check.py — get_enabled_chain_ids() (disabled-сети
+  исключены). autotest.py — блоки 9/28/29 обновлены, get_enabled_chain_ids(),
+  динамический подсчёт сетей; smoke_test.py — 15 тулов. tests/expected.json —
+  пересоздан gen_expected.py (magnit/pyaterochka добавлены + live data drift).
+  Все тесты: autotest/smoke/selftest exit 0.
 
 ## В плане
 
@@ -104,10 +118,13 @@
       между вариациями одного вызова
 - [ ] Мониторинг парсеров: алерты при деградации (ntfy/Telegram) на базе ночного CI
       + история health_check
+- [ ] pyaterochka (5ka.ru): обход анти-бота (капча «разверни картинку» не проходится
+      headless-браузером) — варианты: ручной проход капчи с сохранением cookies,
+      мобильный API X5, либо оставить выключенной
 
 ## На будущее (пока не делаем)
 
-- [ ] Telegram-бот: обёртка над 13 инструментами (комбо по запросу, избранное, алерты)
+- [ ] Telegram-бот: обёртка над 15 инструментами (комбо по запросу, избранное, алерты)
 - [ ] История цен: накопление снапшотов меню в SQLite по расписанию → тренды
       (графики «цена растёт/падает» за недели). Сейчас закрыто диффом на месте:
       diff_menu показывает изменения между двумя загрузками. Тренды — накопление

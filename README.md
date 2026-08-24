@@ -1,6 +1,7 @@
 # Combo Engine MCP Server
 
-Расчёт выгодных комбо по сетям доставки Воронежа. MCP-сервер + библиотека парсеров.
+Расчёт выгодных комбо по сетям доставки Воронежа (7 сетей) + продуктовые
+магазины Магнит и Пятёрочка (поиск товаров и категории). MCP-сервер + библиотека парсеров.
 Всё изолировано в venv: зависимости и браузер Playwright лежат внутри `.venv\` (система не затрагивается).
 
 ## Структура
@@ -35,7 +36,7 @@
 # Автотесты: эталоны комбо + инварианты + контрольные блюда + health_check
 .\.venv\Scripts\python.exe scripts\autotest.py
 
-# Smoke-тест реального MCP-протокола (10 инструментов)
+# Smoke-тест реального MCP-протокола (15 инструментов)
 .\.venv\Scripts\python.exe scripts\smoke_test.py
 
 # Очистка кэша
@@ -44,13 +45,13 @@
 
 ## CI (GitHub Actions)
 - `.github\workflows\ci.yml` — на каждый push: компиляция + быстрый smoke без сети
-  (сервер стартует, 13 инструментов зарегистрированы, JSON-ответы).
+  (сервер стартует, 15 инструментов зарегистрированы, JSON-ответы).
   Запуск вручную: `scripts\ci_smoke.py`.
 - `.github\workflows\nightly.yml` — ежедневно в 06:00 UTC: живой парсинг всех сетей
   (`health_check refresh=true`) + полный автотест (16 блоков). Это мониторинг парсеров:
   упавшая сеть или регрессия → красный статус + артефакт с отчётом (cache/).
 
-## Инструменты MCP (13)
+## Инструменты MCP (15)
 - `list_chains(refresh=)` — сети: id, название, город, available (есть данные в кэше), описание
 - `parse_menu(chain_id, category=, min_weight=, sort_by=, limit=, refresh=)` — меню
 - `best_combo(chain_id, budget, persons=1, variations=3, refresh=, categories=, promos=)` — варианты комбо:
@@ -80,6 +81,25 @@
   (`action="remove"`, `query` — id или подстрока), очистить (`action="clear"`).
   Хранение: `cache/favorites.json`.
   (refresh=true — реальный прогон, иначе быстрый ответ по кэшу)
+- `search_products(chain_id, query, limit=, refresh=)` — поиск товаров по названию
+  в любой сети: для magnit/pyaterochka — серверный поиск API, для остальных —
+  регистронезависимый поиск по меню (кэш). Результаты по цене (price_rub asc)
+- `list_categories(chain_id, refresh=)` — все категории товаров сети:
+  серверное дерево категорий (magnit/pyaterochka) или агрегат по меню
+  ({category, count}, сортировка по числу позиций)
+
+## Продуктовые магазины (ShopExtended)
+- **magnit** — включён. Прямой webgate-API magnit.ru (requests, без браузера):
+  категории `/webgate/v3/categories/store/992301`, товары/поиск `POST /webgate/v2/goods/search`
+  (цены в копейках → конвертируются, вес из weighted/имени).
+- **pyaterochka** — выключен (`enabled: false`). API `5d.5ka.ru` закрыт анти-ботом
+  (капча при заходе не из браузера); парсер написан на Playwright (запросы из контекста
+  страницы 5ka.ru), но headless-браузер стабильно получает капчу → при включении
+  будет отдавать stale-кэш или ошибку «анти-бот капча».
+- Для обоих магазинов работают `search_products` и `list_categories` (серверный
+  путь), а также стандартные `status`/`health_check`/`check_config`. magnit
+  участвует в общих тулах (parse_menu/best_combo/compare) наравне с сетями
+  доставки; pyaterochka исключён из них (`enabled: false`) до обхода анти-бота.
 
 ## Автотесты
 `tests\expected.json` — фиксированные эталоны (комбо по сетям/бюджетам, контрольные блюда).

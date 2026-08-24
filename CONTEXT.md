@@ -4,11 +4,11 @@
 
 ## Что это
 
-MCP-сервер (Python, stdio, mcp) «ComboPizzaSushiMCP»: комбо-подборщик по 7 сетям
+MCP-сервер (Python, stdio, mcp) «ComboPizzaSushiMCP»: комбо-подборщик по 9 сетям
 доставки Воронежа (la_pizza, pizza_kuba, ninja_food, sushi_time, sushi_darom,
-anti_sushi, dodo). 13 MCP-инструментов: list_chains, parse_menu, best_combo,
+anti_sushi, dodo, magnit, pyaterochka). 15 MCP-инструментов: list_chains, parse_menu, best_combo,
 compare, status, verify_chain, check_price, diff_menu, check_config, health_check,
-chain_info, help, favorites.
+chain_info, help, favorites, search_products, list_categories.
 
 ## Как запускать
 
@@ -67,12 +67,20 @@ chain_info, help, favorites.
   детали команды через command="best_combo"; ответ {page, total_pages, commands, hint}.
   Блок 9.
 - list_chains: available=True, если в кэше сети есть позиции; при refresh=true — по
-  результату live-парсинга (был баг: без refresh всегда False).
+результату live-парсинга (был баг: без refresh всегда False).
 - Избранное (13-й инструмент): favorites.py — action="add" (chain_id + items JSON-массив
-  [{name,count,price_rub,weight_g}], снимок с итогами, label автогенерация, id
-  int(time*1000)+счётчик) / "list" (пагинация 10/стр, query="next"/"back"/номер страницы,
-  память _fav_page) / "remove" (query: id или подстрока label/имени) / "clear".
-  Хранение: cache/favorites.json (атомарно: tempfile + os.replace). Блок 10.
+[{name,count,price_rub,weight_g}], снимок с итогами, label автогенерация, id
+int(time*1000)+счётчик) / "list" (пагинация 10/стр, query="next"/"back"/номер страницы,
+память _fav_page) / "remove" (query: id или подстрока label/имени) / "clear".
+Хранение: cache/favorites.json (атомарно: tempfile + os.replace). Блок 10.
+- Поиск продуктов (14-й инструмент): search_products.py — серверный поиск для
+magnit/pyaterochka (has_server_search=True), fallback — поиск по кэшу меню
+(регистронезависимая подстрока в name). Параметры: chain_id, query,
+limit= (default 20), refresh=. Результаты сортируются по цене (price_rub asc).
+- Категории (15-й инструмент): list_categories.py — серверные категории для
+magnit/pyaterochka (иерархия с children), fallback — из кэша меню (группировка
+по category, count desc). Результат: {source, total, categories[]}.
+Блок 9 (pag 2), блок 29.
 - Модуль расширения сетей: метаданные сети (id/name/city/url/description) и маппинг
   категорий category_map — в классе парсера (ChainParser.category_map = {}); категории
   из класса (categories.py через get_chain_class, fallback-эвристики ролл/суши для
@@ -82,7 +90,7 @@ chain_info, help, favorites.
   генерирует парсер + запись в chains_config.json + чек-лист; _template.py обновлён.
   Блок 11.
 
-## Состояние на 2026-08-17
+## Состояние на 2026-08-24
 
 - git: ветка main, remote github.com/1artik1/ComboPizzaSushiMCP.
 - Опубликовано: fd87d5f «разнообразные вариации», 063fa5a chain_info (11-й),
@@ -186,6 +194,38 @@ chain_info, help, favorites.
   только ninja_food и pizza_kuba (совместная оптимизация напитков — больше
   утилизация бюджета, ровно persons напитков), dodo/la_pizza/anti_sushi/
   sushi_time/sushi_darom идентичны. Автотест 17 блоков + smoke: exit 0, зелёные.
+- Сделано (сессия 2026-08-24): Magnit + Pyaterochka интегрированы.
+  combo_mcp/chains/magnit.py — прямой API (прайсы в копейках, вес в граммах,
+  категории, поиск, пагинация, парсинг веса).
+  combo_mcp/chains/pyaterochka.py — Playwright-парсер (прайсы в рублях),
+  исправлен `with pw as p:` для Playwright 1.62.0 (binding Playwright object).
+  combo_mcp/playwright_client.py — get_playwright() возвращает sync_playwright().
+  config/chains_config.json: magnit enabled, pyaterochka disabled (X5 Group 403).
+  combo_mcp/chains/base.py — добавлены search()/get_categories() абстрактные методы.
+  combo_mcp/tools/compare.py — get_enabled_chain_ids() вместо get_chain_meta()
+  (исключает disabled chains из сравнения).
+  combo_mcp/tools/health_check.py — get_enabled_chain_ids() вместо get_chain_meta().
+  scripts/autotest.py — get_enabled_chain_ids() для блоков 1-13 (кроме блока 11
+  registry check), динамический подсчёт цепей, skip для цепей без expected.json.
+  tests/expected.json — обновлён через gen_expected.py (live data drift:
+  dodo, ninja_food, sushi_darom). Autotest: 155/155 OK, exit 0.
+  Pyaterochka: API X5 Group стабильно 403 (anti-bot/Cloudflare), disabled.
+
+- Сделано (сессия 2026-08-24, расширение shop-сетей):
+  combo_mcp/chains/base.py — добавлен атрибут has_server_search=False.
+  combo_mcp/chains/magnit.py и pyaterochka.py — has_server_search=True,
+  переопределены search() и get_categories().
+  combo_mcp/tools/search_products.py — серверный поиск (magnit/pyaterochka)
+  или по меню (fallback), сортировка по цене (price_rub asc), limit=/refresh=.
+  combo_mcp/tools/list_categories.py — серверные категории (magnit/pyaterochka)
+  или из меню (fallback), иерархия с children.
+  combo_mcp/tools/meta.py — записи для search_products/list_categories.
+  combo_mcp/server.py — регистрация 15 инструментов, версия 1.2.0,
+  docstring обновлён. scripts/autotest.py — блок 9 (pag 2: 5 команд),
+  блок 28 (15 инструментов, тесты новых тулов, query "Пепперони"),
+  блок 29 check_shop_tools(). scripts/smoke_test.py — счётчик 15.
+  Все тесты: autotest exit 0, smoke exit 0, selftest exit 0.
+  Help: 15 команд → 2 страницы (10/5).
 
 ## Порядок старта сессии
 

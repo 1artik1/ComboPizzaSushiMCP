@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 
 class ChainUnavailable(Exception):
     """Исключение при недоступности сети."""
+
     pass
 
 
@@ -34,6 +35,8 @@ class ChainParser(ABC):
     # category_map: сырая категория меню -> группа комбо
     # (pizza/rolls/sushi/sets/noodles/snacks/desserts/drinks/sauces/other)
     category_map = {}
+    # has_server_search: True если у парсера рабочий серверный поиск (magnit/pyaterochka)
+    has_server_search = False
 
     @abstractmethod
     def parse(self):
@@ -47,6 +50,22 @@ class ChainParser(ABC):
         "promotions": [...]} или None, если не реализовано.
         """
         return {}
+
+    def search(self, query, limit=20):
+        """Сервисный поиск товаров по запросу.
+
+        Возвращает list[dict] позиций (такой же формат, как parse()).
+        Дефолт — NotImplementedError (переопределяют magnit/pyaterochka).
+        """
+        raise NotImplementedError
+
+    def get_categories(self):
+        """Сервисное получение дерева категорий сервера.
+
+        Возвращает list[dict] категорий.
+        Дефолт — NotImplementedError (переопределяют magnit/pyaterochka).
+        """
+        raise NotImplementedError
 
 
 # ---------------------------------------------------------------------------
@@ -66,10 +85,12 @@ def chain(chain_id):
             name = "Суши Даром"
             ...
     """
+
     def decorator(cls):
         cls.id = chain_id
         _CHAIN_REGISTRY[chain_id] = cls
         return cls
+
     return decorator
 
 

@@ -5,11 +5,12 @@
 
 ## Что это
 
-MCP-сервер (Python, stdio, mcp) «ComboPizzaSushiMCP»: комбо-подборщик по 7 сетям
-доставки Воронежа (la_pizza, pizza_kuba, ninja_food, sushi_time, sushi_darom,
-anti_sushi, dodo). 13 MCP-инструментов: list_chains, parse_menu, best_combo,
+MCP-сервер (Python, stdio, mcp) «ComboPizzaSushiMCP»: комбо-подборщик по 9 сетям
+(7 доставки Воронежа: la_pizza, pizza_kuba, ninja_food, sushi_time, sushi_darom,
+anti_sushi, dodo + продуктовые magnit [вкл] и pyaterochka [выкл, анти-бот]).
+15 MCP-инструментов: list_chains, parse_menu, best_combo,
 compare, status, verify_chain, check_price, diff_menu, check_config, health_check,
-chain_info, help, favorites.
+chain_info, help, favorites, search_products, list_categories.
 
 ## Запуск и тесты
 
@@ -30,7 +31,7 @@ chain_info, help, favorites.
 
 ## Структура
 
-- `combo_mcp\server.py` — точка входа, регистрация 13 тулов
+- `combo_mcp\server.py` — точка входа, регистрация 15 тулов
 - `combo_mcp\tools\` — 1 файл = 1 MCP-инструмент; описание/примеры — tools/meta.py
 - `combo_mcp\chains\` — 1 файл = 1 сеть, класс-парсер с декоратором `@chain("id")`;
   авто-регистрация через pkgutil (chains/__init__.py, пропуск `_*` и extra_utils)

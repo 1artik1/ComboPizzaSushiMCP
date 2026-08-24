@@ -9,7 +9,7 @@ healthy / degraded / unavailable. Сети проверяются паралле
 import json
 import time
 from concurrent.futures import ThreadPoolExecutor
-from combo_mcp.config import get_chain_meta, get_chain_class
+from combo_mcp.config import get_chain_meta, get_chain_class, get_enabled_chain_ids
 from combo_mcp.cache import load_cache, save_cache
 from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.http_client import get_session, DEFAULT_TIMEOUT
@@ -22,19 +22,22 @@ def health_check(refresh=False):
         refresh = to_bool(refresh)
     except ValueError as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
-    meta = get_chain_meta()
+    meta = {c["id"]: c for c in get_chain_meta()}
+    chain_ids = get_enabled_chain_ids()
 
     if refresh:
         # Параллельно: сети независимы (свои сессии/кэш-файлы)
         with ThreadPoolExecutor(max_workers=4) as ex:
-            futures = {ex.submit(_check_chain, c, True): c["id"] for c in meta}
+            futures = {
+                ex.submit(_check_chain, meta[cid], True): cid for cid in chain_ids
+            }
             by_id = {}
             for fut in futures:
                 entry = fut.result()
                 by_id[entry["id"]] = entry
-        results = [by_id[c["id"]] for c in meta]
+        results = [by_id[cid] for cid in chain_ids]
     else:
-        results = [_check_chain(c, False) for c in meta]
+        results = [_check_chain(meta[cid], False) for cid in chain_ids]
 
     return json.dumps(results, ensure_ascii=False, indent=2)
 
@@ -77,8 +80,12 @@ def _check_chain(c, refresh):
 
 def _http_check(url, chain_config):
     """Быстрая проверка доступности: статус, размер, время."""
-    result = {"http_ok": False, "http_status": None,
-              "response_size": 0, "response_time_ms": None}
+    result = {
+        "http_ok": False,
+        "http_status": None,
+        "response_size": 0,
+        "response_time_ms": None,
+    }
     if not url:
         return result
     try:
