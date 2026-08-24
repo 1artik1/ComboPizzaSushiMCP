@@ -73,10 +73,19 @@ chain_info, help, favorites, search_products, list_categories.
 int(time*1000)+счётчик) / "list" (пагинация 10/стр, query="next"/"back"/номер страницы,
 память _fav_page) / "remove" (query: id или подстрока label/имени) / "clear".
 Хранение: cache/favorites.json (атомарно: tempfile + os.replace). Блок 10.
-- Поиск продуктов (14-й инструмент): search_products.py — серверный поиск для
-magnit/pyaterochka (has_server_search=True), fallback — поиск по кэшу меню
-(регистронезависимая подстрока в name). Параметры: chain_id, query,
-limit= (default 20), refresh=. Результаты сортируются по цене (price_rub asc).
+- Поиск продуктов (14-й инструмент, прокачан в сессию 2026-08-24): search_products.py —
+  универсальный поиск для нейросети: query первым, по умолчанию ВСЕ enabled-сети
+  одним вызовом (stores="all" / csv / старый chain_id=). Матчинг — engines/textmatch.py
+  (нормализация ё→е/регистр/пунктуация, токены, Левенштейн ≤1 для токенов ≥5 симв.,
+  бонус категории +0.3; фраза 3.0 > все токены 1.5 > доля×0.5). Фильтры: categories=
+  (группы через resolve_categories, fallback — подстрока сырой категории), min/max_price,
+  in_stock; sort: relevance|price_asc|price_desc; limit. Данные — всегда fetch_items
+  (TTL-кэш, stale-if-error); серверная ветка из тула убрана (методы search()/get_categories()
+  в парсерах остались для list_categories). magnit menu_ttl_minutes=10080 (неделя).
+  Ответ: {query, stores_searched, total, results[{chain_id, chain_name, name, price_rub,
+  weight_g, category, group, in_stock, score}], chains_errors{}, stale} — ошибка одной
+  сети не роняет ответ. Блоки 28/29 обновлены (юнит textmatch, мультистор, фильтры,
+  ошибки, обратная совместимость chain_id).
 - Категории (15-й инструмент): list_categories.py — серверные категории для
 magnit/pyaterochka (иерархия с children), fallback — из кэша меню (группировка
 по category, count desc). Результат: {source, total, categories[]}.

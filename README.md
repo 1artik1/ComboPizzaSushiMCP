@@ -81,9 +81,16 @@
   (`action="remove"`, `query` — id или подстрока), очистить (`action="clear"`).
   Хранение: `cache/favorites.json`.
   (refresh=true — реальный прогон, иначе быстрый ответ по кэшу)
-- `search_products(chain_id, query, limit=, refresh=)` — поиск товаров по названию
-  в любой сети: для magnit/pyaterochka — серверный поиск API, для остальных —
-  регистронезависимый поиск по меню (кэш). Результаты по цене (price_rub asc)
+- `search_products(query, chain_id=, stores=, categories=, min_price=, max_price=,
+  in_stock=, sort=, limit=, refresh=)` — умный поиск продукции для нейросети:
+  сразу по всем магазинам (`stores="all"`, default) или в выбранных
+  (`stores="magnit,la_pizza"`, либо старый добрый `chain_id=`). Матчинг —
+  combo_mcp/engines/textmatch.py: регистр/ё→е не важны, токены, опечатки в
+  1 букву (Левенштейн ≤1 для слов ≥5 симв.), бонус за категорию. Фильтры:
+  цена (min/max), группы категорий («напитки», «пицца»...), только в наличии.
+  Сортировка: relevance (default) | price_asc | price_desc. Данные — из TTL-кэша
+  всех сетей (у Магнита TTL неделя); ошибка одной сети не роняет ответ
+  (`chains_errors`). Пример: `search_products "молоко" max_price=150 sort=price_asc`
 - `list_categories(chain_id, refresh=)` — все категории товаров сети:
   серверное дерево категорий (magnit/pyaterochka) или агрегат по меню
   ({category, count}, сортировка по числу позиций)
@@ -91,7 +98,8 @@
 ## Продуктовые магазины (ShopExtended)
 - **magnit** — включён. Прямой webgate-API magnit.ru (requests, без браузера):
   категории `/webgate/v3/categories/store/992301`, товары/поиск `POST /webgate/v2/goods/search`
-  (цены в копейках → конвертируются, вес из weighted/имени).
+  (цены в копейках → конвертируются, вес из weighted/имени). TTL кэша — неделя
+  (`menu_ttl_minutes: 10080`), поиск search_products идёт по кэшу.
 - **pyaterochka** — выключен (`enabled: false`). API `5d.5ka.ru` закрыт анти-ботом
   (капча при заходе не из браузера); парсер написан на Playwright (запросы из контекста
   страницы 5ka.ru), но headless-браузер стабильно получает капчу → при включении

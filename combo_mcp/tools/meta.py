@@ -86,9 +86,9 @@ TOOLS_META = [
     },
     {
         "name": "search_products",
-        "args": "(chain_id, query, limit=, refresh=)",
-        "description": "Поиск товаров по названию в любой сети (для продуктовых — серверный поиск)",
-        "example": 'search_products "magnit" "молоко" limit=10',
+        "args": "(query, chain_id=, stores=, categories=, min_price=, max_price=, in_stock=, sort=, limit=, refresh=)",
+        "description": 'Поиск продукции сразу по всем магазинам или в выбранных (stores="magnit,la_pizza"): умный матчинг (регистр/ё/опечатки в 1 букву), фильтры цены/категорий/наличия, сортировка',
+        "example": 'search_products "молоко" max_price=150 sort=price_asc',
     },
     {
         "name": "list_categories",

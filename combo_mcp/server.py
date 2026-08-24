@@ -37,7 +37,7 @@ from combo_mcp.tools.meta import TOOLS_META
 # Create server
 mcp = MCPServer(
     "combo-engine",
-    version="1.2.0",
+    version="1.3.0",
     title="Combo Engine",
     description="Расчёт выгодных комбо по сетям доставки в Воронеже",
 )

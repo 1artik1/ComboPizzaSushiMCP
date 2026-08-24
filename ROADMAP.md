@@ -88,9 +88,15 @@
   цены в копейках → рубли, вес из weighted/имени, категории/поиск/пагинация).
   combo_mcp/chains/pyaterochka.py — Playwright-парсер 5ka.ru (запросы к
   5d.5ka.ru из контекста страницы); API закрыт анти-ботом → enabled=false.
-  Новые MCP-тулы (14-й и 15-й, итого 15): search_products (серверный поиск
-  magnit/pyaterochka + локальный fallback по меню для любых сетей) и
-  list_categories (серверное дерево категорий / агрегат по меню).
+  Новые MCP-тулы (14-й и 15-й, итого 15): search_products и
+  list_categories. Сессия 2026-08-24 (продолжение): search_products прокачан
+  до универсального поиска для нейросети — query первым, все enabled-сети одним
+  вызовом (stores=/chain_id=), умный матчинг engines/textmatch.py (ё→е, регистр,
+  токены, опечатки ≤1 буквы, бонус категории), фильтры categories=/min_price=/
+  max_price=/in_stock=, sort relevance|price_asc|price_desc; источник — всегда
+  TTL-кэш (magnit menu_ttl_minutes=10080 — неделя); серверная ветка из тула
+  убрана. server.py 1.3.0. Блоки 28/29 обновлены (юнит textmatch, мультистор,
+  фильтры, ошибки). Все тесты exit 0.
   combo_mcp/chains/base.py — search()/get_categories() + has_server_search.
   compare.py + health_check.py — get_enabled_chain_ids() (disabled-сети
   исключены). autotest.py — блоки 9/28/29 обновлены, get_enabled_chain_ids(),

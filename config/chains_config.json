@@ -8,7 +8,7 @@
     "ninja_food":   {"url": "https://ninjafood.su/", "enabled": true, "http_timeout": 20, "menu_ttl_minutes": 180, "headers": {}, "cookies": {}},
     "pizza_kuba":   {"url": "https://pizzeriacuba.ru/", "enabled": true, "http_timeout": 10, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
     "dodo":         {"url": "https://dodopizza.ru/", "enabled": true, "http_timeout": 10, "menu_ttl_minutes": 240, "headers": {}, "cookies": {}},
-    "magnit":       {"url": "https://magnit.ru/", "enabled": true, "http_timeout": 20, "menu_ttl_minutes": 360, "headers": {}, "cookies": {}},
+    "magnit":       {"url": "https://magnit.ru/", "enabled": true, "http_timeout": 20, "menu_ttl_minutes": 10080, "headers": {}, "cookies": {}},
     "pyaterochka":  {"url": "https://5ka.ru/", "enabled": false, "http_timeout": 20, "menu_ttl_minutes": 360, "headers": {}, "cookies": {}}
   }
 }

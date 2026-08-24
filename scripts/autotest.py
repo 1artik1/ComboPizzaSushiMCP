@@ -1183,30 +1183,76 @@ async def _run_mcp_test():
                 if not isinstance(r_ci, dict) or "error" in r_ci:
                     raise ValueError(f"chain_info refresh='false': {str(r_ci)[:100]}")
 
-                # search_products: menu-путь, la_pizza "Пепперони"
+                # search_products: menu-путь, la_pizza "Пепперони" (query первым)
                 r_sp = await _call(
                     "search_products",
                     {
-                        "chain_id": "la_pizza",
                         "query": "Пепперони",
+                        "chain_id": "la_pizza",
                         "limit": "10",
                         "refresh": "false",
                     },
                 )
                 if "error" in r_sp:
                     raise ValueError(f"search_products Пепперони: {r_sp['error']}")
-                if r_sp.get("source") != "menu":
+                if r_sp.get("stores_searched") != ["la_pizza"]:
                     raise ValueError(
-                        f"search_products: source={r_sp.get('source')}, ожидалось menu"
+                        f"search_products: stores_searched={r_sp.get('stores_searched')}, ожидалось ['la_pizza']"
                     )
                 results_sp = r_sp.get("results", [])
                 if len(results_sp) == 0:
                     raise ValueError(f"search_products Пепперони: 0 результатов")
+                if not any(
+                    "пепперони" in x.get("name", "").lower() for x in results_sp
+                ):
+                    raise ValueError(
+                        "search_products Пепперони: ни одного имени с 'пепперони'"
+                    )
                 for r in results_sp:
-                    if "пепперони" not in r.get("name", "").lower():
+                    if not (
+                        isinstance(r.get("score"), (int, float)) and r["score"] > 0
+                    ):
                         raise ValueError(
-                            f"search_products: имя без 'пепперони': {r['name']}"
+                            f"search_products: score<=0 или отсутствует: {r['name']}"
                         )
+
+                # search_products: мультистор строковыми параметрами
+                r_ms = await _call(
+                    "search_products",
+                    {
+                        "query": "молоко",
+                        "max_price": "150",
+                        "sort": "price_asc",
+                        "limit": "20",
+                        "refresh": "false",
+                    },
+                )
+                if "error" in r_ms:
+                    raise ValueError(f"search_products мультистор: {r_ms['error']}")
+                ss = r_ms.get("stores_searched", [])
+                if not isinstance(ss, list) or len(ss) < 2:
+                    raise ValueError(
+                        f"search_products мультистор: stores_searched={ss}"
+                    )
+                if not isinstance(r_ms.get("chains_errors"), dict):
+                    raise ValueError(
+                        "search_products мультистор: chains_errors не dict"
+                    )
+                if not isinstance(r_ms.get("stale"), bool):
+                    raise ValueError("search_products мультистор: stale не bool")
+                prices_ms = [
+                    x.get("price_rub")
+                    for x in r_ms.get("results", [])
+                    if x.get("price_rub") is not None
+                ]
+                if any(p > 150 for p in prices_ms):
+                    raise ValueError(
+                        f"search_products max_price='150': найдена цена {prices_ms}"
+                    )
+                if any(
+                    prices_ms[i] > prices_ms[i + 1] for i in range(len(prices_ms) - 1)
+                ):
+                    raise ValueError("search_products sort='price_asc': цены убывают")
 
                 # search_products: пустой query -> error
                 r_sp_empty = await _call(
@@ -1568,6 +1614,7 @@ def check_shop_tools():
     """Блок 29: shop-tools — search_products и list_categories."""
     from combo_mcp.tools.search_products import search_products
     from combo_mcp.tools.list_categories import list_categories
+    from combo_mcp.engines.textmatch import score_match
 
     print("Блок 29: shop-tools")
 
@@ -1596,70 +1643,192 @@ def check_shop_tools():
                     )
                     break
 
-    # --- search_products("la_pizza", "Пепперони") — menu-путь ---
-    r = json.loads(search_products("la_pizza", "Пепперони", limit="20"))
-    if "error" in r:
-        _fail("shop", f"search_products Пепперони: {r['error']}")
-    else:
-        if r.get("source") != "menu":
-            _fail("shop", f"search_products: source={r.get('source')}")
+    # --- (а) юнит textmatch ---
+    tm_cases = [
+        ("молоко -> 'Молоко 3.2%' (>0)", score_match("молоко", "Молоко 3.2%") > 0),
+        (
+            "пеперони -> 'Пепперони' (>0, левенштейн)",
+            score_match("пеперони", "Пепперони") > 0,
+        ),
+        ("ёлка -> 'Елка' (>0, ё=е)", score_match("ёлка", "Елка") > 0),
+        (
+            "абракадабра -> 'Пицца Маргарита' (==0)",
+            score_match("абракадабра", "Пицца Маргарита") == 0,
+        ),
+    ]
+    for label, cond in tm_cases:
+        if cond:
+            _ok("shop", f"textmatch: {label}")
         else:
-            results = r.get("results", [])
-            if len(results) == 0:
-                _fail("shop", "search_products Пепперони: 0 результатов")
-            else:
+            _fail("shop", f"textmatch: {label}")
+
+    # --- (д) обратная совместимость: chain_id="la_pizza" ---
+    r = json.loads(search_products("Пепперони", chain_id="la_pizza"))
+    if "error" in r:
+        _fail("shop", f"search_products chain_id Пепперони: {r['error']}")
+    else:
+        results = r.get("results", [])
+        if not results:
+            _fail("shop", "search_products chain_id Пепперони: 0 результатов")
+        else:
+            ok_fields = all(
+                x.get("chain_id") == "la_pizza"
+                and isinstance(x.get("score"), (int, float))
+                and x["score"] > 0
+                for x in results
+            )
+            any_name = any("пепперони" in x.get("name", "").lower() for x in results)
+            if ok_fields and any_name:
                 _ok(
                     "shop",
-                    f"search_products Пепперони: {r.get('total')} найдено, {len(results)} в ответе",
+                    f"search_products chain_id='la_pizza': {r.get('total')} найдено",
                 )
-            # У всех name содержит "пепперони" (регистронезависимо)
-            for item in results:
-                if "пепперони" not in item.get("name", "").lower():
-                    _fail(
-                        "shop", f"search_products: имя без 'пепперони': {item['name']}"
-                    )
-                    break
-            # price_rub > 0
-            for item in results:
-                if not (
-                    isinstance(item.get("price_rub"), (int, float))
-                    and item["price_rub"] > 0
-                ):
-                    _fail("shop", f"search_products: price_rub<=0: {item}")
-                    break
+            else:
+                _fail(
+                    "shop",
+                    f"search_products chain_id: поля/имена — {results[:2]}",
+                )
+        if r.get("stores_searched") != ["la_pizza"]:
+            _fail("shop", f"stores_searched={r.get('stores_searched')}")
+        if not isinstance(r.get("chains_errors"), dict):
+            _fail("shop", "chains_errors не dict")
+        if not isinstance(r.get("stale"), bool):
+            _fail("shop", "stale не bool")
 
-    # --- search_products("la_pizza", "квантозавр") — empty, не error ---
-    r = json.loads(search_products("la_pizza", "квантозавр"))
+    # --- пустой результат — не error ---
+    r = json.loads(search_products("квантозавр", chain_id="la_pizza"))
     if "error" in r:
         _fail("shop", f"search_products miss: {r['error']}")
-    elif r.get("total") != 0:
-        _fail("shop", f"search_products miss: total={r.get('total')}, ожидалось 0")
+    elif r.get("total") != 0 or r.get("results") != []:
+        _fail(
+            "shop",
+            f"search_products miss: total={r.get('total')}, ожидалось 0 и []",
+        )
     else:
         _ok("shop", "search_products miss: total=0 (пустой результат, не error)")
 
-    # --- Ошибки ---
-    # неизвестная сеть
-    r = json.loads(search_products("нет_такой", "хлеб"))
+    # --- (б) мультистор: query по всем включённым сетям ---
+    r = json.loads(search_products("молоко"))
+    if "error" in r:
+        _fail("shop", f"search_products молоко (все сети): {r['error']}")
+    else:
+        ss = r.get("stores_searched", [])
+        if not isinstance(ss, list) or len(ss) < 2:
+            _fail("shop", f"stores_searched: {ss} (ожидалось несколько сетей)")
+        elif not isinstance(r.get("chains_errors"), dict):
+            _fail("shop", "chains_errors не dict")
+        elif not isinstance(r.get("stale"), bool):
+            _fail("shop", "stale не bool")
+        else:
+            _ok(
+                "shop",
+                f"search_products 'молоко': {len(ss)} сетей, total={r.get('total')}, "
+                f"errors={list(r.get('chains_errors', {}).keys())}",
+            )
+
+    # --- (в) фильтр цены ---
+    r = json.loads(search_products("кола", max_price="200"))
+    if "error" in r:
+        _fail("shop", f"search_products кола max_price=200: {r['error']}")
+    else:
+        results = r.get("results", [])
+        if not results:
+            _ok("shop", "search_products кола max_price=200: SKIP (пусто)")
+        else:
+            bad = [
+                x
+                for x in results
+                if not (
+                    isinstance(x.get("price_rub"), (int, float))
+                    and x["price_rub"] <= 200
+                )
+            ]
+            if bad:
+                _fail("shop", f"max_price=200 нарушен: {bad[:2]}")
+            else:
+                _ok(
+                    "shop",
+                    f"max_price=200: {len(results)} позиций, все price_rub<=200",
+                )
+
+    # --- (в) сортировка price_asc — неубывающие цены (None в конец) ---
+    r = json.loads(search_products("кола", sort="price_asc"))
+    if "error" in r:
+        _fail("shop", f"search_products кола price_asc: {r['error']}")
+    else:
+        prices = [x.get("price_rub") for x in r.get("results", [])]
+        known = [p for p in prices if p is not None]
+        non_decreasing = all(known[i] <= known[i + 1] for i in range(len(known) - 1))
+        none_last = prices[len(known) :] == [None] * (len(prices) - len(known))
+        if known and non_decreasing and none_last:
+            _ok("shop", f"sort=price_asc: {known[:5]}... неубывающие")
+        elif not known:
+            _ok("shop", "sort=price_asc: SKIP (пусто)")
+        else:
+            _fail("shop", f"sort=price_asc нарушен: {prices}")
+
+    # --- (в) категории="напитки" на dodo — все group=="drinks"
+    # (имена в кэше dodo английские, поэтому query="cola") ---
+    r = json.loads(search_products("cola", chain_id="dodo", categories="напитки"))
+    if "error" in r:
+        _fail("shop", f"search_products dodo напитки: {r['error']}")
+    else:
+        results = r.get("results", [])
+        if not results:
+            _ok("shop", "search_products dodo категории=напитки: SKIP (пусто)")
+        else:
+            bad = [x for x in results if x.get("group") != "drinks"]
+            if bad:
+                _fail("shop", f"dodo категории=напитки: не drinks — {bad[:2]}")
+            else:
+                _ok(
+                    "shop",
+                    f"dodo категории=напитки: {len(results)} позиций, все group=drinks",
+                )
+
+    # --- (г) ошибки ---
+    # неизвестная сеть через chain_id
+    r = json.loads(search_products("хлеб", chain_id="нет_такой"))
     if "error" not in r:
         _fail("shop", "search_products неизвестная сеть: ожидалась ошибка")
     else:
         _ok("shop", "search_products неизвестная сеть -> error")
 
+    # неизвестный магазин через stores
+    r = json.loads(search_products("хлеб", stores="нет_такой"))
+    if "error" not in r or "Доступны" not in r["error"]:
+        _fail("shop", f"stores='нет_такой': ожидалась ошибка со списком: {r}")
+    else:
+        _ok("shop", "search_products stores='нет_такой' -> error")
+
+    # мусорная сортировка
+    r = json.loads(search_products("кола", sort="мусор"))
+    if "error" not in r:
+        _fail("shop", "search_products sort='мусор': ожидалась ошибка")
+    else:
+        _ok("shop", "search_products sort='мусор' -> error")
+
     # пустой query
-    r = json.loads(search_products("la_pizza", ""))
+    r = json.loads(search_products(""))
     if "error" not in r:
         _fail("shop", "search_products пустой query: ожидалась ошибка")
     else:
         _ok("shop", "search_products пустой query -> error")
 
-    # limit="abc" -> to_int ValueError
-    r = json.loads(search_products("la_pizza", "Пепперони", limit="abc"))
+    # limit="abc" -> to_int ValueError; min>max -> ошибка
+    r = json.loads(search_products("кола", chain_id="la_pizza", limit="abc"))
     if "error" not in r:
         _fail("shop", "search_products limit='abc': ожидалась ошибка")
     else:
         _ok("shop", "search_products limit='abc' -> error")
 
-    # list_categories: неизвестная сеть
+    r = json.loads(search_products("кола", min_price="500", max_price="100"))
+    if "error" not in r:
+        _fail("shop", "search_products min>max: ожидалась ошибка")
+    else:
+        _ok("shop", "search_products min_price>max_price -> error")
+
+    # --- list_categories: неизвестная сеть ---
     r = json.loads(list_categories("нет_такой"))
     if "error" not in r:
         _fail("shop", "list_categories неизвестная сеть: ожидалась ошибка")
@@ -1686,16 +1855,23 @@ def check_shop_tools():
             else:
                 _fail("shop", "list_categories magnit: total=0")
 
-    r = json.loads(search_products("magnit", "молоко", limit="10"))
-    if "error" in r and "magnit" in r.get("error", "").lower():
-        _ok("shop", "search_products magnit: SKIP (недоступна)")
-    elif "error" in r:
-        _ok("shop", f"search_products magnit: {r['error']} (не ChainUnavailable)")
+    # --- magnit через новый search_products (недоступность -> SKIP) ---
+    r = json.loads(search_products("молоко", stores="magnit"))
+    if "error" in r:
+        _fail("shop", f"search_products magnit: неожиданная ошибка {r['error']}")
+    elif r.get("total", 0) == 0 and "magnit" in r.get("chains_errors", {}):
+        _ok("shop", "search_products magnit: SKIP (недоступна, chains_errors)")
     else:
-        if r.get("source") != "server":
-            _fail("shop", f"search_products magnit: source={r.get('source')}")
+        results = r.get("results", [])
+        bad = [x for x in results if x.get("chain_id") != "magnit"]
+        if bad:
+            _fail("shop", f"stores=magnit: чужая сеть в ответе — {bad[:2]}")
         else:
-            _ok("shop", f"search_products magnit: server, {r.get('total')} найдено")
+            _ok(
+                "shop",
+                f"search_products magnit: {r.get('total')} найдено "
+                f"(stale={r.get('stale')})",
+            )
 
 
 def check_mcp():
