@@ -12,6 +12,7 @@ from combo_mcp.params import to_int
 def check_price(chain_id, item_name, expected_price=None):
     """Проверка цены позиции."""
     ids = [c["id"] for c in get_chain_meta()]
+    chain_id = (chain_id or "").strip()
     if chain_id not in ids:
         return json.dumps({"error": f"Неизвестная сеть '{chain_id}'"}, ensure_ascii=False)
 

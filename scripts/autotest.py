@@ -6,12 +6,12 @@ tests/expected.json. Расхождение → FAIL + дифф, эталон п
 
 Блоки:
 1. Эталоны комбо: best_combo против expected.json (вес/цена/состав).
-2. Инварианты данных: бюджет, кол-во напитков = persons, вариации разные,
+2. Инварианты данных: бюджет, кол-во напитков = 1, вариации разные,
    пороги позиций, граничные входные параметры.
 3. Контрольные блюда: 1-2 известных блюда на сеть из кэша.
 4. Связка с health_check: все сети отвечают и имеют позиции.
-5. compare с persons: все 7 сетей, лучшее комбо = первая вариация best_combo,
-   в лучшем комбо ровно persons напитков.
+5. compare: все 7 сетей, лучшее комбо = первая вариация best_combo,
+   в лучшем комбо ровно 1 напиток.
 6. Разнообразные вариации: variations > 3, первые 3 == стандарт.
 7. Доп. информация: доставка, акции, лояльность (chain_info).
 8. Фильтр по категориям: best_combo/compare с categories.
@@ -24,6 +24,8 @@ tests/expected.json. Расхождение → FAIL + дифф, эталон п
 18. Случайные бюджеты/персоны — Monte Carlo (тег "mcart").
 28. Реальный MCP-протокол: ClientSession + stdio (тег "mcp").
 19. Промо-правила в комбо (тег "promos").
+20. Сквозной топ-N: best_combo с chain_id ""/список, sort_by, режимы (тег "cross").
+29. Защита от дурака: мусорные вызовы -> error без краша (тег "robust").
 
 Запуск: .venv\\Scripts\\python.exe scripts/autotest.py
 """
@@ -64,7 +66,6 @@ MIN_ITEMS = {
 }
 
 BUDGETS = [1500, 3000]
-PERSONS = [1, 2]
 
 _FAILED = []
 
@@ -134,62 +135,67 @@ def check_combos():
     for c in get_chain_meta():
         cid = c["id"]
         for budget in BUDGETS:
-            for persons in PERSONS:
-                key = f"{budget}_{persons}"
-                exp = expected.get(cid, {}).get(key)
-                raw = json.loads(best_combo(cid, budget, persons=persons, variations=3, refresh=False))
+            key = str(budget)
+            exp = expected.get(cid, {}).get(key)
+            raw = json.loads(best_combo(cid, budget, variations=3, refresh=False))
 
-                # --- эталон ---
-                if "error" in raw:
-                    if not (exp and isinstance(exp, dict) and exp.get("error")):
-                        _fail("эталон", f"{cid} {key}: неожиданная ошибка: {raw['error']}")
-                    else:
-                        _ok("эталон", f"{cid} {key}: ожидаемая ошибка")
-                    continue
-
-                if not exp or isinstance(exp, dict):
-                    _fail("эталон", f"{cid} {key}: нет эталона в expected.json")
-                    continue
-
-                got = [(v["weight_g"], v["price_rub"], v["items"]) for v in raw.get("combos", [])]
-                want = [(v["weight_g"], v["price_rub"], v["items"]) for v in exp]
-                if got == want:
-                    _ok("эталон", f"{cid} {key}: {len(got)} вариаций совпали")
+            # --- эталон ---
+            if "error" in raw:
+                if not (exp and isinstance(exp, dict) and exp.get("error")):
+                    _fail("эталон", f"{cid} {key}: неожиданная ошибка: {raw['error']}")
                 else:
-                    _fail("эталон", f"{cid} {key}: расхождение")
-                    for i, (g, w) in enumerate(zip(got, want)):
-                        if g != w:
-                            print(f"      вариант {i + 1}:")
-                            print(f"        got  : {g}")
-                            print(f"        want : {w}")
-                    if len(got) != len(want):
-                        print(f"      кол-во: got {len(got)}, want {len(want)}")
+                    _ok("эталон", f"{cid} {key}: ожидаемая ошибка")
+                continue
 
-                # --- инварианты ---
-                _check_invariants(cid, key, budget, persons, raw, exp)
+            if not exp or isinstance(exp, dict):
+                _fail("эталон", f"{cid} {key}: нет эталона в expected.json")
+                continue
+
+            got = [(v["weight_g"], v["price_rub"], v["items"]) for v in raw.get("combos", [])]
+            want = [(v["weight_g"], v["price_rub"], v["items"]) for v in exp]
+            if got == want:
+                _ok("эталон", f"{cid} {key}: {len(got)} вариаций совпали")
+            else:
+                _fail("эталон", f"{cid} {key}: расхождение")
+                for i, (g, w) in enumerate(zip(got, want)):
+                    if g != w:
+                        print(f"      вариант {i + 1}:")
+                        print(f"        got  : {g}")
+                        print(f"        want : {w}")
+                if len(got) != len(want):
+                    print(f"      кол-во: got {len(got)}, want {len(want)}")
+
+            # --- инварианты ---
+            _check_invariants(cid, key, budget, raw, exp)
 
 
-def _expected_drinks(cid, budget, persons):
-    """Сколько напитков реально можно включить: min(persons, влезает в бюджет)."""
+def _expected_drinks(cid, budget, target=1):
+    """Сколько напитков реально можно включить: min(target, влезает в бюджет).
+
+    Применяет справочник весов (как best_combo) — иначе напитки без веса на сайте
+    (например, BonaAqua у dodo) ошибочно не считаются напитками.
+    """
+    from combo_mcp.weights import apply_estimated_weights
     cache_items = load_cache(cid).get("items", []) or []
+    items, _ = apply_estimated_weights(cache_items, cid)
     valid_drinks = sorted(
-        [it for it in cache_items if is_drink(it) and (it.get("weight_g") or 0) > 0
+        [it for it in items if is_drink(it) and (it.get("weight_g") or 0) > 0
          and (it.get("price_rub") or 0) > 0],
         key=lambda x: (x["price_rub"] / x["weight_g"], x["price_rub"]),
     )
     expect = 0
     spent = 0
     for it in valid_drinks:
-        if expect >= persons:
+        if expect >= target:
             break
         if spent + it["price_rub"] > budget:
-            break
+            continue
         expect += 1
         spent += it["price_rub"]
     return expect
 
 
-def _check_invariants(cid, key, budget, persons, raw, exp):
+def _check_invariants(cid, key, budget, raw, exp):
     """Инварианты данных для одного ответа best_combo."""
     combos = raw.get("combos", [])
     if not combos:
@@ -201,8 +207,8 @@ def _check_invariants(cid, key, budget, persons, raw, exp):
     for it in cache_items:
         by_name.setdefault(localize(cid, _norm_name(it["name"])), it)
 
-    # ровно persons напитков (сколько реально доступно с весом)
-    expect_drinks = _expected_drinks(cid, budget, persons)
+    # ровно 1 напиток (сколько реально доступно с весом)
+    expect_drinks = _expected_drinks(cid, budget)
 
     for v in combos:
         price = v["price_rub"]
@@ -217,8 +223,7 @@ def _check_invariants(cid, key, budget, persons, raw, exp):
             if it and is_drink(it):
                 n_drinks += cnt
         if n_drinks != expect_drinks:
-            _fail("напитки", f"{cid} {key}: напитков {n_drinks}, ожидается {expect_drinks} "
-                             f"(persons={persons}): {v['items']}")
+            _fail("напитки", f"{cid} {key}: напитков {n_drinks}, ожидается {expect_drinks}: {v['items']}")
         if len(parts) > 40:
             _fail("позиции", f"{cid} {key}: слишком много позиций ({len(parts)})")
 
@@ -238,8 +243,7 @@ def check_boundary():
         ("budget=1 (ок)", dict(budget=1), "error" not in json.loads(best_combo(cid, 1))),
         ("budget=0 (ошибка)", dict(budget=0), "error" in json.loads(best_combo(cid, 0))),
         ("budget=-5 (ошибка)", dict(budget=-5), "error" in json.loads(best_combo(cid, -5))),
-        ("persons=0 (ошибка)", dict(budget=1000, persons=0), "error" in json.loads(best_combo(cid, 1000, persons=0))),
-        ("persons=-1 (ошибка)", dict(budget=1000, persons=-1), "error" in json.loads(best_combo(cid, 1000, persons=-1))),
+        ("budget=abc (ошибка)", dict(budget="abc"), "error" in json.loads(best_combo(cid, "abc"))),
         ("variations=0 (ошибка)", dict(budget=1000, variations=0), "error" in json.loads(best_combo(cid, 1000, variations=0))),
         ("variations=8 (ок, 8)", dict(budget=2000, variations=8), len(json.loads(best_combo(cid, 2000, variations=8)).get("combos", [])) == 8),
         ("нет сети (ошибка)", dict(budget=1000), "error" in json.loads(best_combo("нет_такой", 1000))),
@@ -295,15 +299,10 @@ def check_health():
 
 # ---------------------------------------------------------------- блок 5
 def check_compare():
-    print("Блок 5: compare с persons")
+    print("Блок 5: compare")
     budget = 3000
 
-    if "error" not in json.loads(_compare(budget, persons=0)):
-        _fail("compare", "persons=0 должен давать ошибку")
-    else:
-        _ok("compare", "persons=0 (ошибка)")
-
-    raw = json.loads(_compare(budget, persons=2))
+    raw = json.loads(_compare(budget))
     if len(raw) != 7:
         _fail("compare", f"сетей {len(raw)}, ожидается 7")
         return
@@ -319,7 +318,7 @@ def check_compare():
             continue
 
         # лучшее комбо compare == первая вариация best_combo (тот же движок)
-        bc = json.loads(best_combo(cid, budget, persons=2, variations=3))
+        bc = json.loads(best_combo(cid, budget, variations=3))
         if "error" in bc or not bc.get("combos"):
             _fail("compare", f"{cid}: best_combo не дал комбо")
             continue
@@ -329,7 +328,7 @@ def check_compare():
                              f"!= best_combo {top['weight_g']}г/{top['price_rub']}₽")
             continue
 
-        # ровно persons напитков в лучшем комбо compare
+        # ровно 1 напиток в лучшем комбо compare
         cache_items = load_cache(cid).get("items", []) or []
         by_name = {}
         for it in cache_items:
@@ -339,10 +338,10 @@ def check_compare():
             it = by_name.get(_norm_name(i["name"]))
             if it and is_drink(it):
                 n_drinks += i.get("count", 1)
-        expect = _expected_drinks(cid, budget, 2)
+        expect = _expected_drinks(cid, budget)
         if n_drinks != expect:
-            _fail("compare", f"{cid}: напитков в комбо {n_drinks}, ожидается {expect} "
-                             f"(persons=2): {[i['name'] for i in entry.get('items', [])]}")
+            _fail("compare", f"{cid}: напитков в комбо {n_drinks}, ожидается {expect}: "
+                             f"{[i['name'] for i in entry.get('items', [])]}")
             continue
         _ok("compare", f"{cid}: {entry['total_weight_g']}г/{entry['total_price_rub']}₽, {n_drinks} напитков")
 
@@ -353,8 +352,8 @@ def check_diverse():
     budget = 1500
     for c in get_chain_meta():
         cid = c["id"]
-        base = json.loads(best_combo(cid, budget, persons=1, variations=3, refresh=False))
-        many = json.loads(best_combo(cid, budget, persons=1, variations=10, refresh=False))
+        base = json.loads(best_combo(cid, budget, variations=3, refresh=False))
+        many = json.loads(best_combo(cid, budget, variations=10, refresh=False))
         if "error" in base or "error" in many:
             continue
 
@@ -377,8 +376,8 @@ def check_diverse():
             _fail("diverse", f"{cid}: {len(combos_many)} вариаций, уникальных {len(uniq)}")
 
         # variations=1/2 — стандартное начало
-        one = json.loads(best_combo(cid, budget, persons=1, variations=1, refresh=False))
-        two = json.loads(best_combo(cid, budget, persons=1, variations=2, refresh=False))
+        one = json.loads(best_combo(cid, budget, variations=1, refresh=False))
+        two = json.loads(best_combo(cid, budget, variations=2, refresh=False))
         if "error" in one or "error" in two:
             continue
         one_items = [(v["weight_g"], v["price_rub"], v["items"]) for v in one.get("combos", [])]
@@ -422,8 +421,8 @@ def check_categories():
     from combo_mcp.categories import category_to_group
 
     print("Блок 8: фильтр по категориям")
-    # pizza_kuba: пицца + напитки, persons=2 -> ровно 2 напитка, остальное пицца
-    r = json.loads(best_combo("pizza_kuba", "1500", persons=2, categories="пицца,напитки"))
+    # pizza_kuba: пицца + напитки -> ровно 1 напиток, остальное пицца
+    r = json.loads(best_combo("pizza_kuba", "1500", categories="пицца,напитки"))
     if "error" in r:
         _fail("categories", f"pizza_kuba пицца+напитки: {r['error']}")
     else:
@@ -441,14 +440,14 @@ def check_categories():
                     cnt = int(m.group(2)) if m else 1
                     if re.search(r"напиток|сок", name, re.IGNORECASE):
                         n_drinks += cnt
-                if n_drinks != 2:
+                if n_drinks != 1:
                     ok = False
-                    _fail("categories", f"pizza_kuba: в комбо {n_drinks} напитков, ожидалось 2: {combo}")
+                    _fail("categories", f"pizza_kuba: в комбо {n_drinks} напитков, ожидалось 1: {combo}")
             if ok:
-                _ok("categories", "pizza_kuba пицца+напитки: ровно 2 напитка, фильтр по группам")
+                _ok("categories", "pizza_kuba пицца+напитки: ровно 1 напиток, фильтр по группам")
 
     # anti_sushi: только пицца (без напитков) — напитки не добавляются
-    r = json.loads(best_combo("anti_sushi", "2000", persons=2, categories="пицца"))
+    r = json.loads(best_combo("anti_sushi", "2000", categories="пицца"))
     if "error" in r:
         _fail("categories", f"anti_sushi пицца: {r['error']}")
     else:
@@ -480,7 +479,7 @@ def check_categories():
         _ok("categories", "la_pizza без categories: фильтр не применяется")
 
     # compare с категорией пицца: все сети имеют группу pizza, категории в ответе
-    r = json.loads(_compare("2000", persons=1, categories="пицца"))
+    r = json.loads(_compare("2000", categories="пицца"))
     if isinstance(r, dict) and "error" in r:
         _fail("categories", f"compare пицца: {r['error']}")
     else:
@@ -491,6 +490,51 @@ def check_categories():
                 _fail("categories", f"compare {c['chain_id']}: categories={c.get('categories')}")
         if ok:
             _ok("categories", f"compare пицца: {len(r)} сетей, все с pizza")
+
+    # --- блок 3: группа combo (наборы/комбо != ролл-сеты) ---
+    from combo_mcp.categories import resolve_categories, ALL_GROUPS
+    from combo_mcp.tools.parse_menu import parse_menu
+    if "combo" not in ALL_GROUPS or resolve_categories("комбо") != ["combo"]:
+        _fail("categories", "группа combo: не в ALL_GROUPS / синоним 'комбо' не сматчился")
+    else:
+        _ok("categories", "группа combo: resolve('комбо') -> combo")
+
+    combo_cases = {"la_pizza": "комбо", "ninja_food": "nabory",
+                   "anti_sushi": "Комбо"}
+    ok = True
+    for cid, raw_cat in combo_cases.items():
+        items = load_cache(cid).get("items", []) or []
+        hits = [it for it in items if (it.get("category") or "") == raw_cat]
+        if not hits:
+            _fail("categories", f"{cid}: нет сырой категории '{raw_cat}'")
+            ok = False
+            continue
+        if any(category_to_group(it, cid) != "combo" for it in hits):
+            _fail("categories", f"{cid}: '{raw_cat}' маппится не в combo")
+            ok = False
+        else:
+            _ok("categories", f"{cid}: '{raw_cat}' -> combo ({len(hits)} поз.)")
+    # sushi_darom 'Наборы' остаются sets
+    hits = [it for it in (load_cache("sushi_darom").get("items", []) or [])
+            if (it.get("category") or "") == "Наборы"]
+    if hits and all(category_to_group(it, "sushi_darom") == "sets" for it in hits):
+        _ok("categories", "sushi_darom: 'Наборы' -> sets (ролл-сеты)")
+    else:
+        _fail("categories", "sushi_darom: 'Наборы' не в sets")
+
+    # categories=sets = чистые ролл-сеты (без наборов/комбо)
+    for cid in ("la_pizza", "ninja_food", "anti_sushi"):
+        r = json.loads(parse_menu(cid, category="сеты"))
+        if isinstance(r, dict) and "error" in r:
+            _fail("categories", f"parse_menu {cid} сеты: {r['error']}")
+            continue
+        raws = {i.get("category") for i in r}
+        if any("набор" in str(x).lower() or "комбо" in str(x).lower() for x in raws):
+            _fail("categories", f"{cid}: categories=sets включает наборы/комбо: {raws}")
+        else:
+            _ok("categories", f"{cid}: sets = {raws or 'пусто'}")
+    if ok:
+        _ok("categories", "combo-группа: итог OK")
 
 
 def check_help():
@@ -744,8 +788,8 @@ def check_idempotency():
     """Блок 17: идемпотентность best_combo — два вызова = одинаковый результат."""
     print("Блок 17: идемпотентность best_combo")
     for cid in ("pizza_kuba", "dodo"):
-        r1 = json.loads(best_combo(cid, "2000", persons=2, variations=3))
-        r2 = json.loads(best_combo(cid, "2000", persons=2, variations=3))
+        r1 = json.loads(best_combo(cid, "2000", variations=3))
+        r2 = json.loads(best_combo(cid, "2000", variations=3))
         if "error" in r1:
             _fail("idem", f"{cid}: первый вызов — ошибка: {r1['error']}")
             continue
@@ -780,29 +824,28 @@ def check_idempotency():
 
 # ---------------------------------------------------------------- блок 18
 def check_montecarlo():
-    """Блок 18: случайные бюджеты/персоны — Monte Carlo (N=15, seed=42)."""
+    """Блок 18: случайные бюджеты — Monte Carlo (N=15, seed=42)."""
     print("Блок 18: Monte Carlo")
     random.seed(42)
     for cid in ("la_pizza", "dodo"):
         for i in range(15):
             budget = random.choice(range(500, 5051, 50))
-            persons = random.randint(1, 3)
-            r = json.loads(best_combo(cid, str(budget), persons=persons, variations=3))
+            r = json.loads(best_combo(cid, str(budget), variations=3))
             if "error" in r:
-                _fail("mcart", f"{cid}: budget={budget} persons={persons} — ошибка: {r['error']}")
+                _fail("mcart", f"{cid}: budget={budget} — ошибка: {r['error']}")
                 continue
             combos = r.get("combos", [])
             if len(combos) < 1:
-                _fail("mcart", f"{cid}: budget={budget} persons={persons} — нет combos")
+                _fail("mcart", f"{cid}: budget={budget} — нет combos")
                 continue
 
             # Ожидаемое кол-во напитков (сколько реально влезает в бюджет)
-            expect_drinks = _expected_drinks(cid, budget, persons)
+            expect_drinks = _expected_drinks(cid, budget)
 
             # Проверка цены <= бюджет
             for j, c in enumerate(combos):
                 if c["price_rub"] > budget:
-                    _fail("mcart", f"{cid}: budget={budget} persons={persons} "
+                    _fail("mcart", f"{cid}: budget={budget} "
                                    f"вариация {j}: цена {c['price_rub']} > бюджет")
                     break
 
@@ -814,14 +857,14 @@ def check_montecarlo():
                     if is_drink({"name": name, "category": "Тест", "description": ""}):
                         n_drinks += cnt
                 if n_drinks != expect_drinks:
-                    _fail("mcart", f"{cid}: budget={budget} persons={persons} "
+                    _fail("mcart", f"{cid}: budget={budget} "
                                    f"вариация {j}: напитков {n_drinks}, ожидалось {expect_drinks}")
                     break
 
             # Вариации попарно различны по составу
             compositions = [tuple(_parse_items_str(c["items"])) for c in combos]
             if len(compositions) != len(set(compositions)):
-                _fail("mcart", f"{cid}: budget={budget} persons={persons} "
+                _fail("mcart", f"{cid}: budget={budget} "
                                f"вариации не различаются: {compositions}")
                 continue
         _ok("mcart", f"{cid}: 15 итераций OK")
@@ -904,7 +947,7 @@ async def _run_mcp_test():
 
                 # refresh="false" НЕ должен ронять и должен работать по кэшу
                 r_refresh = await _call("best_combo", {"chain_id": "la_pizza", "budget": "2000",
-                                                       "persons": "2", "variations": "3",
+                                                       "variations": "3",
                                                        "refresh": "false"})
                 if "error" in r_refresh:
                     raise ValueError(f"best_combo refresh='false': {r_refresh['error']}")
@@ -936,8 +979,8 @@ async def _run_mcp_test():
                 if "error" not in r_pm_bad:
                     raise ValueError(f"parse_menu min_weight='abc': ожидалась ошибка")
 
-                # compare: persons строками
-                r_cmp = await _call("compare", {"budget": "1500", "persons": "1"})
+                # compare: budget строками
+                r_cmp = await _call("compare", {"budget": "1500"})
                 if not isinstance(r_cmp, list):
                     raise ValueError(f"compare: не список — {str(r_cmp)[:100]}")
 
@@ -951,7 +994,16 @@ async def _run_mcp_test():
                 if not isinstance(r_ci, dict) or "error" in r_ci:
                     raise ValueError(f"chain_info refresh='false': {str(r_ci)[:100]}")
 
-                _ok("mcp28", "строковые параметры: refresh/budget/persons/min_weight/limit через MCP")
+                # неизвестный инструмент -> MCP-ошибка (исключение), не падение
+                try:
+                    await session.call_tool("no_such_tool", {})
+                    raise ValueError("no_such_tool: должен быть вызвано исключение")
+                except Exception:
+                    pass
+
+                _ok("mcp28", "неизвестный инструмент: MCP-ошибка без падения")
+
+                _ok("mcp28", "строковые параметры: refresh/budget/min_weight/limit через MCP")
 
     finally:
         proc.terminate()
@@ -964,7 +1016,7 @@ def check_promos():
     ok = True
 
     # 1. la_pizza: promos="pickup" -> combo содержит пиццу -> promo_price = price - 100
-    r = json.loads(best_combo("la_pizza", 2000, persons=1, variations=3, promos="pickup"))
+    r = json.loads(best_combo("la_pizza", 2000, variations=3, promos="pickup"))
     c0 = r["combos"][0] if r.get("combos") else None
     if c0:
         price = c0["price_rub"]
@@ -986,7 +1038,7 @@ def check_promos():
             ok = False
 
     # la_pizza promos="order" -> нет order-правил
-    r2 = json.loads(best_combo("la_pizza", 2000, persons=1, variations=3, promos="order"))
+    r2 = json.loads(best_combo("la_pizza", 2000, variations=3, promos="order"))
     c0b = r2["combos"][0] if r2.get("combos") else None
     if c0b:
         price2 = c0b["price_rub"]
@@ -1001,7 +1053,7 @@ def check_promos():
 
     # 2. sushi_time: promos="order" min_order=1100
     # budget 800 -> price=660 < 1100 -> promo_price == price
-    r3 = json.loads(best_combo("sushi_time", 800, persons=1, variations=3, promos="order"))
+    r3 = json.loads(best_combo("sushi_time", 800, variations=3, promos="order"))
     c1 = r3["combos"][0] if r3.get("combos") else None
     if c1:
         price3 = c1["price_rub"]
@@ -1015,7 +1067,7 @@ def check_promos():
             ok = False
 
     # sushi_time budget 1500 -> price=1370 >= 1100 -> promo_price = price - 250
-    r4 = json.loads(best_combo("sushi_time", 1500, persons=1, variations=3, promos="order"))
+    r4 = json.loads(best_combo("sushi_time", 1500, variations=3, promos="order"))
     c2 = r4["combos"][0] if r4.get("combos") else None
     if c2:
         price4 = c2["price_rub"]
@@ -1031,7 +1083,7 @@ def check_promos():
             ok = False
 
     # 3. dodo: promos="order" -> first_order_20 (once, 20%) + cashback_5 (stackable, 5%)
-    r5 = json.loads(best_combo("dodo", 2000, persons=1, variations=3, promos="order"))
+    r5 = json.loads(best_combo("dodo", 2000, variations=3, promos="order"))
     c3 = r5["combos"][0] if r5.get("combos") else None
     if c3:
         price5 = c3["price_rub"]
@@ -1063,7 +1115,7 @@ def check_promos():
             ok = False
 
     # 4. ninja_food: promos="order" -> newmp_first (once, 20%, min 1299)
-    r6 = json.loads(best_combo("ninja_food", 2000, persons=1, variations=3, promos="order"))
+    r6 = json.loads(best_combo("ninja_food", 2000, variations=3, promos="order"))
     c4 = r6["combos"][0] if r6.get("combos") else None
     if c4:
         price6 = c4["price_rub"]
@@ -1088,7 +1140,7 @@ def check_promos():
             ok = False
 
     # 5. pizza_kuba: promos="pickup" -> pickup_100_pizza per_item
-    r7 = json.loads(best_combo("pizza_kuba", 2000, persons=1, variations=3, promos="pickup"))
+    r7 = json.loads(best_combo("pizza_kuba", 2000, variations=3, promos="pickup"))
     c5 = r7["combos"][0] if r7.get("combos") else None
     if c5:
         price7 = c5["price_rub"]
@@ -1125,6 +1177,184 @@ def check_mcp():
         _fail("mcp", f"исключение: {e}")
 
 
+def check_cross_chain():
+    """Блок 20: сквозной топ-N (chain_id ""/список, sort_by, режимы)."""
+    print("Блок 20: сквозной топ-N (cross-chain)")
+    budget = 2000
+
+    # --- mode=all: пустая строка → все сети ---
+    raw = json.loads(best_combo("", budget))
+    if raw.get("mode") != "all":
+        _fail("cross", f"mode='{raw.get('mode')}', ожидается 'all'")
+        return
+    metas = {c["id"] for c in get_chain_meta()}
+    if raw.get("chains") is None or set(raw["chains"]) != metas:
+        _fail("cross", f"chains не все: {raw.get('chains')}")
+        return
+    combos = raw.get("combos", [])
+    if not combos:
+        _fail("cross", "нет combos в mode=all")
+        return
+    if len(combos) > 3:
+        _fail("cross", f"combos {len(combos)} > variations 3")
+        return
+    ranks = [c["rank"] for c in combos]
+    if ranks != list(range(1, len(combos) + 1)):
+        _fail("cross", f"rank не последовательны: {ranks}")
+        return
+    for c in combos:
+        if not c.get("chain_id") or not c.get("name"):
+            _fail("cross", f"комбо без chain_id/name: {c}")
+            return
+        if c.get("price_rub", 0) > budget:
+            _fail("cross", f"цена {c['price_rub']} > бюджет {budget}")
+            return
+    # сортировка по price_per_100g (меньше — лучше)
+    per100 = [c["price_per_100g"] for c in combos]
+    if per100 != sorted(per100):
+        _fail("cross", f"price_per_100g не по возрастанию: {per100}")
+        return
+    _ok("cross", f"mode=all: {len(combos)} combos из {len(raw['chains'])} сетей, геометрия OK")
+
+    # --- mode=multi: список через запятую + sort_by ---
+    for sort_by, key, asc in (("price", "price_rub", True),
+                              ("weight", "weight_g", False)):
+        raw = json.loads(best_combo("dodo, ninja_food", budget, variations=4,
+                                    sort_by=sort_by))
+        if raw.get("mode") != "multi":
+            _fail("cross", f"mode={raw.get('mode')}, ожидается 'multi'")
+            continue
+        values = [c[key] for c in raw.get("combos", [])]
+        ok = values == (sorted(values) if asc else sorted(values, reverse=True))
+        if not ok:
+            _fail("cross", f"sort_by={sort_by}: {values} не отсортированы")
+        else:
+            _ok("cross", f"mode=multi, sort_by={sort_by}: {values}")
+
+    # --- категории: часть сетей в skipped_chains ---
+    raw = json.loads(best_combo("", budget, categories="суши"))
+    skipped = raw.get("skipped_chains") or []
+    if not skipped:
+        _fail("cross", "categories='суши': нет скрытых сетей")
+    elif all(s.get("chain_id") for s in skipped):
+        _ok("cross", f"categories='суши': {len(skipped)} сетей в skipped_chains")
+    else:
+        _fail("cross", "skipped_chains без chain_id")
+
+    # --- ошибки ---
+    for chain_str, label in (("фуфо", "неизвестная сеть"),
+                             ("dodo, фуфо", "неизвестная в списке")):
+        r = json.loads(best_combo(chain_str, budget))
+        if "error" in r:
+            _ok("cross", f"{label}: ошибка {r['error'][:40]}...")
+        else:
+            _fail("cross", f"{label}: нет ошибки")
+    r = json.loads(best_combo("", budget, sort_by="bogus"))
+    if "error" in r and "sort_by" in r["error"]:
+        _ok("cross", "sort_by=bogus: ошибка")
+    else:
+        _fail("cross", "sort_by=bogus: нет явной ошибки")
+
+    # --- добивка топ-позициями (юнит _pad_candidates) ---
+    from combo_mcp.tools.best_combo import _pad_candidates
+    items = [
+        {"name": "A", "_local_name": "А", "_size_label": "", "weight_g": 100,
+         "price_rub": 90},
+        {"name": "B", "_local_name": "Б", "_size_label": "", "weight_g": 200,
+         "price_rub": 30},
+        {"name": "C", "_local_name": "В", "_size_label": "", "weight_g": 50,
+         "price_rub": 20},
+    ]
+    existing = [{"items": "Б x1"}]
+    padded = _pad_candidates(items, 100, 2, existing, "price_per_100g")
+    if len(padded) == 2 and all(p["items"] != "Б x1" for p in padded):
+        _ok("cross", f"_pad_candidates: добивка {len(padded)} позиций")
+    else:
+        _fail("cross", f"_pad_candidates: {len(padded)} позиций, {padded}")
+
+
+# ---------------------------------------------------------------- блок 29
+def check_robustness():
+    """Блок 29: защита от дурака — мусорные вызовы -> error без краша/зависания."""
+    print("Блок 29: защита от дурака")
+    from combo_mcp.params import MAX_BUDGET, MAX_VARIATIONS, MAX_LIMIT
+    from combo_mcp.tools.parse_menu import parse_menu
+    from combo_mcp.tools.check_price import check_price
+    from combo_mcp.tools.diff_menu import diff_menu
+    from combo_mcp.tools.favorites import favorites as fav
+
+    def expect_error(label, json_str, ok_msg=None):
+        try:
+            r = json.loads(json_str)
+        except Exception as e:
+            _fail("robust", f"{label}: не JSON ({e})")
+            return
+        if isinstance(r, dict) and "error" in r:
+            _ok("robust", ok_msg or label)
+        else:
+            _fail("robust", f"{label}: нет error (получен {type(r).__name__})")
+
+    def expect_contains(label, json_str, needle):
+        if isinstance(json.loads(json_str), dict) and needle in json_str:
+            _ok("robust", label)
+        else:
+            _fail("robust", f"{label}: нет '{needle}' в ответе")
+
+    cid = "la_pizza"
+
+    # budget вне капов (0/минус/abc/флоат/за границей MAX_BUDGET)
+    for b in ("0", "-5", "abc", "1e9", str(MAX_BUDGET + 1)):
+        expect_error(f"budget={b}", best_combo(cid, b))
+
+    # variations вне капов
+    for v in ("0", "-1", "abc", str(MAX_VARIATIONS + 1)):
+        expect_error(f"variations={v}", best_combo(cid, 1000, variations=v))
+
+    # compare: budget кап
+    expect_error("compare budget=1e12", _compare("1e12"))
+
+    # нераспознанные категории -> ошибка с перечнем доступных групп
+    expect_contains("best_combo categories=фуфо", best_combo(cid, 1000, categories="фуфо"),
+                    "Доступные группы")
+    expect_contains("compare categories=нет_такой", _compare(1000, categories="нет_такой"),
+                    "Доступные группы")
+
+    # parse_menu: кап limit, chain_id trim, sort_by валидация
+    expect_error("parse_menu limit>500", parse_menu(cid, limit=str(MAX_LIMIT + 1)))
+    expect_error("parse_menu limit=abc", parse_menu(cid, limit="abc"))
+    expect_error("parse_menu sort_by=бред", parse_menu(cid, sort_by="бред"))
+    expect_error("parse_menu неизвестная сеть", parse_menu("  нет_такой  "))
+    n = len(json.loads(parse_menu("  la_pizza  ", limit=str(MAX_LIMIT))))
+    if n > 0:
+        _ok("robust", "parse_menu chain_id с пробелами: trim сработал")
+    else:
+        _fail("robust", "parse_menu chain_id с пробелами: пустой ответ")
+
+    # favorites: неизвестная сеть, мусор в числах, длинный label
+    expect_error("favorites неизвестная сеть",
+                 fav(action="add", chain_id="нет_такой",
+                     items='[{"name":"Пицца"}]'))
+    expect_error("favorites price_rub='абв'",
+                 fav(action="add", chain_id=cid, label="t",
+                     items='[{"name":"Пицца","price_rub":"абв"}]'))
+    expect_error("favorites weight_g=-5",
+                 fav(action="add", chain_id=cid, label="t",
+                     items='[{"name":"Пицца","weight_g":-5}]'))
+    expect_error("favorites label>200",
+                 fav(action="add", chain_id=cid, label="x" * 201,
+                     items='[{"name":"Пицца"}]'))
+    expect_error("favorites items без count",
+                 fav(action="add", chain_id=cid, label="t",
+                     items='[{"name":"Пицца","count":0}]'))
+
+    # check_price/diff_menu/verify_chain: chain_id trim + валидация
+    expect_error("check_price неизвестная сеть", check_price("нет_такой", "Пицца"))
+    expect_error("diff_menu неизвестная сеть", diff_menu("нет_такой"))
+
+    from combo_mcp.tools.verify_chain import verify_chain
+    expect_error("verify_chain неизвестная сеть", verify_chain("нет_такой"))
+
+
 def main():
     check_combos()
     check_boundary()
@@ -1142,6 +1372,8 @@ def main():
     check_idempotency()
     check_montecarlo()
     check_promos()
+    check_cross_chain()
+    check_robustness()
     check_mcp()
     print()
     if _FAILED:

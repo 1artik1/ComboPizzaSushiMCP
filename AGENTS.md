@@ -40,6 +40,7 @@ chain_info, help, favorites.
   save_cache атомарный (tempfile+os.replace); clear_cache НЕ трогает favorites.json/extra_*;
   `extra_cache.py` — cache/extra_<chain>.json (доставка/акции/лояльность, дневной рефреш)
 - `combo_mcp\params.py` — конвертация строковых параметров MCP (to_bool/to_int/to_float)
+  + капы защиты от дурака: MAX_BUDGET=100000, MAX_VARIATIONS=50, MAX_LIMIT=500
 - `combo_mcp\shared.py` — fetch_items (TTL + stale-if-error + причина ошибки),
   split_items_str/build_items_list (промо-поля base_price_rub/discount_rub)
 - `combo_mcp\logs.py` — файловый логер logs/server.log (log_error)
@@ -47,7 +48,9 @@ chain_info, help, favorites.
   help генерируется из него, server.py регистрирует из него
 - `combo_mcp\weights.py` — справочник весов config/estimated_weights.json
 - `combo_mcp\promos.py` — промо-правила config/promos.json
-- `combo_mcp\categories.py` — маппинг категорий → группы (pizza/rolls/sushi/...)
+- `combo_mcp\categories.py` — маппинг категорий → группы (pizza/rolls/sushi/
+  sets/combo/...); combo — наборы/комбо (la_pizza, ninja_food, anti_sushi),
+  sets — чистые ролл-сеты
 - `config\` — chains_config.json (сети, таймауты, TTL), translations.json (додо)
 - `scripts\` — рабочие скрипты (autotest, smoke_test, selftest, gen_expected,
   clear_cache, ci_smoke, new_chain); temp-файлы не держать
@@ -61,7 +64,7 @@ chain_info, help, favorites.
   (ГУАНТАНАМО, «тан», Мини Колада, «Фреш», Pepperoni Fresh) — регрессия запрещена.
 - Локализация: в кэше имена ОРИГИНАЛЬНЫЕ; перевод только в выводе (names.py localize,
   dp.format_combo, best_combo ставит _local_name/_size_label); детекция по _orig_name.
-- best_combo: ровно persons напитков во всех вариациях (persons>=1, variations>=1);
+- best_combo: ровно 1 напиток (TARGET_DRINKS=1) во всех вариациях (variations>=1);
   порядок вариаций: Оптимум → Без повторов → Макс. вес → доп. стратегии.
 - Оптимум (dp.solve_optimum_with_drinks): напитки оптимизируются ВНУТРИ DP
   (ровно target напитков, вес еды — целевое измерение, вес напитков НЕ в счёте —

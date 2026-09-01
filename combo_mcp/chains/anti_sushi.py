@@ -37,7 +37,7 @@ class AntiSushiParser(ChainParser):
         "Пицца": "pizza",
         "Закуски": "snacks",
         "Соусы": "sauces",
-        "Комбо": "sets",
+        "Комбо": "combo",
     }
 
     DELIVERY_URL = "https://anti-sushi.ru/delivery/"

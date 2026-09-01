@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
-"""parse_menu.py — parse_menu(chain_id, category, min_weight, sort_by, limit, refresh)."""
+"""parse_menu.py — parse_menu(chain_id, category, min_weight, sort_by, limit, refresh).
+
+category: распознаётся как группы (resolve_categories: «пицца», «роллы»,
+«напитки»...), при нераспознанном запросе — fallback на сырую подстроку
+категории меню.
+"""
 
 import json
 from combo_mcp.config import get_chain_meta
 from combo_mcp.shared import fetch_items
-from combo_mcp.params import to_bool, to_int
+from combo_mcp.categories import category_to_group, resolve_categories
+from combo_mcp.params import to_bool, to_int, MAX_LIMIT
 
 _VALID_SORTS = ("price", "weight", "price_per_100g")
 
 
 def parse_menu(chain_id, category=None, min_weight=None, sort_by=None, limit=None, refresh=False):
     """Распарсить меню конкретной сети."""
+    chain_id = (chain_id or "").strip()
     ids = [c["id"] for c in get_chain_meta()]
     if chain_id not in ids:
         return json.dumps({"error": f"Неизвестная сеть '{chain_id}'. Доступные: {', '.join(ids)}"}, ensure_ascii=False)
@@ -30,7 +37,7 @@ def parse_menu(chain_id, category=None, min_weight=None, sort_by=None, limit=Non
 
     if limit not in (None, ""):
         try:
-            limit = to_int(limit, "limit", minimum=1)
+            limit = to_int(limit, "limit", minimum=1, maximum=MAX_LIMIT)
         except ValueError as e:
             return json.dumps({"error": str(e)}, ensure_ascii=False)
     else:
@@ -45,18 +52,34 @@ def parse_menu(chain_id, category=None, min_weight=None, sort_by=None, limit=Non
     if items is None:
         return json.dumps({"error": f"Не удалось загрузить меню: {load_error}"}, ensure_ascii=False)
 
-    return _filter_sort(items, category, min_weight, sort_by, limit)
+    return _filter_sort(items, chain_id, category, min_weight, sort_by, limit)
 
 
-def _filter_sort(items, category, min_weight, sort_by, limit):
-    """Filter and sort items."""
+def _filter_sort(items, chain_id, category, min_weight, sort_by, limit):
+    """Фильтр и сортировка.
+
+    category: сначала попытка распознать группы; если не распознана ни одна —
+    fallback на сырую подстроку category поля меню.
+    """
+    selected_groups = resolve_categories(category) if category else ()
+    cat_lower = category.strip().lower() if category and category.strip() \
+        else ""
+    grp = "other"
+
     result = []
     for it in items:
-        if category and it.get("category") != category:
-            continue
+        if category:
+            grp = category_to_group(it, chain_id)
+            if selected_groups:
+                if grp not in selected_groups:
+                    continue
+            elif cat_lower not in (it.get("category") or "").lower():
+                continue
         if min_weight and it.get("weight_g") is not None and it["weight_g"] < min_weight:
             continue
         entry = dict(it)
+        if selected_groups:
+            entry["group"] = grp
         result.append(entry)
 
     if sort_by == "price_per_100g":

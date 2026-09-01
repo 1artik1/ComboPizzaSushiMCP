@@ -53,14 +53,17 @@ chain_info, help, favorites.
 - Кэш ninja хранит имена с литеральными `\"` — нормализация `_norm_name` в autotest.py.
 
 - Категории комбо (12-я фича): combo_mcp/categories.py — группы pizza/rolls/sushi/sets/
-  noodles/snacks/desserts/drinks/sauces/other; маппинг сырых категорий каждой сети →
+  combo/noodles/snacks/desserts/drinks/sauces/other; маппинг сырых категорий каждой сети →
   группа (dodo — десерты/напитки по имени); categories в best_combo/compare (русские
   слова + группы: «пицца», «pizza», «напитки», «соки»...); напитки добавляются ТОЛЬКО
   если группа drinks в списке (иначе persons не влияет); ошибка с перечнем доступных
-  групп, если выбранной нет в меню. anti_sushi: +подкаталоги (пицца/фьюжен/соусы/
-  комбо/спецпредложения), дедупликация по имени, 87 позиций (было 52); напитков на
-  сайте нет (/catalog/drinks/ → 404). sushi_darom/la_pizza напитков нет на сайтах.
-  dodo: напитки 40, десерты 12, пицца 108. Автотест блок 8.
+  групп, если выбранной нет в меню. Группа combo — наборы/комбо (la_pizza «комбо»,
+  ninja_food «nabory», anti_sushi «Комбо»), sets — чистые ролл-сеты (sushi_darom
+  «Наборы» — это sets, туда НЕ включаются наборы ninja/комбо). anti_sushi:
+  +подкаталоги (пицца/фьюжен/соусы/комбо/спецпредложения), дедупликация по имени,
+  87 позиций (было 52); напитков на сайте нет (/catalog/drinks/ → 404).
+  sushi_darom/la_pizza напитков нет на сайтах. dodo: напитки 40, десерты 12, пицца 108.
+  Автотест блок 8.
 - Команда /help (12-й инструмент): help.py — справочник 13 команд (name/args/description/
   example), пагинация 10 на страницу через action="next"/"back" (память _help_page,
   пустой action сбрасывает на стр. 1),
@@ -186,6 +189,42 @@ chain_info, help, favorites.
   только ninja_food и pizza_kuba (совместная оптимизация напитков — больше
   утилизация бюджета, ровно persons напитков), dodo/la_pizza/anti_sushi/
   sushi_time/sushi_darom идентичны. Автотест 17 блоков + smoke: exit 0, зелёные.
+- Сделано (сессия 2026-08-18, Блок 1 «выпилить persons», НЕ закоммичено):
+  из API и движка убран параметр persons — фиксировано 1 напиток на комбо
+  (TARGET_DRINKS=1 в dp.py); цикл персон → фикс (0, 2, 3); сигнатуры
+  best_combo(chain_id, budget, variations, refresh, categories, promos) и
+  compare(budget, categories) без persons; meta.py/README/AGENTS обновлены;
+  gen_expected.py — ключи {budget} вместо {budget}_{persons}, expected.json
+  пересоздан; autotest блоки 1/4/4b/5/8/17/18/19/28 без persons (persons-тесты
+  → budget=0/-1/abc), smoke/selftest без persons. Побочные фиксы, закрывающие
+  инварианты: _expected_drinks применяет справочник весов (BonaAqua у dodo без
+  веса на сайте ранее не считался напитком при бюджете 650) и continue вместо
+  break; ninja_food — парсер отбрасывает позиции без цены (price<=0) после
+  всех попыток (был «Онигири с лососем» с price_rub=None). Автотест 17 блоков
+  + smoke: exit 0, зелёные. Далее — Блок 2 (сквозной топ-N), Блок 3 (категории
+  + группа combo), Блок 4 (защита от дурака) по ROADMAP.
+- Сделано (сессия 2026-08-18, Блоки 2–4, НЕ закоммичено). Блок 2 «сквозной
+  топ-N»: best_combo(chain_id=""/"a,b", sort_by) — cross-chain топ-N;
+  _resolve_chain_ids/_cross_chain/_chain_candidates/_pad_candidates/
+  _build_combo_line; refresh через ThreadPoolExecutor(4); ответ {mode, budget,
+  variations_requested/returned, chains, skipped_chains, sort_by, promos_mode,
+  categories, combos:[{rank,...}]}; promos per-chain; новый блок 20 автотеста.
+  Блок 3 «категории + группа combo»: categories.py — ALL_GROUPS с группой combo
+  (синоним «комбо», ninja «nabory», anti_sushi «Комбо»); sushi_darom «Наборы»
+  остаются sets; parse_menu категориальный фильтр по группам (chain_id в
+  _filter_sort, fallback на сырую категорию, поле group); доки обновлены.
+  Блок 4 «защита от дурака»: params.py капы MAX_BUDGET=100000/MAX_VARIATIONS=50/
+  MAX_LIMIT=500 + maximum в to_int; budget/variations/limit>капа → ошибка;
+  нераспознанные categories → ошибка с перечнем ALL_GROUPS (best_combo/compare);
+  parse_menu limit<=500, sort_by ошибка; chain_id trim+валидация везде
+  (best_combo/parse_menu/verify_chain/diff_menu/chain_info/check_price);
+  favorites — валидация chain_id по списку, label<=200, мусор/отрицательные в
+  price/weight → ошибка вместо молча 0; единый формат {"error": ...};
+  новый блок 29 «robust» (кaps, мусор, chain_id с пробелами, favorites мусор,
+  unknown tool через MCP — error без краша/зависания) + mcp28 проверка
+  неизвестного инструмента. ИТОГ: Блоки 1–4 по ROADMAP готовы, autotest
+  0 FAIL (28 прогонов зелёные), осталось — коммит и пуш (по запросу
+  пользователя: «Продолжай, потом коммит и пуш»).
 
 ## Порядок старта сессии
 

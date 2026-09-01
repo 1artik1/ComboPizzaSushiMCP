@@ -5,6 +5,11 @@
 Никогда не сравнивать строку с int/float напрямую — сначала конвертация.
 """
 
+# Капы защиты от дурака (DP аллоцирует budget+1 состояний — без лимита краш)
+MAX_BUDGET = 100000
+MAX_VARIATIONS = 50
+MAX_LIMIT = 500
+
 
 def to_bool(value, default=False):
     """Привести строку/буль к bool.
@@ -26,10 +31,10 @@ def to_bool(value, default=False):
     raise ValueError(f"ожидалось true/false, получено: {value!r}")
 
 
-def to_int(value, name="параметр", minimum=None):
+def to_int(value, name="параметр", minimum=None, maximum=None):
     """Привести строку/число к int. Невалидное значение -> ValueError.
 
-    minimum — если задано и результат меньше — ValueError.
+    minimum/maximum — если заданы и результат выходит за границы — ValueError.
     """
     if value is None or isinstance(value, bool):
         raise ValueError(f"{name} должен быть целым числом, получено: {value!r}")
@@ -39,6 +44,8 @@ def to_int(value, name="параметр", minimum=None):
         raise ValueError(f"{name} должен быть целым числом, получено: {value!r}")
     if minimum is not None and result < minimum:
         raise ValueError(f"{name} должен быть >= {minimum}, получено: {result}")
+    if maximum is not None and result > maximum:
+        raise ValueError(f"{name} должен быть <= {maximum}, получено: {result}")
     return result
 
 

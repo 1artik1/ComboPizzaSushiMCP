@@ -11,6 +11,7 @@ import tempfile
 import time
 
 from combo_mcp import cache as cache_mod
+from combo_mcp.config import get_chain_meta
 
 _FAV_FILE = os.path.join(cache_mod._CACHE_DIR, "favorites.json")
 
@@ -82,8 +83,14 @@ def favorites(action="", chain_id="", label="", items="", query=""):
 
 def _fav_add(chain_id, label, items_str):
     """Добавить запись в избранное."""
+    chain_id = (chain_id or "").strip()
     if not chain_id:
         return json.dumps({"error": "chain_id обязателен для add"}, ensure_ascii=False)
+    ids = [c["id"] for c in get_chain_meta()]
+    if chain_id not in ids:
+        return json.dumps(
+            {"error": f"Неизвестная сеть '{chain_id}'. Доступные: {', '.join(ids)}"},
+            ensure_ascii=False)
 
     # Парсим items JSON
     try:
@@ -97,41 +104,51 @@ def _fav_add(chain_id, label, items_str):
             {"error": "items должен быть непустым JSON-массивом"}, ensure_ascii=False
         )
 
-    # Валидация: count >= 1, price_rub/weight_g опциональны (int)
+    # Валидация: count >= 1, price_rub/weight_g опциональны.
+    # Мусорные (нечисловые) price/weight — явная ошибка вместо молча 0.
     parsed = []
     total_price = 0
     total_weight = 0
     has_any_price = False
     has_any_weight = False
 
+    def _num(v, field, minimum=0):
+        if v is None or str(v).strip() == "":
+            return None
+        if isinstance(v, bool):
+            raise ValueError(f"{field} должен быть числом, получено: {v!r}")
+        try:
+            r = float(str(v).strip().replace(",", "."))
+        except (TypeError, ValueError):
+            raise ValueError(f"{field} должен быть числом, получено: {v!r}")
+        if r < minimum:
+            raise ValueError(f"{field} должен быть >= {minimum}, получено: {r}")
+        return r
+
     for it in item_list:
-        name = it.get("name", "")
+        name = str(it.get("name", ""))
         count = it.get("count", 1)
         price_rub = it.get("price_rub")
         weight_g = it.get("weight_g")
 
-        if not isinstance(count, int) or count < 1:
+        if not isinstance(count, int) or isinstance(count, bool) or count < 1:
             return json.dumps({"error": "count должен быть целым >= 1"}, ensure_ascii=False)
 
         parsed.append({"name": name, "count": count})
 
+        try:
+            price_rub = _num(price_rub, "price_rub")
+            weight_g = _num(weight_g, "weight_g")
+        except ValueError as e:
+            return json.dumps({"error": str(e)}, ensure_ascii=False)
+
         if price_rub is not None:
-            try:
-                price_rub = int(price_rub)
-            except (TypeError, ValueError):
-                price_rub = None
-            if price_rub is not None:
-                total_price += price_rub * count
-                has_any_price = True
+            total_price += price_rub * count
+            has_any_price = True
 
         if weight_g is not None:
-            try:
-                weight_g = int(weight_g)
-            except (TypeError, ValueError):
-                weight_g = None
-            if weight_g is not None:
-                total_weight += weight_g * count
-                has_any_weight = True
+            total_weight += weight_g * count
+            has_any_weight = True
 
     if has_any_price and has_any_weight and total_weight > 0:
         price_per_100g = round(total_price / total_weight * 100, 2)
@@ -147,6 +164,10 @@ def _fav_add(chain_id, label, items_str):
         if len(auto_label) > 80:
             auto_label = auto_label[:80] + "..."
         label = auto_label
+
+    if len(label) > 200:
+        return json.dumps({"error": "label не должен быть длиннее 200 символов"},
+                          ensure_ascii=False)
 
     # Уникальный id
     global _next_id_counter

@@ -15,20 +15,20 @@ TOOLS_META = [
     {
         "name": "parse_menu",
         "args": "(chain_id, category=, min_weight=, sort_by=, limit=, refresh=)",
-        "description": "Распарсить меню сети с фильтрами и сортировкой",
+        "description": "Распарсить меню сети с фильтрами и сортировкой (limit не более 500)",
         "example": 'parse_menu "pizza_kuba" limit=10',
     },
     {
         "name": "best_combo",
-        "args": "(chain_id, budget, persons=1, variations=3, refresh=, categories=, promos=)",
-        "description": "Лучшие варианты комбо для сети при заданном бюджете. promos: order/pickup/all для применения скидок",
-        "example": 'best_combo "anti_sushi" 2000 persons=2 categories="пицца"',
+        "args": "(chain_id, budget, variations=3, refresh=, categories=, promos=, sort_by=)",
+        "description": "Лучшие варианты комбо при заданном бюджете (budget до 100000, variations до 50). chain_id: сеть, пустая строка — все сети, список через запятую — только они (топ-N по sort_by). promos: order/pickup/all",
+        "example": 'best_combo "" 2000 variations=5 sort_by="weight" categories="пицца"',
     },
     {
         "name": "compare",
-        "args": "(budget, persons=1, categories=)",
-        "description": "Сравнить все сети по лучшему комбо при заданном бюджете",
-        "example": 'compare 2000 persons=2 categories="пицца"',
+        "args": "(budget, categories=)",
+        "description": "Сравнить все сети по лучшему комбо при заданном бюджете (budget до 100000)",
+        "example": 'compare 2000 categories="пицца"',
     },
     {
         "name": "status",

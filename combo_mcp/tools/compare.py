@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""compare.py — compare(budget, persons): все сети по лучшему варианту.
+"""compare.py — compare(budget, categories): все сети по лучшему варианту.
 
-Как best_combo: справочник весов, persons напитков в комбо, русские названия.
+Как best_combo: справочник весов, ровно 1 напиток, русские названия.
 """
 
 import json
@@ -12,21 +12,24 @@ from combo_mcp.config import get_chain_meta
 from combo_mcp.shared import fetch_items, build_items_list
 from combo_mcp.weights import apply_estimated_weights
 from combo_mcp.names import localize, item_size_label
-from combo_mcp.categories import category_to_group, resolve_categories
-from combo_mcp.params import to_int
+from combo_mcp.categories import category_to_group, resolve_categories, ALL_GROUPS
+from combo_mcp.params import to_int, MAX_BUDGET
 
 
-def compare(budget, persons=1, categories=""):
-    """Сравнить все доступные сети по лучшему комбо (persons — сколько персон)."""
+def compare(budget, categories=""):
+    """Сравнить все доступные сети по лучшему комбо."""
     try:
-        budget = to_int(budget, "budget", minimum=1)
+        budget = to_int(budget, "budget", minimum=1, maximum=MAX_BUDGET)
     except ValueError as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
-    try:
-        persons = to_int(persons, "persons", minimum=1)
-    except ValueError as e:
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+    # Нераспознанные категории — явная ошибка (не молча без фильтра)
+    categories = (categories or "").strip()
+    if categories and not resolve_categories(categories):
+        return json.dumps({
+            "error": f"Неизвестные категории: '{categories}'. "
+                     f"Доступные группы: {', '.join(ALL_GROUPS)}"
+        }, ensure_ascii=False)
 
     meta = get_chain_meta()
     comparisons = []
@@ -82,8 +85,8 @@ def compare(budget, persons=1, categories=""):
                 })
                 continue
 
-            # Best combo (optimum, persons drinks inside)
-            lines, _ = calculate_combos(valid_items, budget, persons=persons, variations=1)
+            # Best combo (optimum, 1 drink inside)
+            lines, _ = calculate_combos(valid_items, budget, variations=1)
             if not lines:
                 comparisons.append({
                     "chain_id": cid,
@@ -100,7 +103,6 @@ def compare(budget, persons=1, categories=""):
                 "chain_id": cid,
                 "name": c["name"],
                 "available": True,
-                "persons": persons,
                 "stale": stale,
                 "total_weight_g": weight,
                 "total_price_rub": price,

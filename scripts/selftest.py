@@ -89,7 +89,7 @@ def run_selftest():
                 continue
 
             # Calculate combos
-            lines, _ = calculate_combos(valid_items, budget, persons=1, variations=3)
+            lines, _ = calculate_combos(valid_items, budget, variations=3)
             for i, line in enumerate(lines, 1):
                 print(f"  {i}) {line}")
             results.append({"chain": cid, "status": "OK", "items": len(items), "valid": len(valid_items), "excluded": no_weight, "lines": lines})

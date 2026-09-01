@@ -53,17 +53,31 @@
 ## Инструменты MCP (13)
 - `list_chains(refresh=)` — сети: id, название, город, available (есть данные в кэше), описание
 - `parse_menu(chain_id, category=, min_weight=, sort_by=, limit=, refresh=)` — меню
-- `best_combo(chain_id, budget, persons=1, variations=3, refresh=, categories=, promos=)` — варианты комбо:
+- `best_combo(chain_id, budget, variations=3, refresh=, categories=, promos=, sort_by=)` —
+  варианты комбо:
 
-  - ровно `persons` напитков в каждой вариации (по 1 на персону)
+  - 1 напиток в каждой вариации (по умолчанию; напитки — если есть с весом, влезающие в бюджет)
+  - `chain_id` — одна сеть (обычный режим) либо пустая строка («все сети») или
+    список через запятую («dodo, ninja_food») — сквозной топ-N: кандидаты сетей
+    сортируются метрикой `sort_by` и отбирается топ `variations` (`mode=all/multi`);
+    сети без комбо — в `skipped_chains`
+  - `sort_by=` — `price_per_100g` (по умолчанию), `weight`, `price`;
+    работает только в cross-chain режиме
   - `categories=` — фильтр по категориям: «пицца», «pizza», «напитки», «роллы»...
-    (группы: pizza/rolls/sushi/sets/noodles/snacks/desserts/drinks/sauces/other;
-    напитки добавляются, только если группа drinks в списке)
+    (группы: pizza/rolls/sushi/sets/combo/noodles/snacks/desserts/drinks/sauces/other;
+    `combo` — наборы/комбо-предложения (la_pizza, ninja_food, anti_sushi),
+    `sets` — чистые ролл-сеты; напитки добавляются, только если группа drinks в списке)
   - `promos=` — применить промо-скидки к цене: `order` (скидки на заказ),
     `pickup` (скидки при самовывозе), `all`. Правила — `config\promos.json`
     (рукописные, из акций chain_info); в ответе у каждой вариации `promo_price`/
     `promo_saved` и список применённых акций в `promos_applied` (кешбэк не меняет цену)
-- `compare(budget, persons=1, categories=)` — все сети по выгодности (₽/100г)
+- `compare(budget, categories=)` — все сети по выгодности (₽/100г)
+
+Параметры-числа передаются строками и валидируются: капы защиты от дурака —
+`budget` ≤ 100000, `variations` ≤ 50, `limit` ≤ 500 (иначе явная ошибка `{"error": ...}`).
+Нераспознанные `categories`/`sort_by`/`chain_id` — ошибка с перечнем доступных значений,
+не молча пустой ответ. Мусор в любом числовом параметре (`abc`, `0`, отрицательные)
+не роняет сервер, а возвращает корректную ошибку.
 - `status()` — конфиг, возраст кэша, ошибки
 - `verify_chain(chain_id)` — качество данных (веса, дубликаты, аномалии)
 - `check_price(chain_id, item_name, expected_price=)` — сверка цены позиции

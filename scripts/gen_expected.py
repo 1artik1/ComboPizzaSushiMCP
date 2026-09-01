@@ -13,7 +13,6 @@ from combo_mcp.config import get_chain_meta
 from combo_mcp.tools.best_combo import best_combo
 
 BUDGETS = [1500, 3000]
-PERSONS = [1, 2]
 PATH = "tests/expected.json"
 
 old = {}
@@ -29,21 +28,20 @@ for c in get_chain_meta():
     cid = c["id"]
     out["combos"][cid] = {}
     for budget in BUDGETS:
-        for persons in PERSONS:
-            raw = json.loads(best_combo(cid, budget, persons=persons, variations=3, refresh=False))
-            key = f"{budget}_{persons}"
-            if "error" in raw:
-                out["combos"][cid][key] = {"error": raw["error"]}
-            else:
-                out["combos"][cid][key] = [
-                    {
-                        "weight_g": v["weight_g"],
-                        "price_rub": v["price_rub"],
-                        "price_per_100g": v["price_per_100g"],
-                        "items": v["items"],
-                    }
-                    for v in raw["combos"]
-                ]
+        raw = json.loads(best_combo(cid, budget, variations=3, refresh=False))
+        key = str(budget)
+        if "error" in raw:
+            out["combos"][cid][key] = {"error": raw["error"]}
+        else:
+            out["combos"][cid][key] = [
+                {
+                    "weight_g": v["weight_g"],
+                    "price_rub": v["price_rub"],
+                    "price_per_100g": v["price_per_100g"],
+                    "items": v["items"],
+                }
+                for v in raw["combos"]
+            ]
 
 if isinstance(old.get("dishes"), dict):
     out["dishes"] = old["dishes"]

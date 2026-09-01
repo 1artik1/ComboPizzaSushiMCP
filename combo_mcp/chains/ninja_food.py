@@ -62,7 +62,7 @@ class NinjaFoodParser(ChainParser):
         "pitstsa": "pizza",
         "rolly": "rolls",
         "sety": "sets",
-        "nabory": "sets",
+        "nabory": "combo",
         "lanchi": "other",
         "vok_i_salaty": "noodles",
         "supy": "other",
@@ -116,6 +116,9 @@ class NinjaFoodParser(ChainParser):
                         if o.get("weight_g"):
                             products.append(o)
                 time.sleep(self._RETRY_DELAY)
+
+        # Отбрасываем позиции без цены (на сайте нет продажной цены — в комбо не годятся)
+        products = [p for p in products if (p.get("price_rub") or 0) > 0]
         return products
 
     # ------------------------------------------------------------------ #

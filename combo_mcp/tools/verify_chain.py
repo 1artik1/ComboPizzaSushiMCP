@@ -12,6 +12,7 @@ from combo_mcp.weights import apply_estimated_weights
 def verify_chain(chain_id):
     """Валидация сети."""
     ids = [c["id"] for c in get_chain_meta()]
+    chain_id = (chain_id or "").strip()
     if chain_id not in ids:
         return json.dumps({"error": f"Неизвестная сеть '{chain_id}'. Доступные: {', '.join(ids)}"}, ensure_ascii=False)
 

@@ -11,6 +11,9 @@ from collections import Counter
 from combo_mcp.engines.taste import count_ingredients
 from combo_mcp.engines.drinks import is_drink
 
+# Фиксированное число напитков в комбо (persons-упрощение: 1 напиток на комбо).
+TARGET_DRINKS = 1
+
 
 def solve_max_weight_single(items, budget):
     """Each item at most 1x. Max weight within budget."""
@@ -418,18 +421,18 @@ def _solve_dp_drinks(items, budget, filtered, target_drinks):
     return final, total_weight, total_cost
 
 
-def select_drinks(items, persons, budget):
-    """Выбрать ровно persons напитков: самые выгодные по г/₽, сумма ≤ budget.
+def select_drinks(items, target, budget):
+    """Выбрать ровно target напитков: самые выгодные по г/₽, сумма ≤ budget.
 
     Возвращает список (idx, count) пар по исходному списку items.
-    Если напитков меньше persons — берутся все подходящие.
+    Если напитков меньше target — берутся все подходящие.
     """
     drinks = [(i, it) for i, it in enumerate(items) if _valid(it) and is_drink(it)]
     drinks.sort(key=lambda x: (x[1]["price_rub"] / x[1]["weight_g"], x[1]["price_rub"]))
     picked = []
     spent = 0
     for i, it in drinks:
-        if len(picked) >= persons:
+        if len(picked) >= target:
             break
         if spent + it["price_rub"] > budget:
             continue
@@ -438,7 +441,7 @@ def select_drinks(items, persons, budget):
     return picked, spent
 
 
-def _combo_variants(items, budget, persons=1):
+def _combo_variants(items, budget):
     """Сгенерировать до 6 стратегий комбо: список строк в порядке
     Оптимум → Без повторов → Макс. вес → ... (см. _STRATEGIES).
     """
@@ -446,7 +449,7 @@ def _combo_variants(items, budget, persons=1):
     food = [(i, it) for i, it in enumerate(items) if _valid(it) and not is_drink(it)]
     food_items = [it for _, it in food]
 
-    drink_pairs, drink_spent = select_drinks(items, persons, budget)
+    drink_pairs, drink_spent = select_drinks(items, TARGET_DRINKS, budget)
     food_budget = budget - drink_spent
 
     variants = []
@@ -454,8 +457,8 @@ def _combo_variants(items, budget, persons=1):
     def _build(strategy):
         pairs = list(drink_pairs)
         if strategy == "optimum":
-            # Совместная оптимизация: напитки внутри DP (ровно target напитков)
-            target = min(persons, len(drinks))
+            # Совместная оптимизация: напитки внутри DP (ровно TARGET_DRINKS)
+            target = min(TARGET_DRINKS, len(drinks))
             indices, w, cost = solve_optimum_with_drinks(items, budget, target)
             pairs = indices if indices else list(drink_pairs)
         elif strategy == "no_duplicates":
@@ -466,7 +469,7 @@ def _combo_variants(items, budget, persons=1):
             pairs += [(food[i][0], cnt) for i, cnt in indices]
         elif strategy == "fewest_items":
             # Максимум веса при минимуме позиций: жадный по весу, по 1 шт,
-            # поверх persons напитков.
+            # поверх TARGET_DRINKS напитков.
             cand = sorted(food, key=lambda x: (-x[1]["weight_g"], x[1]["price_rub"]))
             spent = sum(items[i]["price_rub"] * c for i, c in drink_pairs)
             for i, it in cand:
@@ -490,8 +493,8 @@ def _combo_variants(items, budget, persons=1):
     return variants
 
 
-def _extra_variant(items, budget, strategy, persons=1):
-    """Дополнительные стратегии для variations > 3 (без гарантий persons)."""
+def _extra_variant(items, budget, strategy):
+    """Дополнительные стратегии для variations > 3 (без гарантий напитков)."""
     if strategy == "no_drinks_max":
         food = [(i, it) for i, it in enumerate(items) if _valid(it) and not is_drink(it)]
         indices, w, cost = solve_max_weight_double([it for _, it in food], budget)
@@ -512,8 +515,8 @@ def _extra_variant(items, budget, strategy, persons=1):
     return None
 
 
-def calculate_combos(products, budget, persons=1, variations=3):
-    """Calculate up to `variations` combo variants (persons drinks included).
+def calculate_combos(products, budget, variations=3):
+    """Calculate up to `variations` combo variants (ровно TARGET_DRINKS напитков).
 
     Порядок: Оптимум → Без повторов → Макс. вес → дополнительные стратегии →
     детерминированные исключения → псевдослучайные (seeded).
@@ -521,7 +524,7 @@ def calculate_combos(products, budget, persons=1, variations=3):
     """
     for p in products:
         p["_taste"] = count_ingredients(p.get("description", ""))
-    variants = _combo_variants(products, budget, persons)
+    variants = _combo_variants(products, budget)
     if not variants:
         return [], None
     if variations <= 3:
@@ -532,16 +535,16 @@ def calculate_combos(products, budget, persons=1, variations=3):
     if len(result) >= variations:
         return result[:variations], None
 
-    # дополнительные стратегии без persons-гарантий + варианты персон
+    # дополнительные стратегии без гарантий напитков + вариации
     extra = []
     for strategy in ("no_drinks_max", "drinks_only"):
-        line = _extra_variant(products, budget, strategy, persons)
+        line = _extra_variant(products, budget, strategy)
         if line and line not in result and line not in extra:
             extra.append(line)
-    for persons_v in (0, persons + 1, max(persons * 2, 2)):
+    for persons_v in (0, 2, 3):
         if len(result) + len(extra) >= variations:
             break
-        for v in _combo_variants(products, budget, persons_v):
+        for v in _combo_variants(products, budget):
             if v not in result and v not in extra:
                 extra.append(v)
     result += extra
@@ -549,7 +552,7 @@ def calculate_combos(products, budget, persons=1, variations=3):
         return result[:variations], None
 
     # детерминированные исключающие итерации
-    for v in _exclude_variants(products, budget, persons, variations - len(result)):
+    for v in _exclude_variants(products, budget, variations - len(result)):
         if v not in result:
             result.append(v)
     if len(result) >= variations:
@@ -557,16 +560,16 @@ def calculate_combos(products, budget, persons=1, variations=3):
 
     # псевдослучайные (seeded) — для сетей с большим каталогом добираем до variations
     seed = int(time.time() * 1000)
-    for v in _random_variants(products, budget, persons, variations - len(result), seed):
+    for v in _random_variants(products, budget, variations - len(result), seed):
         if v not in result:
             result.append(v)
     return result[:variations], seed
 
 
-def _exclude_variants(items, budget, persons, limit):
+def _exclude_variants(items, budget, limit):
     """Детерминированные вариации: исключаем позиции уже найденных комбо и решаем заново.
 
-    Чередуем optimum → max_weight; persons напитков выбираются из того же пула.
+    Чередуем optimum → max_weight; TARGET_DRINKS напитков выбираются из того же пула.
     """
     all_valid = [(i, it) for i, it in enumerate(items) if _valid(it)]
     variants = []
@@ -581,7 +584,7 @@ def _exclude_variants(items, budget, persons, limit):
         if not food:
             break
         cand_items = [it for _, it in cand]
-        drink_pairs, drink_spent = select_drinks(cand_items, persons, budget)
+        drink_pairs, drink_spent = select_drinks(cand_items, TARGET_DRINKS, budget)
         drink_pairs = [(cand[i][0], 1) for i, _ in drink_pairs]
         food_budget = budget - drink_spent
         if food_budget <= 0:
@@ -606,10 +609,10 @@ def _exclude_variants(items, budget, persons, limit):
     return variants
 
 
-def _random_variants(items, budget, persons, limit, seed):
+def _random_variants(items, budget, limit, seed):
     """Псевдослучайные вариации: жадный набор по перемешанному порядку.
 
-    Сначала до persons напитков, затем еда; до max_attempts перестановок.
+    Сначала до TARGET_DRINKS напитков, затем еда; до max_attempts перестановок.
     """
     rng = random.Random(seed)
     valid = [(i, it) for i, it in enumerate(items) if _valid(it)]
@@ -628,7 +631,7 @@ def _random_variants(items, budget, persons, limit, seed):
         spent = 0
         n_drinks = 0
         for i, it in drinks:
-            if n_drinks >= persons:
+            if n_drinks >= TARGET_DRINKS:
                 break
             if spent + it["price_rub"] <= budget:
                 picked.append((i, 1))

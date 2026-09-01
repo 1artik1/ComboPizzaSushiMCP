@@ -86,6 +86,60 @@
 
 ## В плане
 
+### План 2026-08-18: persons-упрощение, сквозной топ-N, категории, защита от дурака
+
+Блок 1. Выпилить persons (согласовано):
+- [x] Убрать параметр persons из API (best_combo/compare/meta.py) и dp.py
+      (select_drinks/_combo_variants/_extra_variant/calculate_combos/_exclude_variants/
+      _random_variants); фиксированный target = 1 напиток на комбо (TARGET_DRINKS);
+      цикл персон (0, persons+1, max(persons*2,2)) → фикс (0, 2, 3); новая инварианта:
+      «ровно 1 напиток в основных вариациях, если есть напитки с весом»
+- [x] gen_expected.py: ключи {budget}_{persons} → {budget}; регенерировать expected.json
+      осознанным шагом (diff-сверка)
+- [x] autotest: блоки 1/4/4b/5/8/17/18/19/28 без persons (persons=0/-1-тесты → бюджетные
+      budget=0/-1/abc); MC — persons фикс; smoke_test/selftest без persons
+- [x] Доки: AGENTS.md, CONTEXT.md, README.md, ROADMAP.md
+- [x] Побочно: mcart dodo/budget650 — _expected_drinks применяет справочник весов
+      (BonaAqua без веса на сайте) и continue вместо break; ninja_food — отбрасывать
+      позиции без цены (парсер фильтрует price<=0)
+
+Блок 2. Сквозной топ-N в best_combo (согласовано):
+- [x] chain_id: "" → все сети; список через запятую → только эти сети; валидация каждого
+      id (trim) против get_chain_meta; single-chain — прежнее поведение (эталоны целы)
+- [x] sort_by: price_per_100g | weight | price (default price_per_100g, словарь parse_menu),
+      только в cross-chain режиме
+- [x] Кандидаты: стратегии сети + padding топ-K позиций по метрике (добирает до variations
+      при схлопывании стратегий — кейс «10 напитков»); ответ {mode, chains, skipped_chains,
+      combos: [{rank, chain_id, name, ...}]}; refresh → 4 воркера; promos per-chain
+- [x] Автотест блок 20 «cross-chain» (режимы, сортировки, ошибки, _pad_candidates)
+- [x] Замечание: sushi_darom при variations>3 + budget≥5000 — 329с (перебор pareto-состояний
+      в solve_optimum, без капа 40 как в _solve_dp_drinks). Не входит в Блок 2; учесть в Блоке 4/бэклоге.
+
+Блок 3. Категории (из очереди, согласовано):
+- [x] parse_menu: фильтр по группам (resolve_categories) + fallback на сырую категорию;
+      chain_id в _filter_sort
+- [x] Новая группа combo: categories.py (ALL_GROUPS + синоним «комбо»); la_pizza «комбо»,
+      ninja_food «nabory», anti_sushi «Комбо» → combo; sushi_darom «Наборы» остаются sets
+      (это ролл-сеты); categories=sets = чистые ролл-сеты
+- [x] Автотест (блок 8 расширен): группа combo, маппинги сетей, sets без наборов
+
+Блок 4. Защита от дурака (согласовано, капы 100k/50/500):
+- [x] Капы: MAX_BUDGET=100000 (DP аллоцирует budget+1), MAX_VARIATIONS=50, MAX_LIMIT=500
+      (parse_menu) — явные ошибки с лимитом (params.py, to_int получил maximum)
+- [x] categories/sort_by не распознаны → явная ошибка с перечнем доступных (не молча [])
+      (best_combo/compare: ошибка со списком ALL_GROUPS; parse_menu — fallback + sort_by ошибка)
+- [x] chain_id trim везде (best_combo/_resolve_chain_ids, parse_menu, verify_chain,
+      diff_menu, chain_info, check_price); favorites: валидация chain_id по списку,
+      label ≤ 200, мусор/отрицательные в price/weight → ошибка; check_price item_name
+      обязателен; единый формат ошибок {"error": ...}
+- [x] Новый блок тестов 29 «защита от дурака»: budget=0/-5/abc/1e9/100001,
+      variations=0/-1/abc/51, categories=фуфо (best_combo/compare), limit>500/abc,
+      sort_by=бред, chain_id с пробелами/неизвестная, favorites мусор
+      (сеть/price/weight/label>200/count=0), check_price/diff_menu/verify_chain,
+      unknown tool через MCP — error без краша/зависания (тег "robust")
+
+### Открытые пункты (ранее)
+
 - [ ] dodo: мерч без веса (брелоки, игрушки, книги) — исключается из комбо намеренно
 - [ ] pizza_kuba: закуски «10 шт» без граммов (креветка, сырные шарики, луковые,
       наггетсы) — остаются на справочных весах, пока сайт не даст граммы

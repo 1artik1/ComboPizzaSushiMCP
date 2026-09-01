@@ -3,11 +3,17 @@
 
 import json
 from combo_mcp.cache import load_cache
+from combo_mcp.config import get_chain_meta
 from combo_mcp.chains.base import get_chain_class, ChainUnavailable
 
 
 def diff_menu(chain_id):
     """Сравнение меню с предыдущей версией."""
+    chain_id = (chain_id or "").strip()
+    ids = [c["id"] for c in get_chain_meta()]
+    if chain_id not in ids:
+        return json.dumps({"error": f"Неизвестная сеть '{chain_id}'. Доступные: {', '.join(ids)}"}, ensure_ascii=False)
+
     cache_data = load_cache(chain_id)
     if cache_data is None:
         return json.dumps({"error": "Нет кэша для сравнения. Сначала распарсите меню."}, ensure_ascii=False)

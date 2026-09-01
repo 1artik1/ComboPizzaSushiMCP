@@ -78,9 +78,9 @@ async def run_smoke_test():
                 except json.JSONDecodeError:
                     print(f"  FAIL: not JSON: {text[:200]}")
 
-                # 3. call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000, "persons": 1})
-                print("\n[3] call_tool('best_combo', {'chain_id': 'la_pizza', 'budget': 3000, 'persons': 1})")
-                resp = await session.call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000, "persons": 1})
+                # 3. call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000})
+                print("\n[3] call_tool('best_combo', {'chain_id': 'la_pizza', 'budget': 3000})")
+                resp = await session.call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000})
                 text = ""
                 for c in resp.content:
                     if hasattr(c, 'text'):

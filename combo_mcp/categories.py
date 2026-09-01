@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """categories.py — маппинг сырых категорий меню в группы комбо.
 
-Группы: pizza, rolls, sushi, sets, noodles, snacks, desserts, drinks,
-sauces, other.
+Группы: pizza, rolls, sushi, sets, combo, noodles, snacks, desserts,
+drinks, sauces, other.
 
 Маппинг берётся из атрибута category_map класса парсера (chain.py),
 fallback — эвристики для sushi_darom / anti_sushi / ninja_food.
@@ -13,7 +13,7 @@ from combo_mcp.engines.drinks import is_drink as _is_drink
 
 # Группы
 ALL_GROUPS = [
-    "pizza", "rolls", "sushi", "sets", "noodles",
+    "pizza", "rolls", "sushi", "sets", "combo", "noodles",
     "snacks", "desserts", "drinks", "sauces", "other",
 ]
 
@@ -22,7 +22,8 @@ _SYNONYMS = {
     "пицц": "pizza", "pizza": "pizza",
     "ролл": "rolls", "rolls": "rolls",
     "суши": "sushi", "sushi": "sushi",
-    "сет": "sets", "sets": "sets", "набор": "sets", "комбо": "sets",
+    "сет": "sets", "sets": "sets", "набор": "sets",
+    "комбо": "combo", "combo": "combo",
     "лапша": "noodles", "noodles": "noodles", "вок": "noodles",
     "закуск": "snacks", "snacks": "snacks",
     "десерт": "desserts", "desserts": "desserts",

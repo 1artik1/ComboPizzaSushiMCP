@@ -25,7 +25,7 @@ class LaPizzaParser(ChainParser):
         "обычная": "pizza",
         "гигант": "pizza",
         "римская": "pizza",
-        "комбо": "sets",
+        "комбо": "combo",
     }
 
     DELIVERY_URL = "https://la-pizza.pro/info/9707"

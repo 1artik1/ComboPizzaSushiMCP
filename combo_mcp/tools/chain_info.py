@@ -21,6 +21,7 @@ def chain_info(chain_id, refresh=False):
 
     refresh=True — принудительно перепарсить страницы сети сейчас.
     """
+    chain_id = (chain_id or "").strip()
     if not chain_id:
         return json.dumps({"error": "Не указан chain_id"}, ensure_ascii=False)
 
