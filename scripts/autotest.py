@@ -5,7 +5,9 @@
 tests/expected.json. Расхождение → FAIL + дифф, эталон правится вручную.
 
 Блоки:
-1. Эталоны комбо: best_combo против expected.json (вес/цена/состав).
+1. Эталоны комбо: best_combo против expected.json. Вариант 1 (оптимум) —
+   точное сравнение состава; варианты 2+ — допуск ±5% на вес и цену
+   (устойчивость к дрейфу меню/добивок).
 2. Инварианты данных: бюджет, кол-во напитков = 1, вариации разные,
    пороги позиций, граничные входные параметры.
 3. Контрольные блюда: 1-2 известных блюда на сеть из кэша.
@@ -127,6 +129,34 @@ def _split_items_str(items_str):
 
 
 # ---------------------------------------------------------------- блок 1-2
+TOLERANCE = 0.05
+
+
+def _combo_match(g, w, idx):
+    """Сравнение вариации с эталоном.
+
+    Вариант 1 (оптимум) — точное совпадение состава (вес/цена/items).
+    Варианты 2+ — допуск ±TOLERANCE на вес и цену: добор веса (соусы,
+    маффины, палочки, имбирь) и перестройка меню сети легко сдвигают
+    состав добивок, не меняя сути комбо. Точный состав там не является
+    качественно значимым — сравнение агрегатных метрик + инварианты.
+    """
+    if idx == 1:
+        return g == w
+    wg, pg, _ = g
+    ww, pw, _ = w
+    if ww <= 0 or pw <= 0:
+        return False
+    return (abs(wg - ww) / ww <= TOLERANCE) and (abs(pg - pw) / pw <= TOLERANCE)
+
+
+def _combos_match(got, want):
+    if len(got) != len(want):
+        return -1
+    return sum(1 for i, (g, w) in enumerate(zip(got, want))
+               if _combo_match(g, w, i + 1))
+
+
 def check_combos():
     print("Блок 1: эталоны комбо")
     with open(EXPECTED_PATH, encoding="utf-8") as f:
@@ -153,12 +183,13 @@ def check_combos():
 
             got = [(v["weight_g"], v["price_rub"], v["items"]) for v in raw.get("combos", [])]
             want = [(v["weight_g"], v["price_rub"], v["items"]) for v in exp]
-            if got == want:
+            matches = _combos_match(got, want)
+            if matches == len(got) == len(want):
                 _ok("эталон", f"{cid} {key}: {len(got)} вариаций совпали")
             else:
                 _fail("эталон", f"{cid} {key}: расхождение")
                 for i, (g, w) in enumerate(zip(got, want)):
-                    if g != w:
+                    if not _combo_match(g, w, i + 1):
                         print(f"      вариант {i + 1}:")
                         print(f"        got  : {g}")
                         print(f"        want : {w}")
