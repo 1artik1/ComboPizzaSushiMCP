@@ -60,7 +60,7 @@ def help_tool(action="", command=""):
                 {"name": c["name"], "args": c["args"], "description": c["description"]}
                 for c in page_items
             ],
-            "hint": "next — следующая страница, back — назад, /help <команда> — детали команды",
+            "hint": "next — следующая страница, back — назад, /help <команда> — детали команды. Смысл и сценарии команд — в COMMANDS.md",
         },
         ensure_ascii=False,
         indent=2,
