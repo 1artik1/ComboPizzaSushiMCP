@@ -5,6 +5,7 @@ _pareto_filter, format_combo, solve_optimum, _solve_optimum_pareto, calculate_co
 Перенос 1:1 из combo_engine.py.
 """
 
+import os
 import random
 import time
 from collections import Counter
@@ -13,6 +14,11 @@ from combo_mcp.engines.drinks import is_drink
 
 # Фиксированное число напитков в комбо (persons-упрощение: 1 напиток на комбо).
 TARGET_DRINKS = 1
+
+# Кап состояний на ячейку DP (env: DP_STATE_CAP). Защита от взрыва на больших
+# бюджетах и меню без вкуса (sushi_darom, dodo). cap=40 сохраняет качество
+# (tested: cap<40 меняет оптимум anti_sushi/sushi_time при budget=3000).
+_STATE_CAP = int(os.environ.get("DP_STATE_CAP", "40"))
 
 
 def solve_max_weight_single(items, budget):
@@ -201,8 +207,8 @@ def _solve_optimum_pareto(items, budget, filtered):
             item_cnt = copies
             # Collect new states to add
             new_states = []
-            for c in range(budget + 1 - item_cost):
-                if c not in dp:
+            for c in dp:
+                if c + item_cost > budget:
                     continue
                 for state in dp[c]:
                     old_w, old_ts, old_cnt, hist = state
@@ -225,6 +231,11 @@ def _solve_optimum_pareto(items, budget, filtered):
                         existing.add(key)
                         dp[target_c].append(s)
                 dp[target_c] = _pareto_filter(dp[target_c])
+                if len(dp[target_c]) > _STATE_CAP:
+                    # Кап: не более _STATE_CAP состояний на ячейку (как в
+                    # _solve_dp_drinks) — иначе взрыв на больших бюджетах/
+                    # меню без вкуса (sushi_darom).
+                    dp[target_c] = dp[target_c][:_STATE_CAP]
 
     # Find best score across all costs <= budget
     best_score = 0
@@ -354,8 +365,8 @@ def _solve_dp_drinks(items, budget, filtered, target_drinks):
             item_dr = dr * copies
             item_cnt = copies
             new_states = []
-            for c in range(budget + 1 - item_cost):
-                if c not in dp:
+            for c in dp:
+                if c + item_cost > budget:
                     continue
                 for state in dp[c]:
                     old_fw, old_ts, old_cnt, old_dr, hist = state
@@ -377,8 +388,8 @@ def _solve_dp_drinks(items, budget, filtered, target_drinks):
                         existing.add(key)
                         dp[target_c].append(s)
                 dp[target_c] = pfilt(dp[target_c])
-                if len(dp[target_c]) > 40:
-                    # Кап: не более 40 состояний на одно значение числа напитков,
+                if len(dp[target_c]) > _STATE_CAP:
+                    # Кап: не более _STATE_CAP состояний на одно значение числа напитков,
                     # чтобы не взрываться на больших бюджетах/меню без вкуса.
                     groups = {}
                     for s in dp[target_c]:
@@ -386,7 +397,7 @@ def _solve_dp_drinks(items, budget, filtered, target_drinks):
                     capped = []
                     for g in groups.values():
                         g.sort(key=lambda s: (-s[0], -s[1]))
-                        capped.extend(g[:40])
+                        capped.extend(g[:_STATE_CAP])
                     dp[target_c] = capped
 
     # Лучший результат: сначала состояния с максимальным числом напитков
@@ -535,18 +546,12 @@ def calculate_combos(products, budget, variations=3):
     if len(result) >= variations:
         return result[:variations], None
 
-    # дополнительные стратегии без гарантий напитков + вариации
+    # дополнительные стратегии без гарантий напитков
     extra = []
     for strategy in ("no_drinks_max", "drinks_only"):
         line = _extra_variant(products, budget, strategy)
         if line and line not in result and line not in extra:
             extra.append(line)
-    for persons_v in (0, 2, 3):
-        if len(result) + len(extra) >= variations:
-            break
-        for v in _combo_variants(products, budget):
-            if v not in result and v not in extra:
-                extra.append(v)
     result += extra
     if len(result) >= variations:
         return result[:variations], None

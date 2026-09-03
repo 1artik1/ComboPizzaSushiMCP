@@ -113,7 +113,10 @@
       combos: [{rank, chain_id, name, ...}]}; refresh → 4 воркера; promos per-chain
 - [x] Автотест блок 20 «cross-chain» (режимы, сортировки, ошибки, _pad_candidates)
 - [x] Замечание: sushi_darom при variations>3 + budget≥5000 — 329с (перебор pareto-состояний
-      в solve_optimum, без капа 40 как в _solve_dp_drinks). Не входит в Блок 2; учесть в Блоке 4/бэклоге.
+      в solve_optimum, без капа 40 как в _solve_dp_drinks). Исправлено: reachability + кап 40
+      в _solve_optimum_pareto + лишние повторы _combo_variants в calculate_combos удалены
+      (variations=6, budget=5000: 217с → 89с, качество сохранено — кап 40 не меняет оптимум;
+      cap<40 ломает оптимум anti_sushi/sushi_time при budget=3000, поэтому глобальный кап не снижали)
 
 Блок 3. Категории (из очереди, согласовано):
 - [x] parse_menu: фильтр по группам (resolve_categories) + fallback на сырую категорию;
