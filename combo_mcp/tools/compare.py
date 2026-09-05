@@ -8,7 +8,7 @@ import json
 from collections import Counter
 from combo_mcp.engines.dp import calculate_combos
 from combo_mcp.engines.taste import count_ingredients
-from combo_mcp.config import get_chain_meta
+from combo_mcp.config import get_chain_meta, get_combo_chain_ids
 from combo_mcp.shared import fetch_items, build_items_list
 from combo_mcp.weights import apply_estimated_weights
 from combo_mcp.names import localize, item_size_label
@@ -31,20 +31,25 @@ def compare(budget, categories=""):
                      f"Доступные группы: {', '.join(ALL_GROUPS)}"
         }, ensure_ascii=False)
 
-    meta = get_chain_meta()
+    meta = {c["id"]: c for c in get_chain_meta()}
+    chain_ids = get_combo_chain_ids()
     comparisons = []
 
-    for c in meta:
-        cid = c["id"]
+    for cid in chain_ids:
+        c = meta.get(cid)
+        if c is None:
+            continue
         try:
             items, stale, load_error = fetch_items(cid)
             if items is None:
-                comparisons.append({
-                    "chain_id": cid,
-                    "name": c["name"],
-                    "available": False,
-                    "error": f"Не удалось загрузить: {load_error}",
-                })
+                comparisons.append(
+                    {
+                        "chain_id": cid,
+                        "name": c["name"],
+                        "available": False,
+                        "error": f"Не удалось загрузить: {load_error}",
+                    }
+                )
                 continue
 
             # Apply reference book for items without weight
@@ -54,8 +59,7 @@ def compare(budget, categories=""):
             selected_groups = resolve_categories(categories)
             if selected_groups:
                 items = [
-                    it for it in items
-                    if category_to_group(it, cid) in selected_groups
+                    it for it in items if category_to_group(it, cid) in selected_groups
                 ]
 
             no_weight = 0
@@ -77,23 +81,27 @@ def compare(budget, categories=""):
             if not valid_items:
                 if selected_groups:
                     continue
-                comparisons.append({
-                    "chain_id": cid,
-                    "name": c["name"],
-                    "available": False,
-                    "error": f"Нет позиций с весом ({no_excluded} без веса пропущено)",
-                })
+                comparisons.append(
+                    {
+                        "chain_id": cid,
+                        "name": c["name"],
+                        "available": False,
+                        "error": f"Нет позиций с весом ({no_excluded} без веса пропущено)",
+                    }
+                )
                 continue
 
-            # Best combo (optimum, 1 drink inside)
+# Best combo (optimum, 1 drink inside)
             lines, _ = calculate_combos(valid_items, budget, variations=1)
             if not lines:
-                comparisons.append({
-                    "chain_id": cid,
-                    "name": c["name"],
-                    "available": False,
-                    "error": "Нет комбо в бюджете",
-                })
+                comparisons.append(
+                    {
+                        "chain_id": cid,
+                        "name": c["name"],
+                        "available": False,
+                        "error": "Нет комбо в бюджете",
+                    }
+                )
                 continue
             weight, price, items_str = _parse_line(lines[0])
 
@@ -115,21 +123,25 @@ def compare(budget, categories=""):
                 "weight_sources": dict(Counter(it.get("weight_source", "none") for it in items)),
             })
         except Exception as e:
-            comparisons.append({
-                "chain_id": cid,
-                "name": c["name"],
-                "available": False,
-                "error": str(e),
-            })
+            comparisons.append(
+                {
+                    "chain_id": cid,
+                    "name": c["name"],
+                    "available": False,
+                    "error": str(e),
+                }
+            )
 
     # Sort by price_per_100g (lower is better)
-    comparisons.sort(key=lambda x: x.get("price_per_100g", float('inf')))
+    comparisons.sort(key=lambda x: x.get("price_per_100g", float("inf")))
 
     # Если все сети отсеяны фильтрами — ошибка
     if not comparisons:
-        return json.dumps({
-            "error": "Ни одна сеть не имеет позиций выбранных категорий"
-        }, ensure_ascii=False, indent=2)
+        return json.dumps(
+            {"error": "Ни одна сеть не имеет позиций выбранных категорий"},
+            ensure_ascii=False,
+            indent=2,
+        )
 
     return json.dumps(comparisons, ensure_ascii=False, indent=2)
 

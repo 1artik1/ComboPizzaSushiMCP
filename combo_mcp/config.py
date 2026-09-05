@@ -4,9 +4,13 @@
 import json
 import os
 
+_KIND_COMBO = "combo"
+_KIND_STORE = "store"
+
 _DEFAULTS = {
     "url": "",
     "enabled": True,
+    "kind": _KIND_COMBO,
     "http_timeout": 10,
     "menu_ttl_minutes": 0,
     "headers": {},
@@ -53,6 +57,31 @@ def get_enabled_chain_ids():
     cfg = _load_config()
     chains = cfg.get("chains", {})
     return [cid for cid, cdata in chains.items() if cdata.get("enabled", True)]
+
+
+def get_chain_kind(chain_id):
+    """Тип сети: 'combo' (рестораны доставки) или 'store' (магазины, поиск товаров)."""
+    return get_chain(chain_id).get("kind", _KIND_COMBO)
+
+
+def get_combo_chain_ids():
+    """Id включённых сетей-ресторанов (kind=combo) — участники комбо/сравнения."""
+    cfg = _load_config()
+    chains = cfg.get("chains", {})
+    return [
+        cid for cid, cdata in chains.items()
+        if cdata.get("enabled", True) and cdata.get("kind", _KIND_COMBO) == _KIND_COMBO
+    ]
+
+
+def get_store_chain_ids():
+    """Id включённых магазинов (kind=store) — для store_search/store_categories."""
+    cfg = _load_config()
+    chains = cfg.get("chains", {})
+    return [
+        cid for cid, cdata in chains.items()
+        if cdata.get("enabled", True) and cdata.get("kind", _KIND_STORE) == _KIND_STORE
+    ]
 
 
 def get_extra_refresh_at():

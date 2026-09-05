@@ -1,12 +1,14 @@
 {
   "extra_refresh_at": "11:00",
   "chains": {
-    "la_pizza":    {"url": "https://la-pizza.pro", "enabled": true,  "http_timeout": 10, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
-    "sushi_darom": {"url": "https://voronezh.sushi-darom.com/", "enabled": true, "http_timeout": 10, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
-    "anti_sushi":  {"url": "https://anti-sushi.ru/", "enabled": true, "http_timeout": 10, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
-    "sushi_time":  {"url": "https://суши-тайм.рф/Voronezh/", "enabled": true, "http_timeout": 15, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
-    "ninja_food":  {"url": "https://ninjafood.su/", "enabled": true, "http_timeout": 20, "menu_ttl_minutes": 180, "headers": {}, "cookies": {}},
-    "pizza_kuba":  {"url": "https://pizzeriacuba.ru/", "enabled": true, "http_timeout": 10, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
-    "dodo":        {"url": "https://dodopizza.ru/", "enabled": true, "http_timeout": 10, "menu_ttl_minutes": 240, "headers": {}, "cookies": {}}
+    "la_pizza":     {"url": "https://la-pizza.pro", "enabled": true,  "kind": "combo", "http_timeout": 10, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "sushi_darom":  {"url": "https://voronezh.sushi-darom.com/", "enabled": true, "kind": "combo", "http_timeout": 10, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "anti_sushi":   {"url": "https://anti-sushi.ru/", "enabled": true, "kind": "combo", "http_timeout": 10, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "sushi_time":   {"url": "https://суши-тайм.рф/Voronezh/", "enabled": true, "kind": "combo", "http_timeout": 15, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "ninja_food":   {"url": "https://ninjafood.su/", "enabled": true, "kind": "combo", "http_timeout": 20, "menu_ttl_minutes": 180, "headers": {}, "cookies": {}},
+    "pizza_kuba":   {"url": "https://pizzeriacuba.ru/", "enabled": true, "kind": "combo", "http_timeout": 10, "menu_ttl_minutes": 120, "headers": {}, "cookies": {}},
+    "dodo":         {"url": "https://dodopizza.ru/", "enabled": true, "kind": "combo", "http_timeout": 10, "menu_ttl_minutes": 240, "headers": {}, "cookies": {}},
+    "magnit":       {"url": "https://magnit.ru/", "enabled": true,  "kind": "store", "http_timeout": 20, "menu_ttl_minutes": 10080, "headers": {}, "cookies": {}},
+    "pyaterochka":  {"url": "https://5ka.ru/", "enabled": false, "kind": "store", "http_timeout": 20, "menu_ttl_minutes": 360, "headers": {}, "cookies": {}}
   }
 }

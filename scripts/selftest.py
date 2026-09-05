@@ -18,7 +18,7 @@ if _project_dir not in sys.path:
 
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
 
-from combo_mcp.config import get_chain_meta, get_enabled_chain_ids
+from combo_mcp.config import get_chain_meta, get_combo_chain_ids
 from combo_mcp.cache import load_cache, save_cache
 from combo_mcp.chains.base import get_chain_class, ChainUnavailable
 from combo_mcp.engines.dp import calculate_combos
@@ -35,7 +35,8 @@ def run_selftest():
     print(f"{'='*60}\n")
 
     results = []
-    for c in get_chain_meta():
+    for cid in get_combo_chain_ids():
+        c = next(x for x in get_chain_meta() if x["id"] == cid)
         cid = c["id"]
         print(f"\n--- {c['name']} ({cid}) ---")
         try:

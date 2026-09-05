@@ -4,11 +4,13 @@
 
 ## Что это
 
-MCP-сервер (Python, stdio, mcp) «ComboPizzaSushiMCP»: комбо-подборщик по 7 сетям
-доставки Воронежа (la_pizza, pizza_kuba, ninja_food, sushi_time, sushi_darom,
-anti_sushi, dodo). 13 MCP-инструментов: list_chains, parse_menu, best_combo,
+MCP-сервер (Python, stdio, mcp) «ComboPizzaSushiMCP»: комбо-подборщик.
+9 сетей: 7 доставки Воронежа kind=combo (la_pizza, pizza_kuba, ninja_food, sushi_time,
+sushi_darom, anti_sushi, dodo) + продуктовые kind=store (magnit [вкл], pyaterochka [выкл,
+анти-бот]). 15 MCP-инструментов: list_chains, parse_menu, best_combo,
 compare, status, verify_chain, check_price, diff_menu, check_config, health_check,
-chain_info, help, favorites.
+chain_info, help, favorites, store_search, store_categories.
+Комбо-тулы — только kind=combo; store-тулы — только kind=store (нативный API, живые цены).
 
 ## Как запускать
 
@@ -20,15 +22,16 @@ chain_info, help, favorites.
 
 ## Ключевые решения
 
-- `best_combo(chain_id, budget, persons=1, variations=3, refresh=False)` →
-  JSON с `combos[]`; persons>=1, variations>=1; во всех вариациях ровно persons напитков.
+- `best_combo(chain_id, budget, variations=3, refresh=False)` →
+  JSON с `combos[]`; во всех вариациях ровно 1 напиток (TARGET_DRINKS=1, persons убран).
 - Порядок вариаций: Оптимум → Без повторов → Макс. вес → доп. стратегии
   (variations>3: fewest_items, no_drinks_max, drinks_only).
 - Детекция напитков: категория + эвристика RU/EN (drinks.py). Ложные срабатывания убраны:
   ГУАНТАНАМО, «тан», Мини Колада, «Фреш», Pepperoni Fresh.
 - Веса: `weight_g` у позиции. Если парсер не дал вес — справочник
   `config/estimated_weights.json` (weight_source="reference", поле source — откуда взят вес).
-  `weight_source`: site | size_name (pizza_kuba из названий размеров) | reference | none.
+  `weight_source`: site | size_name (pizza_kuba из названий размеров) | reference|
+  name (magnit: вес из названия/weight-поля API) | none.
 - Позиции без веса из комбо исключаются (мерч додо, палочки — намеренно).
 - Локализация: `config/translations.json` (додо), модуль names.py: localize() + item_size_label().
   В комбо имена русские (бренды как есть), у каждой позиции вес единицы:
@@ -70,12 +73,29 @@ chain_info, help, favorites.
   детали команды через command="best_combo"; ответ {page, total_pages, commands, hint}.
   Блок 9.
 - list_chains: available=True, если в кэше сети есть позиции; при refresh=true — по
-  результату live-парсинга (был баг: без refresh всегда False).
+результату live-парсинга (был баг: без refresh всегда False).
 - Избранное (13-й инструмент): favorites.py — action="add" (chain_id + items JSON-массив
-  [{name,count,price_rub,weight_g}], снимок с итогами, label автогенерация, id
-  int(time*1000)+счётчик) / "list" (пагинация 10/стр, query="next"/"back"/номер страницы,
-  память _fav_page) / "remove" (query: id или подстрока label/имени) / "clear".
-  Хранение: cache/favorites.json (атомарно: tempfile + os.replace). Блок 10.
+[{name,count,price_rub,weight_g}], снимок с итогами, label автогенерация, id
+int(time*1000)+счётчик) / "list" (пагинация 10/стр, query="next"/"back"/номер страницы,
+память _fav_page) / "remove" (query: id или подстрока label/имени) / "clear".
+Хранение: cache/favorites.json (атомарно: tempfile + os.replace). Блок 10.
+- Поиск продуктов (14-й инструмент, прокачан в сессию 2026-08-24): search_products.py —
+  универсальный поиск для нейросети: query первым, по умолчанию ВСЕ enabled-сети
+  одним вызовом (stores="all" / csv / старый chain_id=). Матчинг — engines/textmatch.py
+  (нормализация ё→е/регистр/пунктуация, токены, Левенштейн ≤1 для токенов ≥5 симв.,
+  бонус категории +0.3; фраза 3.0 > все токены 1.5 > доля×0.5). Фильтры: categories=
+  (группы через resolve_categories, fallback — подстрока сырой категории), min/max_price,
+  in_stock; sort: relevance|price_asc|price_desc; limit. Данные — всегда fetch_items
+  (TTL-кэш, stale-if-error); серверная ветка из тула убрана (методы search()/get_categories()
+  в парсерах остались для list_categories). magnit menu_ttl_minutes=10080 (неделя).
+  Ответ: {query, stores_searched, total, results[{chain_id, chain_name, name, price_rub,
+  weight_g, category, group, in_stock, score}], chains_errors{}, stale} — ошибка одной
+  сети не роняет ответ. Блоки 28/29 обновлены (юнит textmatch, мультистор, фильтры,
+  ошибки, обратная совместимость chain_id).
+- Категории (15-й инструмент): list_categories.py — серверные категории для
+magnit/pyaterochka (иерархия с children), fallback — из кэша меню (группировка
+по category, count desc). Результат: {source, total, categories[]}.
+Блок 9 (pag 2), блок 29.
 - Модуль расширения сетей: метаданные сети (id/name/city/url/description) и маппинг
   категорий category_map — в классе парсера (ChainParser.category_map = {}); категории
   из класса (categories.py через get_chain_class, fallback-эвристики ролл/суши для
@@ -85,7 +105,7 @@ chain_info, help, favorites.
   генерирует парсер + запись в chains_config.json + чек-лист; _template.py обновлён.
   Блок 11.
 
-## Состояние на 2026-08-17
+## Состояние на 2026-08-24
 
 - git: ветка main, remote github.com/1artik1/ComboPizzaSushiMCP.
 - Опубликовано: fd87d5f «разнообразные вариации», 063fa5a chain_info (11-й),
@@ -240,6 +260,31 @@ chain_info, help, favorites.
   3 pre-existing FAIL (dodo 3000, sushi_darom 1500/3000) — дрейф кэша, не связан с кодом,
   варианты 1 (оптимум) у всех сетей зелёные; smoke exit 0. ROADMAP записан.
   Следующий шаг (по желанию пользователя) — коммит и пуш.
+- Сделано (сессия 2026-09-04, merge origin/ShopExtended -> merge/shop-stores, НЕ закоммичено):
+  РЕШЕНИЯ пользователя: kind-разделение — 7 ресторанов kind=combo, magnit/pyaterochka
+  kind=store; магазины НЕ участвуют в parse_menu/best_combo/compare (только combo-сети);
+  тулы ветки search_products/list_categories переделаны в store_search/store_categories —
+  ТОЛЬКО магазины, нативный парсер (parser.search()/get_categories(), живые цены, без
+  fallback по меню); expected.json — структура main (блоки 1..28) + блок 30 по мотивам
+  ветки, эталоны из ветки НЕ берём (перегенерация только через gen_expected.py).
+  Часть 1 (код): combo_mcp/config.py — kind в _DEFAULTS + get_chain_kind/
+  get_combo_chain_ids/get_store_chain_ids (ч/з enabled); config/chains_config.json — kind
+  у всех 9 сетей (magnit enabled menu_ttl_minutes=10080, pyaterochka disabled anti-bot);
+  best_combo._resolve_chain_ids — "" -> get_combo_chain_ids(), явный store-id -> ошибка
+  «Магазины не участвуют в комбо...»; compare — get_combo_chain_ids вместо всех;
+  store_search.py/store_categories.py (валидация sort/limit/min/max, отключённый магазин
+  -> ошибка enabled=false, ресторан -> kind=combo, stores_errors per-chain);
+  search_products.py/list_categories.py удалены; server.py/meta.py — 15 тулов (v1.3.0
+  из ветки); list_chains/status выводят kind; smoke_test — имена новых тулов.
+  Часть 2 (autotest): main-версия (no persons) как база; _combo_meta() для циклов
+  блоков 1/5/6/7/12/13; блок 11 — 9 парсеров; блок 20 (cross) — set(get_combo_chain_ids());
+  новый блок 30 check_store (textmatch-юниты, store_search/store_categories: ресторан/
+  неизвестный/отключённый/капы/сортировки, magnit live-поиск и категории).
+  Часть 3 (доки): README (intro-сети + магазины kind=store + store-тулы), CONTEXT — эта запись.
+  ОСТАЛОСЬ: AGENTS.md (тулы/kind/weight_source name), ROADMAP.md; прогнать autotest
+  (exit 0) + smoke_test + selftest; ручной smoke store_search/store_categories live;
+  потом — вопрос пользователя о влитии merge/shop-stores в main и коммите.
+
 
 ## Порядок старта сессии
 

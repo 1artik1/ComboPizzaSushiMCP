@@ -84,6 +84,18 @@ TOOLS_META = [
         "description": "Избранное: сохранить/показать/удалить понравившееся комбо",
         "example": 'favorites action="list"',
     },
+    {
+        "name": "store_search",
+        "args": "(query, store=, min_price=, max_price=, in_stock=, sort=, limit=)",
+        "description": 'Поиск товаров только по магазинам (kind=store): нативный серверный поиск, свежие цены/наличие. store="" — все включённые магазины, или "magnit". Рестораны не ищутся (для них parse_menu/best_combo).',
+        "example": 'store_search "молоко" store="magnit" max_price=150 sort=price_asc',
+    },
+    {
+        "name": "store_categories",
+        "args": "(store=)",
+        "description": 'Дерево категорий товаров только магазинов (kind=store), серверное. store="" — все включённые магазины, или "magnit".',
+        "example": 'store_categories store="magnit"',
+    },
 ]
 
 # name -> описание (для регистрации тулов в server.py)

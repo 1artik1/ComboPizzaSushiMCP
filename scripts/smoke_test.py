@@ -45,19 +45,33 @@ async def run_smoke_test():
             async with ClientSession(read_stream, write_stream) as session:
                 await session.initialize()
 
-                # 1. list_tools — все 10 инструментов
+                # 1. list_tools — все 15 инструментов
                 print("\n[1] list_tools()")
                 tools = await session.list_tools()
                 tool_names = [t.name for t in tools.tools]
                 print(f"  Tools ({len(tool_names)}): {', '.join(tool_names)}")
-                expected = ["list_chains", "parse_menu", "best_combo", "compare",
-                            "status", "verify_chain", "check_price", "diff_menu",
-                            "check_config", "health_check"]
+                expected = [
+                    "list_chains",
+                    "parse_menu",
+                    "best_combo",
+                    "compare",
+                    "status",
+                    "verify_chain",
+                    "check_price",
+                    "diff_menu",
+                    "check_config",
+                    "health_check",
+                    "chain_info",
+                    "help",
+                    "favorites",
+                    "store_search",
+                    "store_categories",
+                ]
                 missing = [n for n in expected if n not in tool_names]
                 if missing:
                     print(f"  FAIL: missing tools: {missing}")
                 else:
-                    print("  PASS: all 10 tools registered")
+                    print("  PASS: all 15 tools registered")
 
                 # 2. call_tool("list_chains", {})
                 print("\n[2] call_tool('list_chains', {})")
@@ -65,7 +79,7 @@ async def run_smoke_test():
                 # resp.content is a list of content items
                 text = ""
                 for c in resp.content:
-                    if hasattr(c, 'text'):
+                    if hasattr(c, "text"):
                         text += c.text
                 try:
                     data = json.loads(text)
@@ -78,12 +92,12 @@ async def run_smoke_test():
                 except json.JSONDecodeError:
                     print(f"  FAIL: not JSON: {text[:200]}")
 
-                # 3. call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000})
+# 3. call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000})
                 print("\n[3] call_tool('best_combo', {'chain_id': 'la_pizza', 'budget': 3000})")
                 resp = await session.call_tool("best_combo", {"chain_id": "la_pizza", "budget": 3000})
                 text = ""
                 for c in resp.content:
-                    if hasattr(c, 'text'):
+                    if hasattr(c, "text"):
                         text += c.text
                 try:
                     data = json.loads(text)
@@ -104,14 +118,16 @@ async def run_smoke_test():
                 resp = await session.call_tool("status", {})
                 text = ""
                 for c in resp.content:
-                    if hasattr(c, 'text'):
+                    if hasattr(c, "text"):
                         text += c.text
                 try:
                     data = json.loads(text)
                     if isinstance(data, list):
                         print(f"  PASS: {len(data)} entries")
                         for e in data[:2]:
-                            print(f"    - {e['name']}: enabled={e['enabled']}, items={e['items_count']}")
+                            print(
+                                f"    - {e['name']}: enabled={e['enabled']}, items={e['items_count']}"
+                            )
                     else:
                         print(f"  WARN: unexpected response type: {type(data)}")
                 except json.JSONDecodeError:
@@ -122,7 +138,7 @@ async def run_smoke_test():
                 resp = await session.call_tool("check_config", {})
                 text = ""
                 for c in resp.content:
-                    if hasattr(c, 'text'):
+                    if hasattr(c, "text"):
                         text += c.text
                 try:
                     data = json.loads(text)
@@ -136,7 +152,7 @@ async def run_smoke_test():
                 resp = await session.call_tool("health_check", {"refresh": False})
                 text = ""
                 for c in resp.content:
-                    if hasattr(c, 'text'):
+                    if hasattr(c, "text"):
                         text += c.text
                 try:
                     data = json.loads(text)

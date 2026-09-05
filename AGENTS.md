@@ -7,11 +7,14 @@
 
 ## Что это
 
-MCP-сервер (Python, stdio, mcp) «ComboPizzaSushiMCP»: комбо-подборщик по 7 сетям
-доставки Воронежа (la_pizza, pizza_kuba, ninja_food, sushi_time, sushi_darom,
-anti_sushi, dodo). 13 MCP-инструментов: list_chains, parse_menu, best_combo,
+MCP-сервер (Python, stdio, mcp) «ComboPizzaSushiMCP»: комбо-подборщик по 9 сетям
+(7 доставки Воронежа: la_pizza, pizza_kuba, ninja_food, sushi_time, sushi_darom,
+anti_sushi, dodo + продуктовые magnit [вкл] и pyaterochka [выкл, анти-бот]).
+15 MCP-инструментов: list_chains, parse_menu, best_combo,
 compare, status, verify_chain, check_price, diff_menu, check_config, health_check,
-chain_info, help, favorites.
+chain_info, help, favorites, store_search, store_categories.
+Комбо-тулы (parse_menu/best_combo/compare) работают только по kind=combo;
+store_search/store_categories — только по kind=store (нативный API, живые цены).
 
 ## Запуск и тесты
 
@@ -32,12 +35,14 @@ chain_info, help, favorites.
 
 ## Структура
 
-- `combo_mcp\server.py` — точка входа, регистрация 13 тулов
+- `combo_mcp\server.py` — точка входа, регистрация 15 тулов
 - `combo_mcp\tools\` — 1 файл = 1 MCP-инструмент; описание/примеры — tools/meta.py
 - `combo_mcp\chains\` — 1 файл = 1 сеть, класс-парсер с декоратором `@chain("id")`;
   авто-регистрация через pkgutil (chains/__init__.py, пропуск `_*` и extra_utils)
 - `combo_mcp\engines\` — dp.py (комбо-алгоритмы), drinks.py (детекция напитков),
-  taste.py (ингредиенты)
+  taste.py (ингредиенты), textmatch.py (нечёткий матчинг для store_search)
+- `combo_mcp\config.py` — chains_config.json + kind-хелперы (get_chain_kind,
+  get_combo_chain_ids — рестораны, get_store_chain_ids — магазины)
 - `combo_mcp\cache.py` — дисковый кэш cache/<chain>.json (fetched_at, items, prev_items);
   save_cache атомарный (tempfile+os.replace); clear_cache НЕ трогает favorites.json/extra_*;
   `extra_cache.py` — cache/extra_<chain>.json (доставка/акции/лояльность, дневной рефреш)
@@ -60,7 +65,8 @@ chain_info, help, favorites.
 ## Конвенции данных (не нарушать без согласования)
 
 - Позиция: `{name, price_rub, weight_g, category, description, in_stock, ...}`
-- `weight_source`: site | size_name (pizza_kuba) | reference (справочник) | none.
+- `weight_source`: site | size_name (pizza_kuba) | reference (справочник) | name
+  (magnit: вес из weight-поля/имени товара) | none.
   Позиции без веса (>0) в комбо НЕ включаются (мерч, палочки — намеренно).
 - Детекция напитков: drinks.py (категория + эвристика RU/EN). Ложные срабатывания
   (ГУАНТАНАМО, «тан», Мини Колада, «Фреш», Pepperoni Fresh) — регрессия запрещена.
@@ -114,11 +120,29 @@ BS4 AttributeValue, pytesseract/playwright import.
 
 ## Git
 
-- Ветка main, remote github.com/1artik1/ComboPizzaSushiMCP.
-- Коммитить ТОЛЬКО по явному запросу пользователя. Стиль: короткое русское
-  описание сути («фикс refresh-параметров в MCP-тулах»).
-- Старт сессии: `git fetch origin; git log HEAD..origin/main --oneline; git status --short`.
-  При наличии чужих коммитов — ВСЕГДА спросить пользователя (не вливать/откатывать).
+Разработка ведётся ПАРАЛЛЕЛЬНО в ветках: ещё один пользователь работает
+в своей ветке (`origin/ShopExtended`), мы — в своей (`merge/shop-stores`).
+`main` — общая защищённая база, в неё НЕ коммитим напрямую в ходе работы;
+готовые наработки вливаются в `main` отдельным шагом.
+
+Правило ветвления (обязательно):
+- Рабочая ветка этой сессии — `merge/shop-stores` (текущая). Все изменения —
+  здесь, не в `main`.
+- Старт каждой сессии — fetch + sync:
+  `git fetch origin; git log HEAD..origin/main --oneline; git status --short`.
+  При наличии новых/чужих коммитов в `origin/main` — ОБЯЗАТЕЛЬНО влить их
+  в свою ветку (`git merge origin/main`) и решить конфликты СРАЗУ, до начала
+  работы. Чужие наработки не откатывать и не терять.
+- Коммит в `merge/shop-stores` — по завершении крупного блока работы. Стиль:
+  короткое русское описание сути («kind-разделение комбо/магазины, 15 тулов»).
+- Когда основная работа на своей ветке ЗАКОНЧЕНА и autotest/smoke/selftest
+  зелёные (exit 0) — ВСЕГДА СПРОСИТЬ/ПРЕДЛОЖИТЬ пользователю влитие в `main`.
+  Вливать в `main` ТОЛЬКО по явному сигналу пользователя.
+- Критерий готовности к влитию в `main`: autotest + smoke + selftest зелёные.
+
+Перед влитием своей ветки в `main`: почистить рабочие артефакты
+(`autotest_run*.txt`, `mcp_selftest.txt`), `git add` резолвленных/новых файлов,
+убедиться, что в `main` нет конфликтующих чужих коммитов (сначала fetch+sync).
 
 ## Добавление сети/инструмента
 

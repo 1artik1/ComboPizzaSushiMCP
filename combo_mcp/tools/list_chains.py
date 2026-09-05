@@ -4,7 +4,7 @@
 import json
 import time
 from concurrent.futures import ThreadPoolExecutor
-from combo_mcp.config import get_chain_meta, get_enabled_chain_ids, get_chain_class
+from combo_mcp.config import get_chain_meta, get_enabled_chain_ids, get_chain_class, get_chain_kind
 from combo_mcp.cache import load_cache, save_cache
 from combo_mcp.params import to_bool
 
@@ -68,6 +68,7 @@ def list_chains(refresh=False):
         entry = {
             "id": cid,
             "name": c["name"],
+            "kind": get_chain_kind(cid),
             "city": c["city"],
             "url": c["url"],
             "available": available,

@@ -7,13 +7,20 @@ import json
 
 try:
     from playwright.sync_api import sync_playwright
+
     _PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     _PLAYWRIGHT_AVAILABLE = False
 
 
 def get_playwright():
-    """Get playwright sync API, or None if not installed."""
+    """Get playwright sync API context manager, or None if not installed.
+
+    Возвращает PlaywrightContextManager — используйте с with:
+        pw = get_playwright()
+        with pw:
+            browser = pw.chromium.launch(...)
+    """
     if not _PLAYWRIGHT_AVAILABLE:
         return None
     return sync_playwright()
@@ -68,6 +75,7 @@ def fetch_text(url, timeout_ms=40000, wait_ms=3000):
     if not _PLAYWRIGHT_AVAILABLE:
         return None
     import re
+
     last = None
     for attempt in range(2):
         try:

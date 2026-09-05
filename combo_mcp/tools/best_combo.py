@@ -14,7 +14,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from combo_mcp.engines.dp import calculate_combos
 from combo_mcp.engines.taste import count_ingredients
-from combo_mcp.config import get_chain_meta
+from combo_mcp.config import get_chain_meta, get_combo_chain_ids, get_store_chain_ids
 from combo_mcp.shared import fetch_items, build_items_list
 from combo_mcp.weights import apply_estimated_weights
 from combo_mcp.names import localize, item_size_label
@@ -243,18 +243,27 @@ def _filter_by_categories(items, chain_id, selected_groups):
 def _resolve_chain_ids(chain_id):
     """Разобрать chain_id на список id сетей.
 
-    "" / пробелы → все сети; "a, b" → список (trim). Неизвестный id → строка-ошибка.
+    "" / пробелы → включённые рестораны (kind=combo); "a, b" → список (trim).
+    Магазины (kind=store) в комбо не участвуют — при явном запросе возвращают
+    ошибку с указанием store-tools. Неизвестный id → строка-ошибка.
     """
     meta = get_chain_meta()
     ids = [c["id"] for c in meta]
+    store_ids = get_store_chain_ids()
     raw = (chain_id or "").strip()
     if not raw:
-        return list(ids)
+        return list(get_combo_chain_ids())
     parts = [p.strip() for p in raw.split(",") if p.strip()]
     unknown = [p for p in parts if p not in ids]
     if unknown:
         return json.dumps({
             "error": f"Неизвестная сеть '{unknown[0]}'. Доступные: {', '.join(ids)}"
+        }, ensure_ascii=False)
+    stores = [p for p in parts if p in store_ids]
+    if stores:
+        return json.dumps({
+            "error": f"Магазины не участвуют в комбо: {', '.join(stores)}. "
+                     f"Для поиска товаров используйте store_search/store_categories."
         }, ensure_ascii=False)
     return list(dict.fromkeys(parts))
 

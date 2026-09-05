@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""server.py — MCP Server (MCPServer) + 13 инструментов.
+"""server.py — MCP Server (MCPServer) + 15 инструментов.
 
 Описания инструментов — единый реестр combo_mcp/tools/meta.py.
 """
@@ -29,13 +29,15 @@ from combo_mcp.tools.health_check import health_check as _health_check
 from combo_mcp.tools.chain_info import chain_info as _chain_info
 from combo_mcp.tools.help import help_tool as _help_tool
 from combo_mcp.tools.favorites import favorites as _favorites
+from combo_mcp.tools.store_search import store_search as _store_search
+from combo_mcp.tools.store_categories import store_categories as _store_categories
 
 from combo_mcp.tools.meta import TOOLS_META
 
 # Create server
 mcp = MCPServer(
     "combo-engine",
-    version="1.1.0",
+    version="1.3.0",
     title="Combo Engine",
     description="Расчёт выгодных комбо по сетям доставки в Воронеже",
 )
@@ -55,6 +57,8 @@ _HANDLERS = {
     "chain_info": _chain_info,
     "help": _help_tool,
     "favorites": _favorites,
+    "store_search": _store_search,
+    "store_categories": _store_categories,
 }
 
 # Register all tools from the single meta registry
@@ -79,4 +83,5 @@ if __name__ == "__main__":
 
     # Run as MCP stdio server
     import asyncio
+
     asyncio.run(mcp.run_stdio_async())

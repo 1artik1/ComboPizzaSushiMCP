@@ -3,7 +3,7 @@
 
 import json
 import time
-from combo_mcp.config import get_chain_meta, get_enabled_chain_ids
+from combo_mcp.config import get_chain_meta, get_enabled_chain_ids, get_chain_kind
 from combo_mcp.cache import load_cache
 from combo_mcp.weights import apply_estimated_weights
 
@@ -40,6 +40,7 @@ def status():
         entry = {
             "id": cid,
             "name": c["name"],
+            "kind": get_chain_kind(cid),
             "enabled": enabled,
             "url": c["url"],
             "fetched_at": fetched_at,

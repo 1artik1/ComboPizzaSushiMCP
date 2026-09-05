@@ -28,6 +28,7 @@ tests/expected.json. Расхождение → FAIL + дифф, эталон п
 19. Промо-правила в комбо (тег "promos").
 20. Сквозной топ-N: best_combo с chain_id ""/список, sort_by, режимы (тег "cross").
 29. Защита от дурака: мусорные вызовы -> error без краша (тег "robust").
+30. Store-тулы: store_search/store_categories только для магазинов (тег "store").
 
 Запуск: .venv\\Scripts\\python.exe scripts/autotest.py
 """
@@ -70,6 +71,16 @@ MIN_ITEMS = {
 BUDGETS = [1500, 3000]
 
 _FAILED = []
+
+
+def _combo_meta():
+    """Мета только комбо-сетей (kind=combo) — магазины в комбо не участвуют."""
+    return [c for c in get_chain_meta() if _chain_kind(c["id"]) == "combo"]
+
+
+def _chain_kind(cid):
+    from combo_mcp.config import get_chain_kind
+    return get_chain_kind(cid)
 
 
 def _fail(block, msg):
@@ -162,7 +173,7 @@ def check_combos():
     with open(EXPECTED_PATH, encoding="utf-8") as f:
         expected = json.load(f)["combos"]
 
-    for c in get_chain_meta():
+    for c in _combo_meta():
         cid = c["id"]
         for budget in BUDGETS:
             key = str(budget)
@@ -315,7 +326,7 @@ def check_health():
     print("Блок 4: связка с health_check")
     raw = json.loads(health_check(refresh=False))
     by_id = {e["id"]: e for e in raw}
-    for c in get_chain_meta():
+    for c in _combo_meta():
         e = by_id.get(c["id"])
         if e is None:
             _fail("health", f"{c['id']}: нет в ответе health_check")
@@ -338,7 +349,7 @@ def check_compare():
         _fail("compare", f"сетей {len(raw)}, ожидается 7")
         return
 
-    for c in get_chain_meta():
+    for c in _combo_meta():
         cid = c["id"]
         entry = next((e for e in raw if e["chain_id"] == cid), None)
         if entry is None:
@@ -381,7 +392,7 @@ def check_compare():
 def check_diverse():
     print("Блок 6: разнообразные вариации (variations > 3)")
     budget = 1500
-    for c in get_chain_meta():
+    for c in _combo_meta():
         cid = c["id"]
         base = json.loads(best_combo(cid, budget, variations=3, refresh=False))
         many = json.loads(best_combo(cid, budget, variations=10, refresh=False))
@@ -424,7 +435,7 @@ def check_diverse():
 # ---------------------------------------------------------------- блок 7
 def check_extra():
     print("Блок 7: доп. информация (доставка, акции, лояльность)")
-    for c in get_chain_meta():
+    for c in _combo_meta():
         cid = c["id"]
         r = json.loads(chain_info(cid, refresh=False))
         if "error" in r:
@@ -582,10 +593,10 @@ def check_help():
         _ok("help", f"стр.1: 10 команд из {r.get('total_commands')}")
 
     r = json.loads(help_tool(action="next"))
-    if r.get("page") != 2 or len(r.get("commands", [])) != 3:
+    if r.get("page") != 2 or len(r.get("commands", [])) != 5:
         _fail("help", f"next: page={r.get('page')}, команд={len(r.get('commands', []))}")
     else:
-        _ok("help", "next: стр.2, 3 команды")
+        _ok("help", "next: стр.2, 5 команд")
 
     r = json.loads(help_tool(action="next"))
     if r.get("page") != 2:
@@ -681,7 +692,7 @@ def check_extend():
     meta = get_chain_meta()
     ids = {m["id"] for m in meta}
     expected = {"la_pizza", "pizza_kuba", "ninja_food", "sushi_time",
-                "sushi_darom", "anti_sushi", "dodo"}
+                "sushi_darom", "anti_sushi", "dodo", "magnit", "pyaterochka"}
     if ids != expected:
         _fail("extend", f"get_chain_meta: {sorted(ids)}, ожидалось {sorted(expected)}")
     else:
@@ -714,14 +725,14 @@ def check_extend():
     if reg is None:
         _fail("extend", "авто-регистрация: dodo не найден в реестре")
     else:
-        _ok("extend", "авто-регистрация: реестр из pkgutil (7 парсеров)")
+        _ok("extend", "авто-регистрация: реестр из pkgutil (9 парсеров)")
 
 
 # ---------------------------------------------------------------- блок 12
 def check_cache():
     """Блок 12: инварианты кэша — каждая сеть, позиции, поля, дубликаты."""
     print("Блок 12: кэш-инварианты")
-    for c in get_chain_meta():
+    for c in _combo_meta():
         cid = c["id"]
         data = load_cache(cid)
         if data is None:
@@ -798,7 +809,7 @@ def check_drinks():
 
     # Проверка на реальном кэше: категории напитков -> is_drink=True
     drink_cats = {"napitki", "напитки", "drinks", "напиток"}
-    for c in get_chain_meta():
+    for c in _combo_meta():
         cid = c["id"]
         data = load_cache(cid)
         if data is None:
@@ -934,13 +945,14 @@ async def _run_mcp_test():
             async with ClientSession(read_stream, write_stream) as session:
                 await session.initialize()
 
-                # list_tools — ровно 13 инструментов
+                # list_tools — ровно 15 инструментов
                 tools = await session.list_tools()
                 tool_names = sorted([t.name for t in tools.tools])
                 expected_tools = sorted([
                     "list_chains", "parse_menu", "best_combo", "compare",
                     "status", "verify_chain", "check_price", "diff_menu",
                     "check_config", "health_check", "chain_info", "help", "favorites",
+                    "store_search", "store_categories",
                 ])
                 if tool_names != expected_tools:
                     raise ValueError(
@@ -1218,7 +1230,8 @@ def check_cross_chain():
     if raw.get("mode") != "all":
         _fail("cross", f"mode='{raw.get('mode')}', ожидается 'all'")
         return
-    metas = {c["id"] for c in get_chain_meta()}
+    from combo_mcp.config import get_combo_chain_ids
+    metas = set(get_combo_chain_ids())
     if raw.get("chains") is None or set(raw["chains"]) != metas:
         _fail("cross", f"chains не все: {raw.get('chains')}")
         return
@@ -1386,6 +1399,102 @@ def check_robustness():
     expect_error("verify_chain неизвестная сеть", verify_chain("нет_такой"))
 
 
+# ---------------------------------------------------------------- блок 30
+def check_store():
+    """Блок 30: store-тулы — store_search/store_categories только для магазинов."""
+    from combo_mcp.tools.store_search import store_search
+    from combo_mcp.tools.store_categories import store_categories
+    from combo_mcp.engines.textmatch import score_match
+
+    print("Блок 30: store-тулы (магазины)")
+
+    # --- textmatch: нечёткий матчинг (юнит) ---
+    tm_cases = [
+        ("молоко -> 'Молоко 3.2%' (>0)", score_match("молоко", "Молоко 3.2%") > 0),
+        ("пепперони -> 'Пепперони' (>0)", score_match("пепперони", "Пепперони") > 0),
+        ("ёлка -> 'Елка' (>0, ё=е)", score_match("ёлка", "Елка") > 0),
+        ("аброкадабра -> 'Пицца Маргарита' (==0)",
+         score_match("аброкадабра", "Пицца Маргарита") == 0),
+    ]
+    for label, cond in tm_cases:
+        if cond:
+            _ok("store", f"textmatch: {label}")
+        else:
+            _fail("store", f"textmatch: {label}")
+
+    def expect_error(label, json_str, needle=None):
+        r = json.loads(json_str)
+        if isinstance(r, dict) and "error" in r \
+                and (needle is None or needle in r["error"]):
+            _ok("store", label)
+        else:
+            _fail("store", f"{label}: нет error (получено: {str(r)[:80]})")
+
+    # --- store_search: рестораны/неизвестные/отключённые/капы ---
+    expect_error("store_search la_pizza (kind=combo)", store_search("пицца", store="la_pizza"))
+    expect_error("store_search пустой query", store_search("   ", store="magnit"))
+    expect_error("store_search неизвестный store", store_search("молоко", store="фуфо"))
+    expect_error("store_search pyaterochka (disabled)", store_search("молоко", store="pyaterochka"),
+                 "enabled=false")
+    expect_error("store_search sort=бред", store_search("молоко", store="magnit", sort="бред"))
+    expect_error("store_search limit=0", store_search("молоко", store="magnit", limit="0"))
+    expect_error("store_search max<min",
+                 store_search("молоко", store="magnit", min_price="200", max_price="50"))
+
+    # --- store_categories: ресторан/неизвестный/отключённый ---
+    expect_error("store_categories la_pizza (kind=combo)", store_categories("la_pizza"))
+    expect_error("store_categories неизвестный store", store_categories("фуфо"))
+    expect_error("store_categories pyaterochka (disabled)", store_categories("pyaterochka"),
+                 "enabled=false")
+
+    # --- magnit: живой поиск ---
+    r = json.loads(store_search("молоко", store="magnit", limit="5"))
+    if "error" in r:
+        _fail("store", f"magnit поиск: {r['error']}")
+    else:
+        results = r.get("results") or []
+        errors = r.get("stores_errors") or {}
+        if results:
+            ok_fields = all(
+                x.get("chain_id") == "magnit"
+                and isinstance(x.get("price_rub"), (int, float))
+                and isinstance(x.get("score"), (int, float))
+                and x.get("score") > 0
+                for x in results
+            )
+            if ok_fields:
+                _ok("store", f"magnit 'молоко': {r['total']} найдено, поля OK")
+            else:
+                _fail("store", f"magnit поля/score: {results[:2]}")
+        elif errors:
+            _ok("store", f"magnit поиск: SKIP (stores_errors={errors})")
+        else:
+            _ok("store", "magnit 'молоко': 0 результатов (не error)")
+
+    r = json.loads(store_search("молоко", store="magnit", sort="price_asc", limit="5"))
+    if "error" not in r:
+        prices = [x.get("price_rub") for x in r.get("results") or []]
+        if not prices:
+            _ok("store", "magnit sort=price_asc: SKIP (пусто)")
+        elif all(prices[i] <= prices[i + 1] for i in range(len(prices) - 1)):
+            _ok("store", "magnit sort=price_asc: неуб. цены")
+        else:
+            _fail("store", f"magnit sort=price_asc: {prices}")
+
+    # --- magnit: категории ---
+    r = json.loads(store_categories("magnit"))
+    if "error" in r:
+        _fail("store", f"magnit категории: {r['error']}")
+    else:
+        entry = next((e for e in r.get("results") or []
+                      if e.get("store_id") == "magnit"), None)
+        total = (entry or {}).get("total") or 0
+        if total > 0 and isinstance((entry or {}).get("categories"), list):
+            _ok("store", f"magnit категории: {total}")
+        else:
+            _fail("store", f"magnit категории: total={total}")
+
+
 def main():
     check_combos()
     check_boundary()
@@ -1405,6 +1514,7 @@ def main():
     check_promos()
     check_cross_chain()
     check_robustness()
+    check_store()
     check_mcp()
     print()
     if _FAILED:

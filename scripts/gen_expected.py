@@ -9,7 +9,7 @@ import sys, json, os
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.getcwd())
 
-from combo_mcp.config import get_chain_meta
+from combo_mcp.config import get_chain_meta, get_combo_chain_ids
 from combo_mcp.tools.best_combo import best_combo
 
 BUDGETS = [1500, 3000]
@@ -24,8 +24,8 @@ if os.path.exists(PATH):
         old = {}
 
 out = {"version": 1, "combos": {}}
-for c in get_chain_meta():
-    cid = c["id"]
+for cid in get_combo_chain_ids():
+    c = next(x for x in get_chain_meta() if x["id"] == cid)
     out["combos"][cid] = {}
     for budget in BUDGETS:
         raw = json.loads(best_combo(cid, budget, variations=3, refresh=False))
