@@ -197,7 +197,62 @@
 
 ## На будущее (пока не делаем)
 
-- [ ] Telegram-бот: обёртка над 15 инструментами (комбо по запросу, избранное, алерты)
+### Burger King (id `burgerking`) — burgerkingrus.ru
+
+- [ ] Подключить сеть Burger King. Разведка проведена (2026-09-08), каркас подходит
+      (Playwright-паттерн как у pyaterochka), реализация отложена. Техническая карта:
+      - URL: меню отдаётся на КОРНЕ https://burgerkingrus.ru/ (путь /menu → 404!).
+        city="Воронеж", kind=combo, needs_playwright=True.
+      - Анти-бот ServicePipe (servicepipe.tech): JS-challenge + cookies spid/spsc/
+        burgerking_ab_id; чистый HTTP не проходит даже на API-хосте — curl/powershell
+        к orderapp.burgerkingrus.ru/gateway/menu-composition/api/v8/menu/group вернул
+        523 (TLS-фингерпринт). В headless-браузере (Чром, UA обычный) challenge
+        проходится чисто → паттерн _open_page как в combo_mcp/chains/pyaterochka.py
+        (проверка капчи → ChainUnavailable; затем ждать появления `__NUXT_DATA__`).
+      - Каталог — Nuxt.js SSR: весь каталог в `<script id="__NUXT_DATA__">` (~1.2 МБ,
+        flatted-кодировка, резолвер по индексам). Внутри:
+        `{badges, categories, combos, dishes, groups, keys}`.
+        Позиция (dishes): `{id, name, price (КОПЕЙКИ: 61999 = 619,99 ₽;
+        price_rub = round(коп/100)), price_without_combo, show_price_without_combo,
+        image, categories[]}`. `keys.prices_key` — токен цен для API композиции.
+        Маппинг категорий НЕ в карточке напрямую: у диша поле `categories` = список
+        id категорий, а `categories` в payload = массив объектов `{id, name, ...}` —
+        брать name категории («Бургеры», «Комбо», ...), затем category_map →
+        группы. Цены/меню федеральные единые (не зависят от города/ресторана).
+      - Весов в каталоге НЕТ (по ключам weight/kcal/foodValue — ноль). Вес добирается
+        поштучно: `POST orderapp.burgerkingrus.ru/gateway/menu-composition/api/v8/menu/group`,
+        body `{"params":{"id":<dish_id>,"type":"stay","source":"web","keys":{"prices_key":<pk>}}}`,
+        заголовки: content-type/accept json, x-burgerking-platform: web_mobile, referer.
+        Ответ: `result.group.dishes[].composition.unit.amount` — вес в г/мл
+        (Ангус 4 Сыра = 337 г; unit.name = «г» или «мл»), плюс
+        `composition.kcals/proteins/fats/carbs` (amount/per_100), `main_info.price`,
+        `composition.description`. Вызовы из контекста страницы — `page.evaluate(fetch(...))`,
+        батчами Promise.all по 10–16 (N+1 ≈ 150–250 POST на первый парсинг, далее
+        дисковый кэш TTL 120 мин). Питьевые мл ≈ г (weight_source="site").
+        Готовые комбо — это обычные позиции категории «Комбо» (как продукты, не
+        составлять из частей вручную).
+      - Категории сайта: Новинки, Комбо, Соусы (подкатегории), Бургеры (Премиум/
+        Говядина/Курица и рыба/Острые), Вкусы Воппера, Дети любят, Роллы (Воппер Ролл),
+        Картофель и закуски, Напитки и десерты (Холодные/Горячие напитки, Пиво,
+        Молочные коктейли, Десерты), Купоны.
+      - Решения (согласованы при разведке): веса ТОЛЬКО через API композиции
+        (не справочник); новая группа `burgers` в categories.py (ALL_GROUPS + синонимы
+        «бург», «burger», «воппер»); Бургеры→burgers, Картофель и закуски→snacks,
+        Комбо→combo, Напитки и десерты→drinks, Соусы→sauces, Роллы→rolls,
+        Дети любят→snacks, Новинки/Вкусы Воппера/Купоны→other.
+      - Файлы: combo_mcp/chains/burgerking.py (новый), categories.py (группа burgers),
+        config/chains_config.json (entry kind=combo, enabled=true, menu_ttl_minutes=120),
+        tests/expected.json перегенерить gen_expected.py осознанным шагом; в autotest
+        для burgerking допускать ChainUnavailable (анти-бот) без красного CI.
+        parse_extra (доставка/купоны) на первом этапе НЕ делать.
+      - Риски: ServicePipe меняет куки/капчу во времени (pyaterochka с тем же анти-ботом
+        лежит выключенной) — лечится TTL + stale-if-error; первый парсинг медленный;
+        «Роллы» BK попадут в группу rolls (отдельная сеть, не смешивается);
+        Пиво в «Напитках» — решить при имплементации (исключать из комбо или нет).
+
+### Telegram-бот
+
+- [ ] Обёртка над 15 инструментами (комбо по запросу, избранное, алерты)
 - [ ] История цен: накопление снапшотов меню в SQLite по расписанию → тренды
       (графики «цена растёт/падает» за недели). Сейчас закрыто диффом на месте:
       diff_menu показывает изменения между двумя загрузками. Тренды — накопление

@@ -62,14 +62,15 @@ class AntiSushiParser(ChainParser):
     # ------------------------------------------------------------------
 
     def _parse_products_from_html(self, html, default_category="Роллы/Суши"):
-        """Распарсить div.product с schema.org markup из HTML.
+        """Распарсить .product (article/div) с schema.org markup из HTML.
 
-        Возвращает список dict-позиций.
+        Возвращает список dict-позиций. Карточка может быть <div> или
+        <article class="product product-redesign">; модалка product-detail исключается.
         """
         products = []
         soup = BeautifulSoup(html, 'html.parser')
 
-        product_divs = soup.find_all('div', class_='product')
+        product_divs = soup.select('.product:not(.product-detail)')
         for pd in product_divs:
             price_meta = pd.find('meta', itemprop='price')
             if not price_meta:

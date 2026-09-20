@@ -17,7 +17,7 @@ from mcp.client.session import ClientSession
 _project_dir = os.path.dirname(os.path.abspath(__file__))
 _parent_dir = os.path.dirname(_project_dir)
 SERVER_SCRIPT = os.path.join(_parent_dir, "combo_mcp", "server.py")
-PYTHON = os.path.join(_parent_dir, ".venv", "Scripts", "python.exe")
+PYTHON = sys.executable
 
 EXPECTED_TOOLS = [
     "list_chains", "parse_menu", "best_combo", "compare", "status",

@@ -14,7 +14,7 @@ import mcp.client.stdio as stdio_client
 from mcp.client.session import ClientSession
 
 SERVER_SCRIPT = os.path.join(_parent_dir, "combo_mcp", "server.py")
-PYTHON = os.path.join(_parent_dir, ".venv", "Scripts", "python.exe")
+PYTHON = sys.executable
 
 
 async def run_smoke_test():
