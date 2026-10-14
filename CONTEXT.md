@@ -284,6 +284,28 @@ magnit/pyaterochka (иерархия с children), fallback — из кэша м
   ОСТАЛОСЬ: AGENTS.md (тулы/kind/weight_source name), ROADMAP.md; прогнать autotest
   (exit 0) + smoke_test + selftest; ручной smoke store_search/store_categories live;
   потом — вопрос пользователя о влитии merge/shop-stores в main и коммите.
+- Сделано (сессия 2026-10-14, ФИКС рекуррентного красного CI): причина — nightly
+  гонял эталоны по ЖИВЫМ сайтам на чистом раннере (cache/ в .gitignore → fetch_items
+  уходил в сеть): dodo 403/антибот, anti_sushi 0 позиций/смена разметки, ninja
+  рейт-лимит → отсюда «через день красный». РЕШЕНИЕ: развести детерминированные
+  тесты (гейт) и живой мониторинг.
+  (1) combo_mcp/cache.py: каталог кэша через env COMBO_CACHE_DIR (читается на
+  импорте) + is_offline() (COMBO_OFFLINE=1). (2) Офлайн уважают: shared.fetch_items
+  (сеть запрещена, только снимок), extra_cache.get_extra (только срез),
+  health_check._check_chain (без HTTP, вердикт по снимку). (3) tests/fixtures/ —
+  закоммиченные снимки меню+extra 7 combo-сетей (компактный JSON, ~330 КБ).
+  (4) autotest.py --offline: копирует fixtures во временный каталог, ставит
+  COMBO_OFFLINE/COMBO_CACHE_DIR ДО импорта combo_mcp, живой magnit в check_store
+  пропускается; починен краш load_cache(cid).get при отсутствии кэша (helper
+  _cache_items, было AttributeError на чистом раннере). (5) gen_expected.py
+  --fixtures: эталоны считаются от снимков. (6) CI: ci.yml (push/PR) + nightly job
+  `gate` — autotest --offline (стабильно зелёный); nightly job `monitor` — живой
+  autotest, НЕ гейт (summary + артефакт live-report). (7) Эталоны пересозданы
+  --fixtures; контрольные блюда anti_sushi обновлены (Лакомка ушла с сайта →
+  По-кушение 1299/1300, Хитяра 849/660). Офлайн-прогон: 0 FAIL. Живой прогон:
+  1 дрейф (anti_sushi 3000) — предмет мониторинга, не краш.
+  ОСТАЛОСЬ: smoke/selftest/compile; коммит по запросу; вопрос о влитии в main.
+  Внешний алерт (ntfy/Telegram) для monitor — в ROADMAP «В плане».
 
 
 ## Порядок старта сессии
@@ -292,5 +314,7 @@ magnit/pyaterochka (иерархия с children), fallback — из кэша м
    (проверка коммитов контрибьютора — см. ROADMAP.md «Проверка контрибьютора».
    ВАЖНО: при наличии чужих коммитов — ВСЕГДА спрашивать пользователя, что делать,
    не вливать и не откатывать самостоятельно.)
-2. `scripts/autotest.py` — убедиться, что база зелёная.
+2. `scripts/autotest.py` — убедиться, что база зелёная. Для гейта без сети:
+   `scripts/autotest.py --offline` (данные из tests/fixtures). Живой прогон
+   (`autotest.py` без флага) показывает дрейф сайтов — это мониторинг, не гейт.
 3. Дальше — по задачам пользователя.

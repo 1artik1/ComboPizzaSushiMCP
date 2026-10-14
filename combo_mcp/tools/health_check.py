@@ -12,7 +12,7 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor
 from combo_mcp.config import get_chain_meta, get_chain_class, get_combo_chain_ids
-from combo_mcp.cache import load_cache, save_cache
+from combo_mcp.cache import load_cache, save_cache, is_offline
 from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.http_client import get_session, DEFAULT_TIMEOUT
 from combo_mcp.params import to_bool
@@ -48,6 +48,7 @@ def _check_chain(c, refresh):
     """Полная проверка одной сети (HTTP + парсинг/кэш)."""
     cid = c["id"]
     url = c.get("url", "")
+    offline = is_offline()
     entry = {
         "id": cid,
         "name": c["name"],
@@ -62,16 +63,23 @@ def _check_chain(c, refresh):
         "verdict": "unknown",
     }
 
-    entry.update(_http_check(url, c))
-    if refresh:
-        parse_ok, error, items = _try_parse(cid)
-    else:
+    if offline:
+        # Офлайн-режим (COMBO_OFFLINE=1): сеть не трогаем, вердикт по снимку.
+        entry["offline"] = True
         parse_ok, error, items = _cache_info(cid)
+    else:
+        entry.update(_http_check(url, c))
+        if refresh:
+            parse_ok, error, items = _try_parse(cid)
+        else:
+            parse_ok, error, items = _cache_info(cid)
     entry["parse_ok"] = parse_ok
     entry["parse_error"] = error
     entry["items_count"] = len(items) if items else 0
 
-    if not entry["http_ok"]:
+    if offline:
+        entry["verdict"] = "healthy" if entry["items_count"] > 0 else "degraded"
+    elif not entry["http_ok"]:
         entry["verdict"] = "unavailable"
     elif entry["items_count"] == 0:
         entry["verdict"] = "degraded"

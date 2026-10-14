@@ -13,7 +13,7 @@ import time
 import datetime
 
 from combo_mcp import config as mcp_config
-from combo_mcp.cache import _CACHE_DIR
+from combo_mcp.cache import _CACHE_DIR, is_offline
 from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.logs import log_error
 
@@ -89,6 +89,24 @@ def get_extra(chain_id, refresh=False):
     refresh=True — принудительно перепарсить. Возвращает dict:
     {extra, fetched_at, source_state, last_error, updated}.
     """
+    if is_offline():
+        data = load_extra_cache(chain_id)
+        if data and data.get("extra"):
+            return {
+                "extra": data.get("extra"),
+                "fetched_at": data.get("fetched_at"),
+                "source_state": "snapshot",
+                "last_error": data.get("last_error"),
+                "updated": False,
+            }
+        return {
+            "extra": None,
+            "fetched_at": None,
+            "source_state": "error",
+            "last_error": "офлайн-режим: нет снимка доп. данных",
+            "updated": False,
+        }
+
     need = refresh or should_refresh(chain_id)
     if not need:
         data = load_extra_cache(chain_id)

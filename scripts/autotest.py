@@ -46,6 +46,38 @@ try:
 except AttributeError:
     pass
 
+
+# --- Офлайн-режим (детерминированный прогон) ------------------------------
+# --offline (или COMBO_OFFLINE=1) запрещает сеть и подкладывает снимки
+# tests/fixtures как каталог кэша. Обязательно ДО импорта combo_mcp: путь кэша
+# и офлайн-флаг читаются на уровне модулей.
+def _enable_offline():
+    import tempfile
+    import shutil
+    import atexit
+
+    os.environ["COMBO_OFFLINE"] = "1"
+    if os.environ.get("COMBO_CACHE_DIR"):
+        return  # каталог уже задан извне (например, в CI)
+    fixtures = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "tests", "fixtures",
+    )
+    if not os.path.isdir(fixtures):
+        print(f"ОФЛАЙН: нет каталога снимков {fixtures}")
+        sys.exit(2)
+    tmp = tempfile.mkdtemp(prefix="combo_fixtures_")
+    for fn in os.listdir(fixtures):
+        if fn.endswith(".json"):
+            shutil.copy2(os.path.join(fixtures, fn), os.path.join(tmp, fn))
+    os.environ["COMBO_CACHE_DIR"] = tmp
+    atexit.register(shutil.rmtree, tmp, True)
+
+
+OFFLINE = "--offline" in sys.argv or os.environ.get("COMBO_OFFLINE") == "1"
+if OFFLINE:
+    _enable_offline()
+
 from combo_mcp.cache import load_cache
 from combo_mcp.config import get_chain_meta
 from combo_mcp.engines.drinks import is_drink
@@ -95,6 +127,15 @@ def _ok(block, msg):
 def _norm_name(name):
     """Кэш ninja_food хранит имена с литеральными \\" — нормализуем."""
     return name.replace('\\"', '"')
+
+
+def _cache_items(cid):
+    """Позиции из кэша сети (или []). Устойчиво к отсутствию файла (load_cache → None).
+
+    В офлайн-режиме (COMBO_OFFLINE=1) источниками служат снимки tests/fixtures.
+    """
+    data = load_cache(cid)
+    return (data or {}).get("items", []) or []
 
 
 def _strip_size_suffix(name):
@@ -218,7 +259,7 @@ def _expected_drinks(cid, budget, target=1):
     (например, BonaAqua у dodo) ошибочно не считаются напитками.
     """
     from combo_mcp.weights import apply_estimated_weights
-    cache_items = load_cache(cid).get("items", []) or []
+    cache_items = _cache_items(cid)
     items, _ = apply_estimated_weights(cache_items, cid)
     valid_drinks = sorted(
         [it for it in items if is_drink(it) and (it.get("weight_g") or 0) > 0
@@ -244,7 +285,7 @@ def _check_invariants(cid, key, budget, raw, exp):
         return
 
     # позиции из кэша для детекции напитков
-    cache_items = load_cache(cid).get("items", []) or []
+    cache_items = _cache_items(cid)
     by_name = {}
     for it in cache_items:
         by_name.setdefault(localize(cid, _norm_name(it["name"])), it)
@@ -304,7 +345,7 @@ def check_dishes():
         dishes = json.load(f)["dishes"]
 
     for cid, list_dishes in dishes.items():
-        items = load_cache(cid).get("items", []) or []
+        items = _cache_items(cid)
         by_name = {}
         for it in items:
             by_name.setdefault(localize(cid, _norm_name(it["name"])), it)
@@ -371,7 +412,7 @@ def check_compare():
             continue
 
         # ровно 1 напиток в лучшем комбо compare
-        cache_items = load_cache(cid).get("items", []) or []
+        cache_items = _cache_items(cid)
         by_name = {}
         for it in cache_items:
             by_name.setdefault(localize(cid, _norm_name(it["name"])), it)
@@ -545,7 +586,7 @@ def check_categories():
                    "anti_sushi": "Комбо"}
     ok = True
     for cid, raw_cat in combo_cases.items():
-        items = load_cache(cid).get("items", []) or []
+        items = _cache_items(cid)
         hits = [it for it in items if (it.get("category") or "") == raw_cat]
         if not hits:
             _fail("categories", f"{cid}: нет сырой категории '{raw_cat}'")
@@ -557,7 +598,7 @@ def check_categories():
         else:
             _ok("categories", f"{cid}: '{raw_cat}' -> combo ({len(hits)} поз.)")
     # sushi_darom 'Наборы' остаются sets
-    hits = [it for it in (load_cache("sushi_darom").get("items", []) or [])
+    hits = [it for it in _cache_items("sushi_darom")
             if (it.get("category") or "") == "Наборы"]
     if hits and all(category_to_group(it, "sushi_darom") == "sets" for it in hits):
         _ok("categories", "sushi_darom: 'Наборы' -> sets (ролл-сеты)")
@@ -1215,7 +1256,7 @@ def check_mcp():
     print("Блок 28: MCP-протокол")
     try:
         asyncio.run(_run_mcp_test())
-        _ok("mcp", "MCP-протокол: 13 инструментов, 5 быстрых OK")
+        _ok("mcp", "MCP-протокол: 15 инструментов, 5 быстрых OK")
     except Exception as e:
         _fail("mcp", f"исключение: {e}")
 
@@ -1448,6 +1489,10 @@ def check_store():
                  "enabled=false")
 
     # --- magnit: живой поиск ---
+    if OFFLINE:
+        _ok("store", "офлайн-режим: живой поиск magnit пропущен")
+        return
+
     r = json.loads(store_search("молоко", store="magnit", limit="5"))
     if "error" in r:
         _fail("store", f"magnit поиск: {r['error']}")

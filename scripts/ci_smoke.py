@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ci_smoke.py — быстрый CI-смоук БЕЗ сети: сервер стартует, 13 инструментов
+"""ci_smoke.py — быстрый CI-смоук БЕЗ сети: сервер стартует, 15 инструментов
 зарегистрированы, базовые инструменты отвечают валидным JSON.
 
 Используется в .github/workflows/ci.yml (push). Полный прогон — nightly.yml.
@@ -23,6 +23,7 @@ EXPECTED_TOOLS = [
     "list_chains", "parse_menu", "best_combo", "compare", "status",
     "verify_chain", "check_price", "diff_menu", "check_config",
     "health_check", "chain_info", "help", "favorites",
+    "store_search", "store_categories",
 ]
 
 QUICK_TOOLS = [

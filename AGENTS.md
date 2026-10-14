@@ -21,10 +21,13 @@ store_search/store_categories — только по kind=store (нативный
 - Сервер: `.venv\Scripts\python.exe combo_mcp\server.py`
 - Автотесты: `.venv\Scripts\python.exe scripts\autotest.py` (exit 0 = зелёная база).
   ОБЯЗАТЕЛЬНО прогнать после любых изменений кода.
+- Детерминированные автотесты (без сети): `scripts\autotest.py --offline` —
+  данные из снимков `tests\fixtures\`, сеть запрещена. Это гейт CI.
 - Smoke MCP-протокола: `.venv\Scripts\python.exe scripts\smoke_test.py`
 - Selftest: `.venv\Scripts\python.exe scripts\selftest.py`
-- Эталоны: `scripts\gen_expected.py` пересоздаёт tests/expected.json —
-  обновлять только осознанным коммитом (сверка с real-данными).
+- Эталоны: `scripts\gen_expected.py --fixtures` пересоздаёт tests/expected.json
+  ОТ СНИМКОВ (согласовано с офлайн-прогоном); `scripts\gen_expected.py` без флага —
+  от живого кэша. Обновлять только осознанным коммитом (сверка диффом).
 - Очистка кэша: `scripts\clear_cache.py`
 
 ВАЖНО про Windows PowerShell 5.1:
@@ -44,6 +47,8 @@ store_search/store_categories — только по kind=store (нативный
 - `combo_mcp\config.py` — chains_config.json + kind-хелперы (get_chain_kind,
   get_combo_chain_ids — рестораны, get_store_chain_ids — магазины)
 - `combo_mcp\cache.py` — дисковый кэш cache/<chain>.json (fetched_at, items, prev_items);
+  каталог переопределяется env `COMBO_CACHE_DIR`, офлайн-флаг `COMBO_OFFLINE=1`
+  (is_offline) запрещает сеть — для детерминированных тестов;
   save_cache атомарный (tempfile+os.replace); clear_cache НЕ трогает favorites.json/extra_*;
   `extra_cache.py` — cache/extra_<chain>.json (доставка/акции/лояльность, дневной рефреш)
 - `combo_mcp\params.py` — конвертация строковых параметров MCP (to_bool/to_int/to_float)
@@ -59,6 +64,8 @@ store_search/store_categories — только по kind=store (нативный
   sets/combo/...); combo — наборы/комбо (la_pizza, ninja_food, anti_sushi),
   sets — чистые ролл-сеты
 - `config\` — chains_config.json (сети, таймауты, TTL), translations.json (додо)
+- `tests\` — expected.json (эталоны) + fixtures\ (закоммиченные снимки меню/доп.данных
+  для офлайн-прогона; формат как у cache/<chain>.json)
 - `scripts\` — рабочие скрипты (autotest, smoke_test, selftest, gen_expected,
   clear_cache, ci_smoke, new_chain); temp-файлы не держать
 
@@ -96,11 +103,17 @@ store_search/store_categories — только по kind=store (нативный
 
 ## Тесты
 
-- Автотест — блоки 1..28 (эталоны комбо, инварианты, напитки, категории, help,
-  favorites, идемпотентность, Monte Carlo, реальный MCP-протокол). Все зелёные = OK.
+- Автотест — блоки 1..30 (эталоны комбо, инварианты, напитки, категории, help,
+  favorites, идемпотентность, Monte Carlo, промо, cross-chain, robust, store,
+  реальный MCP-протокол). Все зелёные = OK.
+- ДВА РЕЖИМА: `autotest.py --offline` (гейт CI) — из снимков tests/fixtures, без
+  сети; `autotest.py` — живой (реальный кэш/сайты), для мониторинга, не гейт.
+  Живые сайты нестабильны (антибот dodo, рейт-лимит ninja, смена разметки) —
+  расхождения в живом режиме это сигнал, а не повод считать код сломанным.
 - Блок 28 вызывает тулы через ClientSession/stdio — параметры строками.
-- Эталоны tests/expected.json пересоздавать через scripts/gen_expected.py
-  (НЕ вручную), только при осознанном изменении алгоритма/данных.
+- Эталоны tests/expected.json пересоздавать через `scripts/gen_expected.py --fixtures`
+  (НЕ вручную) — от тех же снимков, что и офлайн-прогон. Снимки tests/fixtures
+  обновлять осознанным коммитом (снимок меню согласован с эталонами).
 
 ## Todo-дисциплина (обязательно)
 
@@ -115,7 +128,7 @@ store_search/store_categories — только по kind=store (нативный
 
 ## Известные ложные LSP-варнинги (не чинить)
 
-mcp.server.mcpserver import, reconfigure, `.get` на None в autotest.py,
+mcp.server.mcpserver import, reconfigure,
 BS4 AttributeValue, pytesseract/playwright import.
 
 ## Git

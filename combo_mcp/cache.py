@@ -6,7 +6,21 @@ import os
 import tempfile
 import time
 
-_CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cache")
+# Каталог кэша можно переопределить окружением (тесты/CI): COMBO_CACHE_DIR=<path>.
+# По умолчанию — <project>/cache. Значение читается один раз при импорте, поэтому
+# переменную нужно выставить ДО импорта combo_mcp (autotest --offline, CI, gen_expected).
+_CACHE_DIR = os.environ.get("COMBO_CACHE_DIR") or os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "cache"
+)
+
+
+def is_offline():
+    """Офлайн-режим: запрет обращений к сети (COMBO_OFFLINE=1).
+
+    Используется детерминированными тестами: данные берутся только из
+    зафиксированного снимка (fixtures), живой парсинг не запускается.
+    """
+    return os.environ.get("COMBO_OFFLINE") == "1"
 
 
 def _cache_path(chain_id):

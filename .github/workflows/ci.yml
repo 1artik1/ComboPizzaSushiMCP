@@ -24,5 +24,8 @@ jobs:
       - name: Компиляция (синтаксис)
         run: python -m compileall -q combo_mcp scripts
 
-      - name: "Быстрый smoke: сервер + 13 инструментов + JSON-ответы"
+      - name: "Быстрый smoke: сервер + 15 инструментов + JSON-ответы"
         run: python scripts/ci_smoke.py
+
+      - name: "Детерминированный автотест (офлайн-снимки, без сети)"
+        run: python scripts/autotest.py --offline

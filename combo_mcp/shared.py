@@ -8,7 +8,7 @@ fetch_items: кэш с TTL + stale-if-error (при неудачном парс�
 import re
 
 from combo_mcp.config import get_chain_class
-from combo_mcp.cache import load_cache, load_items_with_ttl, save_cache
+from combo_mcp.cache import load_cache, load_items_with_ttl, save_cache, is_offline
 from combo_mcp.chains.base import ChainUnavailable
 from combo_mcp.logs import log_error
 
@@ -25,6 +25,14 @@ def fetch_items(chain_id, refresh=False, allow_stale=True):
         items = load_items_with_ttl(chain_id)
         if items is not None:
             return items, False, None
+
+    if is_offline():
+        # Детерминированный режим (COMBO_OFFLINE=1): сеть запрещена.
+        # Отдаём только зафиксированный снимок, иначе честная ошибка.
+        cache_data = load_cache(chain_id)
+        if cache_data and cache_data.get("items"):
+            return cache_data["items"], False, None
+        return None, False, f"офлайн-режим: нет снимка данных для {chain_id}"
 
     error = None
     try:

@@ -9,6 +9,13 @@ import sys, json, os
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.getcwd())
 
+# --fixtures: эталоны считаются от закоммиченных снимков tests/fixtures (без сети),
+# чтобы они были согласованы с офлайн-прогоном autotest. Выполняется до импорта combo_mcp.
+if "--fixtures" in sys.argv:
+    _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.environ.setdefault("COMBO_OFFLINE", "1")
+    os.environ.setdefault("COMBO_CACHE_DIR", os.path.join(_root, "tests", "fixtures"))
+
 from combo_mcp.config import get_chain_meta, get_combo_chain_ids
 from combo_mcp.tools.best_combo import best_combo
 
