@@ -5,11 +5,16 @@ on:
     - cron: "0 6 * * *"
   workflow_dispatch:
 
+# ВАЖНО: GitHub запускает schedule-воркфлоу ТОЛЬКО на дефолтной ветке (main).
+# Поэтому джобы ниже выполняются лишь при ref = merge/shop-stores: на main
+# автоночной прогон пропускается (отключён), а на рабочей ветке работает
+# (вручную через workflow_dispatch; автоматически — если ветку сделать дефолтной).
 jobs:
   # Детерминированный гейт: эталоны сверяются с закоммиченными снимками
   # tests/fixtures. Сеть не нужна, результат воспроизводим -> стабильно зелёный.
   gate:
     name: Детерминированный автотест (снимки, без сети)
+    if: github.ref == 'refs/heads/merge/shop-stores'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -34,6 +39,7 @@ jobs:
   # разбору, а не повод красить main. Джоба не гейтит (все шаги мягкие).
   monitor:
     name: Живой мониторинг парсеров (не гейт)
+    if: github.ref == 'refs/heads/merge/shop-stores'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

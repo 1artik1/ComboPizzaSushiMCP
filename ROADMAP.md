@@ -118,7 +118,9 @@
   7 combo-сетей), офлайн-режим (`COMBO_OFFLINE=1`, каталог кэша через
   `COMBO_CACHE_DIR`) — сеть запрещена, данные только из снимка. `autotest.py --offline`
   = гейт (ci.yml на push/PR + nightly job `gate`); живой прогон — отдельная
-  негейтящая job `monitor` (summary + артефакт `live-report`). Эталоны пересозданы
+  негейтящая job `monitor` (summary + артефакт `live-report`). CI/автоночной прогон
+  нацелены на ветку `merge/shop-stores` (ci.yml branches, nightly `if: github.ref`);
+  на `main` не гоняются. Эталоны пересозданы
   `gen_expected.py --fixtures` (контрольные блюда anti_sushi: Лакомка убрана с
   сайта → По-кушение/Хитяра). Починен краш `load_cache(...).get` при пустом кэше
   (`_cache_items`). Офлайн-прогон autotest: 0 FAIL.

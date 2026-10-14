@@ -152,6 +152,10 @@ BS4 AttributeValue, pytesseract/playwright import.
   зелёные (exit 0) — ВСЕГДА СПРОСИТЬ/ПРЕДЛОЖИТЬ пользователю влитие в `main`.
   Вливать в `main` ТОЛЬКО по явному сигналу пользователя.
 - Критерий готовности к влитию в `main`: autotest + smoke + selftest зелёные.
+- CI нацелен на рабочую ветку: `ci.yml` — `branches: [merge/shop-stores]`;
+  джобы `nightly.yml` — `if: github.ref == 'refs/heads/merge/shop-stores'`
+  (schedule у GitHub идёт только с дефолтной ветки, поэтому на `main` автоночной
+  прогон пропускается). При смене рабочей ветки — править эти триггеры.
 
 Перед влитием своей ветки в `main`: почистить рабочие артефакты
 (`autotest_run*.txt`, `mcp_selftest.txt`), `git add` резолвленных/новых файлов,

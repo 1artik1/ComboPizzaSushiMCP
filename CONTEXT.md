@@ -300,7 +300,11 @@ magnit/pyaterochka (иерархия с children), fallback — из кэша м
   _cache_items, было AttributeError на чистом раннере). (5) gen_expected.py
   --fixtures: эталоны считаются от снимков. (6) CI: ci.yml (push/PR) + nightly job
   `gate` — autotest --offline (стабильно зелёный); nightly job `monitor` — живой
-  autotest, НЕ гейт (summary + артефакт live-report). (7) Эталоны пересозданы
+  autotest, НЕ гейт (summary + артефакт live-report). ОБЛАСТЬ: обе проверки
+  нацелены на рабочую ветку merge/shop-stores (ci.yml branches=[merge/shop-stores];
+  джобы nightly защищены `if: github.ref == 'refs/heads/merge/shop-stores'`) —
+  на main автоночной прогон пропускается (schedule у GitHub идёт только с
+  дефолтной ветки). Внешний алерт для monitor — в ROADMAP «В плане». (7) Эталоны пересозданы
   --fixtures; контрольные блюда anti_sushi обновлены (Лакомка ушла с сайта →
   По-кушение 1299/1300, Хитяра 849/660). Офлайн-прогон: 0 FAIL. Живой прогон:
   1 дрейф (anti_sushi 3000) — предмет мониторинга, не краш.

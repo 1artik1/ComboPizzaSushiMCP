@@ -1,10 +1,12 @@
 name: CI
 
 on:
+  # Рабочая ветка проекта — merge/shop-stores. На main эти проверки не гоняем
+  # (main — база для влития). Смена ветки — здесь.
   push:
-    branches: [main]
+    branches: [merge/shop-stores]
   pull_request:
-    branches: [main]
+    branches: [merge/shop-stores]
 
 jobs:
   smoke:
